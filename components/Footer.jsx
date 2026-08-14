@@ -11,8 +11,11 @@ export default function Footer() {
             className="footer__brand"
             aria-label="Rumble Harbor home"
           >
-            <PulseMark size={12} />
-            <span className="footer__name">Rumble Harbor</span>
+            <span className="footer__name">
+              Ru
+              <PulseMark inline />
+              ble Harbor
+            </span>
           </a>
           <span className="footer__tagline">Built to hold.</span>
         </div>

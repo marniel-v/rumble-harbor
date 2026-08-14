@@ -1,4 +1,9 @@
-import { IconWorld, IconMobile, IconScan } from "@/components/Icons";
+import {
+  IconWorld,
+  IconMobile,
+  IconScan,
+  FrequencyField,
+} from "@/components/Icons";
 import SignalMarker from "@/components/SignalMarker";
 
 function IconServer({ size = 18 }) {
@@ -55,6 +60,7 @@ const services = [
 export default function Services() {
   return (
     <section className="services section" id="services">
+      <FrequencyField className="services__field" />
       <div className="container services__inner">
         <SignalMarker
           label="Capabilities"

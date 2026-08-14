@@ -1,5 +1,6 @@
 import PulseMark from "@/components/PulseMark";
 import SignalMarker from "@/components/SignalMarker";
+import { Resonance } from "@/components/Icons";
 
 const pillars = [
   {
@@ -28,6 +29,7 @@ export default function About() {
               <br />
               Calmly Engineered<span className="stop">.</span>
             </h2>
+            <Resonance className="about__resonance" />
           </div>
 
           <div className="about__body">

@@ -71,8 +71,7 @@
   --scrim: rgba(23, 26, 25, 0.78); /* nav over scrolled content */
   --scrim-solid: rgba(23, 26, 25, 0.95);
   --glow: rgba(242, 233, 220, 0.05); /* hero wash */
-  --hatch: rgba(242, 233, 220, 0.055); /* services frequency field */
-  --field-stroke: #a5aaa7; /* hero convergence lines */
+  --field-stroke: #a5aaa7; /* every graphic-language field */
   --input-bg: rgba(242, 233, 220, 0.04);
   --input-placeholder: #7b807d;
 }
@@ -93,7 +92,6 @@
   --scrim: rgba(242, 233, 220, 0.8);
   --scrim-solid: rgba(242, 233, 220, 0.96);
   --glow: rgba(23, 26, 25, 0.05);
-  --hatch: rgba(23, 26, 25, 0.06);
   --field-stroke: #7c837f;
   --input-bg: rgba(255, 255, 255, 0.55);
   --input-placeholder: #8b918d;
@@ -545,29 +543,40 @@ p {
   font-size: 13.5px;
   line-height: 1.55;
 }
+/* Resonance closes the title column, which is otherwise short against the body
+   — the grid starts both at the top and leaves the space anyway. */
+.about__resonance {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  margin-top: 34px;
+}
 
 /* ───────────────────────── Services ───────────────────────── */
 .services {
   position: relative;
   overflow: hidden;
 }
-/* Frequency field — brand graphic language as ambient texture. */
-.services::before {
-  content: "";
+/* Frequency fields — brand graphic language as ambient texture. The rays fade
+   along their own length; the mask only pulls them off the section edges. */
+.services__field {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-    180deg,
-    var(--hatch) 0 1px,
-    transparent 1px 13px
-  );
+  width: 100%;
+  height: 100%;
   -webkit-mask-image: radial-gradient(
-    ellipse 55% 75% at 8% 50%,
+    ellipse 70% 80% at 0% 50%,
     #000,
-    transparent 72%
+    transparent 75%
   );
-  mask-image: radial-gradient(ellipse 55% 75% at 8% 50%, #000, transparent 72%);
+  mask-image: radial-gradient(ellipse 70% 80% at 0% 50%, #000, transparent 75%);
   pointer-events: none;
+}
+/* Rays travel with the pulse, so the source swaps edges with it. Follows
+   PULSE_FLIPPED in components/PulseMark.jsx, via <html data-pulse>. */
+html[data-pulse="flipped"] .services__field {
+  transform: scaleX(-1);
 }
 .services__inner {
   position: relative;
@@ -701,9 +710,32 @@ html[data-pulse="flipped"] .work-card__chip::before {
 
 /* ───────────────────────── Contact ───────────────────────── */
 .contact {
+  position: relative;
+  overflow: hidden;
   border-top: 1px solid var(--line);
 }
+/* Pattern & texture — the wave surface, banked into the bottom-left so it sits
+   under the intro column and stays off the form. */
+.contact__pattern {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-mask-image: radial-gradient(
+    ellipse 75% 85% at 18% 88%,
+    #000,
+    transparent 72%
+  );
+  mask-image: radial-gradient(
+    ellipse 75% 85% at 18% 88%,
+    #000,
+    transparent 72%
+  );
+  pointer-events: none;
+}
 .contact__inner {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 48px;

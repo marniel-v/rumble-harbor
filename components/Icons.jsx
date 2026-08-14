@@ -181,3 +181,217 @@ export function PulseField({ className }) {
     </svg>
   );
 }
+
+/**
+ * Frequency Fields — from the brand's graphic language. Rays leave one source
+ * at the back edge and spread as they travel. Ambient only: no mark, no coral.
+ *
+ * Stretches to whatever box it is given (`preserveAspectRatio="none"`) — rays
+ * are straight, so non-uniform scale costs nothing and the strokes hold their
+ * weight. Being directional it follows PULSE_FLIPPED, but through
+ * `html[data-pulse]` in globals.css rather than a transform of its own.
+ */
+export function FrequencyField({ className }) {
+  const rays = Array.from({ length: 21 }, (_, i) => i - 10);
+
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 600 400"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient
+          id="rh-freq"
+          gradientUnits="userSpaceOnUse"
+          x1="0"
+          y1="0"
+          x2="600"
+          y2="0"
+        >
+          <stop offset="0" stopColor="var(--field-stroke)" stopOpacity="0.75" />
+          <stop
+            offset="0.5"
+            stopColor="var(--field-stroke)"
+            stopOpacity="0.3"
+          />
+          <stop offset="1" stopColor="var(--field-stroke)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      {/* The source is a short bundle, not a point — 2.6 apart at the edge
+          against 17 at full spread. Both signs match, or the rays cross and
+          the field reads as convergence instead. */}
+      <g fill="none">
+        {rays.map((i) => (
+          <line
+            key={i}
+            x1="0"
+            y1={200 + i * 2.6}
+            x2="600"
+            y2={200 + i * 17}
+            stroke="url(#rh-freq)"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * Resonance — from the brand's graphic language. One wave carried five times
+ * at stepped phase: they pinch at the crossings and open between them. Same
+ * frequency reinforcing itself, with the mark riding it.
+ */
+export function Resonance({ className }) {
+  const W = 320;
+  const mid = 60;
+  const amp = 34;
+  const k = (2 * Math.PI) / 160; // two cycles across the box
+
+  const wave = (phase) => {
+    let d = "";
+    for (let x = 0; x <= W; x += 4) {
+      const y = mid + amp * Math.sin(k * x + phase);
+      d += `${x === 0 ? "M" : "L"}${x} ${y.toFixed(1)}`;
+    }
+    return d;
+  };
+
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 320 120"
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient
+          id="rh-resonance"
+          gradientUnits="userSpaceOnUse"
+          x1="0"
+          y1="0"
+          x2={W}
+          y2="0"
+        >
+          <stop offset="0" stopColor="var(--field-stroke)" stopOpacity="0" />
+          <stop
+            offset="0.26"
+            stopColor="var(--field-stroke)"
+            stopOpacity="0.8"
+          />
+          <stop
+            offset="0.76"
+            stopColor="var(--field-stroke)"
+            stopOpacity="0.8"
+          />
+          <stop offset="1" stopColor="var(--field-stroke)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      <g stroke="url(#rh-resonance)" strokeWidth="1" fill="none">
+        {[-2, -1, 0, 1, 2].map((j) => (
+          <path key={j} d={wave(j * 0.4)} />
+        ))}
+      </g>
+
+      {/* 155 x 129 at 0.2 = 31 x 25.8, centred on (198, 60). */}
+      <g transform="translate(182.5 47.1) scale(0.2)" fill="var(--coral)">
+        <g transform={PULSE_FLIPPED ? PULSE_FLIP_TRANSFORM : undefined}>
+          {PULSE_SHAPES.map((d) => (
+            <path key={d} d={d} />
+          ))}
+        </g>
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * Pattern & Texture — from the brand's graphic language. A dot grid lifted by
+ * two waves at different wavelengths, so the sheet reads as a moving surface
+ * rather than a grid. A few marks sit on it, at the height the surface gives
+ * them.
+ *
+ * Stepping the phase by row runs the crests diagonally, but the step is what
+ * risks rows crossing: the per-row swing is amp·0.72·0.45 ≈ 16 against a 26
+ * step, so the sheet stays one surface. Raising either needs the other checked.
+ *
+ * Each row is one path — the dots are round line caps on 0.01-long segments,
+ * so the whole field is 11 nodes rather than 660.
+ */
+export function PatternField({ className }) {
+  const cols = 60;
+  const rows = 11;
+  const colStep = 20;
+  const rowStep = 26;
+  const x0 = 10;
+  const y0 = 60;
+  const amp = 50;
+
+  const lift = (x, row) =>
+    amp *
+    (0.72 * Math.sin(x / 165 + row * 0.45) +
+      0.28 * Math.sin(x / 78 - row * 0.2));
+
+  const surface = (x, row) => y0 + row * rowStep + lift(x, row);
+
+  const rowPath = (row) => {
+    let d = "";
+    for (let c = 0; c < cols; c++) {
+      const x = x0 + c * colStep;
+      d += `M${x} ${surface(x, row).toFixed(1)}h.01`;
+    }
+    return d;
+  };
+
+  const marks = [
+    { x: 250, row: 2, scale: 0.085 },
+    { x: 690, row: 7, scale: 0.06 },
+    { x: 980, row: 4, scale: 0.07 },
+  ];
+
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 1200 380"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+    >
+      <g
+        stroke="var(--field-stroke)"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        fill="none"
+      >
+        {Array.from({ length: rows }, (_, row) => (
+          <path
+            key={row}
+            d={rowPath(row)}
+            opacity={(0.3 + row * 0.032).toFixed(3)}
+          />
+        ))}
+      </g>
+
+      {marks.map(({ x, row, scale }) => (
+        <g
+          key={`${x}-${row}`}
+          transform={`translate(${(x - (155 * scale) / 2).toFixed(1)} ${(
+            surface(x, row) -
+            (129 * scale) / 2
+          ).toFixed(1)}) scale(${scale})`}
+          fill="var(--coral)"
+        >
+          <g transform={PULSE_FLIPPED ? PULSE_FLIP_TRANSFORM : undefined}>
+            {PULSE_SHAPES.map((d) => (
+              <path key={d} d={d} />
+            ))}
+          </g>
+        </g>
+      ))}
+    </svg>
+  );
+}

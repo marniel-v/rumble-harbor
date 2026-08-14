@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import SignalMarker from "@/components/SignalMarker";
+import { PatternField } from "@/components/Icons";
 
 const initial = { name: "", email: "", message: "" };
 
@@ -50,6 +51,7 @@ export default function Contact() {
 
   return (
     <section className="contact section" id="contact">
+      <PatternField className="contact__pattern" />
       <div className="container contact__inner">
         <div className="contact__intro">
           <SignalMarker label="Get in touch" meta="Channel" status="Open" />
