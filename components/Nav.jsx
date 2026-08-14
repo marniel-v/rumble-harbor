@@ -27,8 +27,11 @@ export default function Nav() {
     <header className={`nav ${scrolled ? "nav--scrolled" : ""}`}>
       <div className="nav__inner">
         <a href="#top" className="nav__brand" aria-label="Rumble Harbor home">
-          <PulseMark size={13} />
-          <span className="nav__name">Rumble Harbor</span>
+          <span className="nav__name">
+            Ru
+            <PulseMark size={12} inline />
+            ble Harbor
+          </span>
         </a>
 
         {/* Links collapse into the mobile sheet; the theme control never does

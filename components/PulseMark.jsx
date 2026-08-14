@@ -41,6 +41,7 @@ export default function PulseMark({
   className,
   color = "var(--coral)",
   flip = PULSE_FLIPPED,
+  inline = false,
 }) {
   return (
     <svg
@@ -50,7 +51,15 @@ export default function PulseMark({
       viewBox={PULSE_VIEWBOX}
       fill={color}
       aria-hidden="true"
-      style={{ display: "block", flex: "none" }}
+      style={
+        inline
+          ? // Standing in for a letter: it has to sit in the text run, so it
+            // takes an inline box and centres on the cap height rather than
+            // riding the baseline.
+            { display: "inline-block", verticalAlign: "0.08em", flex: "none" }
+          : // Beside text in a flex row: block avoids the inline descender gap.
+            { display: "block", flex: "none" }
+      }
     >
       <g transform={flip ? PULSE_FLIP_TRANSFORM : undefined}>
         {PULSE_SHAPES.map((d) => (
