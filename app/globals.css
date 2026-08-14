@@ -348,6 +348,25 @@ p {
   font-size: 14px;
   letter-spacing: 0.14em;
 }
+/* The mark standing in for a letter (`<PulseMark inline />`). It takes the cap
+   height of the text it sits in and rests on the baseline, so it tracks any
+   size it is dropped into and the `size` prop does not apply. `cap` reads the
+   real font metric; the em value is the fallback for browsers without it.
+   The right margin is an optical correction and follows PULSE_FLIPPED: flipped,
+   the mark's heavy edge lands on its right and the tracking alone leaves it
+   crowding the letter after it. Unflipped, this belongs on the left instead. */
+.pulse--inline {
+  display: inline-block;
+  height: 0.72em;
+  width: auto;
+  vertical-align: baseline;
+  margin-right: 0.3em;
+}
+@supports (height: 1cap) {
+  .pulse--inline {
+    height: 1cap;
+  }
+}
 .nav__end {
   gap: 22px;
 }

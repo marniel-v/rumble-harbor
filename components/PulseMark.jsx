@@ -45,21 +45,18 @@ export default function PulseMark({
 }) {
   return (
     <svg
-      className={className}
+      className={[inline && "pulse--inline", className]
+        .filter(Boolean)
+        .join(" ")}
       width={(size * PULSE_W) / PULSE_H}
       height={size}
       viewBox={PULSE_VIEWBOX}
       fill={color}
       aria-hidden="true"
-      style={
-        inline
-          ? // Standing in for a letter: it has to sit in the text run, so it
-            // takes an inline box and centres on the cap height rather than
-            // riding the baseline.
-            { display: "inline-block", verticalAlign: "0.08em", flex: "none" }
-          : // Beside text in a flex row: block avoids the inline descender gap.
-            { display: "block", flex: "none" }
-      }
+      // Inline: `.pulse--inline` owns the box, sizing it to the surrounding
+      // cap height — `size` is ignored. Otherwise it sits beside text in a
+      // flex row, where block avoids the inline descender gap.
+      style={inline ? undefined : { display: "block", flex: "none" }}
     >
       <g transform={flip ? PULSE_FLIP_TRANSFORM : undefined}>
         {PULSE_SHAPES.map((d) => (
