@@ -13,6 +13,28 @@
   --coral-deep: #b8362d;
   --fog: #a5aaa7;
 
+  /* ── Type scale ──────────────────────────────────────────────────────────
+     Four sizes, four tracking steps, nothing between them. The mono label is
+     a readout: the smaller it goes, the wider it opens. Mixed-case strings
+     take --track-flat; uppercase never does.                               */
+  --label-xs: 10px;
+  --label-sm: 11px;
+  --label-md: 12px;
+  --label-lg: 13px;
+
+  --track-flat: 0.04em;
+  --track-tight: 0.1em;
+  --track-mid: 0.14em;
+  --track-wide: 0.18em;
+
+  /* One speed for every hover; --t-theme moves the whole page, so it's slower. */
+  --t: 0.16s ease;
+  --t-theme: 0.28s ease;
+
+  /* --r-sm for controls, --r-md for the panels they sit on. */
+  --r-sm: 3px;
+  --r-md: 4px;
+
   --maxw: 1120px;
   --pad: 26px;
   --nav-h: 64px;
@@ -116,7 +138,7 @@ p {
 :focus-visible {
   outline: 2px solid var(--coral);
   outline-offset: 3px;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
 }
 
 .container {
@@ -136,16 +158,102 @@ p {
   color: var(--signal);
 }
 
+/* ═════════════════════════ Primitives ═════════════════════════
+   Defined once here; every component rule below is only a *delta*. All are
+   single-class selectors, so those later rules win on source order — keep
+   this section first. Reaching for `var(--font-mono)` again means the
+   element belongs in a list below instead. */
+
+/* Mono label — uppercase, tracked open, small. The defaults are the commonest
+   pairing, so several of these declare no type of their own at all. */
+.marker,
+.btn,
+.nav__link,
+.nav__mobile-link,
+.about__pillar-label,
+.svc-card__index,
+.work-card__chip,
+.field__label,
+.footer__tagline,
+.footer__links {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-xs);
+  letter-spacing: var(--track-mid);
+  text-transform: uppercase;
+}
+
+/* Same face, but these carry real strings — an address, a sentence, a
+   copyright — so they keep their capitals and stay nearly untracked. */
+.form-note,
+.footer__copy,
+.contact__email {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-sm);
+  letter-spacing: var(--track-flat);
+}
+
+/* Bristone at size. Negative tracking — the face is already extended, so past
+   ~30px it needs pulling back in. */
+.hero__title,
+.about__title,
+.contact__title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin-top: 18px;
+}
+
+/* The same face used small, where it behaves like a label — tracking opens
+   back out instead of closing. */
+.nav__name,
+.footer__name,
+.svc-card__title,
+.work-card__title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 500;
+  font-size: var(--label-lg);
+  letter-spacing: var(--track-tight);
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+/* Rows — items on one centred line. Each still owns its gap and justification. */
+.marker,
+.nav__inner,
+.nav__brand,
+.nav__end,
+.nav__links,
+.about__pillar-label,
+.footer__inner,
+.footer__lockup,
+.footer__brand {
+  display: flex;
+  align-items: center;
+}
+
+/* Inline blocks that centre their own contents. */
+.btn,
+.theme-toggle,
+.svc-card__icon,
+.work-card__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Services and Work are the same panel; only their internals differ. */
+.svc-card,
+.work-card {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
 /* ───────────────────────── Signal marker ─────────────────────────
    Micro pulse + technical label. Replaces the old eyebrow entirely. */
 .marker {
-  display: flex;
-  align-items: center;
   gap: 9px;
-  font-family: var(--font-mono), monospace;
-  font-size: 10.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
   line-height: 1;
 }
 .marker__mark {
@@ -169,24 +277,17 @@ p {
 }
 
 /* ───────────────────────── Buttons ───────────────────────── */
+/* Shorthand sets the timing, longhand narrows what it applies to — one --t per
+   rule instead of one per property. Same pattern everywhere below. */
 .btn {
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
+  font-size: var(--label-sm);
   font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
   padding: 15px 26px;
-  border-radius: 3px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   border: 1px solid transparent;
+  border-radius: var(--r-sm);
   cursor: pointer;
-  transition:
-    transform 0.15s ease,
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
+  transition: var(--t);
+  transition-property: transform, background, border-color, color;
 }
 .btn--primary {
   background: var(--coral);
@@ -219,10 +320,9 @@ p {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 50;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
   border-bottom: 1px solid transparent;
+  transition: var(--t);
+  transition-property: background, border-color;
 }
 .nav--scrolled {
   background: var(--scrim);
@@ -234,41 +334,31 @@ p {
   margin: 0 auto;
   padding: 0 var(--pad);
   height: var(--nav-h);
-  display: flex;
-  align-items: center;
   justify-content: space-between;
 }
-.nav__brand {
-  display: flex;
-  align-items: center;
-  gap: 11px;
+/* The wordmark lockup, identical top and bottom of the page. */
+.nav__brand,
+.footer__brand {
+  gap: 10px;
 }
+/* The wordmark holds its own tracking — it is the logo, not a label, and
+   should not move if the scale is ever retuned. */
 .nav__name,
 .footer__name {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 500;
   font-size: 14px;
   letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text);
 }
 .nav__end {
-  display: flex;
-  align-items: center;
   gap: 22px;
 }
 .nav__links {
-  display: flex;
-  align-items: center;
   gap: 28px;
 }
 .nav__link {
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: var(--label-sm);
+  letter-spacing: var(--track-tight);
   color: var(--text-mute);
-  transition: color 0.15s ease;
+  transition: color var(--t);
 }
 .nav__link:hover {
   color: var(--text);
@@ -290,10 +380,7 @@ p {
   border-bottom: 1px solid var(--line);
 }
 .nav__mobile-link {
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: var(--label-md);
   color: var(--text-dim);
   padding: 14px 0;
   border-top: 1px solid var(--line);
@@ -303,20 +390,16 @@ p {
    Reads as instrumentation, not decoration: same square footprint as the
    mobile menu button, same mono/technical language as the nav links. */
 .theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 32px;
   height: 32px;
   padding: 0;
   background: transparent;
   border: 1px solid var(--line);
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   color: var(--text-mute);
   cursor: pointer;
-  transition:
-    color 0.15s ease,
-    border-color 0.15s ease;
+  transition: var(--t);
+  transition-property: color, border-color;
 }
 .theme-toggle:hover {
   color: var(--text);
@@ -371,14 +454,10 @@ p {
   align-items: center;
 }
 .hero__title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 500;
   /* Bristone is extended: "SYSTEMS THAT HOLD" is 14.55em, so 68px = 989px of
      the 1068px container. Below ~500px the line wraps rather than shrinking. */
   font-size: clamp(34px, 6.2vw, 68px);
   line-height: 1.04;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
   margin-top: 28px;
 }
 .hero__field {
@@ -410,16 +489,12 @@ p {
   gap: 56px;
   align-items: start;
 }
-.about__title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 500;
-  /* Sits in the 0.425fr column (~430px at max width), so it scales off the
-     viewport far more slowly than the hero. Longest line is 10.73em. */
+/* Both section titles sit in a column rather than the full container, so they
+   scale off the viewport far more slowly than the hero. */
+.about__title,
+.contact__title {
   font-size: clamp(26px, 3.2vw, 36px);
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
-  margin-top: 18px;
+  line-height: 1.08;
 }
 .about__body p {
   color: var(--text-dim);
@@ -442,31 +517,14 @@ p {
   gap: 9px;
 }
 .about__pillar-label {
-  display: flex;
-  align-items: center;
   gap: 7px;
-  font-family: var(--font-mono), monospace;
-  font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
   color: var(--text);
 }
 .about__pillar-text {
   color: var(--text-mute);
   font-size: 13.5px;
   line-height: 1.55;
-}
-
-@media (max-width: 860px) {
-  .about__grid {
-    grid-template-columns: 1fr;
-    gap: 22px;
-  }
-  .about__pillars {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
 }
 
 /* ───────────────────────── Services ───────────────────────── */
@@ -506,13 +564,10 @@ p {
   gap: 15px;
   align-items: flex-start;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-top: 1.5px solid var(--line-strong);
-  border-radius: 4px;
+  border-top: 1.5px solid var(--line-strong); /* the lit edge */
   padding: 20px 22px;
-  transition:
-    border-top-color 0.18s ease,
-    border-color 0.18s ease;
+  transition: var(--t);
+  transition-property: border-top-color, border-color;
 }
 .svc-card:hover {
   border-top-color: var(--coral);
@@ -521,13 +576,10 @@ p {
   flex: 0 0 auto;
   width: 38px;
   height: 38px;
-  border-radius: 4px;
+  border-radius: var(--r-md);
   background: var(--surface);
   color: var(--text-mute);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.18s ease;
+  transition: color var(--t);
 }
 .svc-card:hover .svc-card__icon {
   color: var(--coral);
@@ -542,21 +594,11 @@ p {
   justify-content: space-between;
   gap: 12px;
 }
-.svc-card__title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 500;
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text);
-}
 .svc-card__index {
-  font-family: var(--font-mono), monospace;
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-tight);
   font-variant-numeric: tabular-nums;
   color: var(--text-mute);
-  transition: color 0.18s ease;
+  transition: color var(--t);
 }
 .svc-card:hover .svc-card__index {
   color: var(--signal);
@@ -578,12 +620,9 @@ p {
   display: flex;
   flex-direction: column;
   background: var(--surface-solid);
-  border: 1px solid var(--line);
-  border-radius: 4px;
   overflow: hidden;
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease;
+  transition: var(--t);
+  transition-property: transform, border-color;
 }
 .work-card:hover {
   transform: translateY(-3px);
@@ -608,18 +647,13 @@ p {
   position: absolute;
   top: 10px;
   left: 12px;
-  display: inline-flex;
-  align-items: center;
   gap: 7px;
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: var(--track-tight);
   color: var(--fog);
   background: rgba(16, 19, 18, 0.82);
   border: 1px solid rgba(242, 233, 220, 0.1);
   padding: 4px 9px;
-  border-radius: 3px;
+  border-radius: var(--r-sm);
 }
 /* Micro-chevron — the mark's first form at 45:129 with its true 11.2% inset. */
 .work-card__chip::before {
@@ -637,13 +671,7 @@ html[data-pulse="flipped"] .work-card__chip::before {
   padding: 15px 17px 18px;
 }
 .work-card__title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 500;
-  font-size: 12.5px;
-  letter-spacing: 0.1em;
   line-height: 1.5;
-  text-transform: uppercase;
-  color: var(--text);
 }
 .work-card__desc {
   margin-top: 9px;
@@ -662,15 +690,6 @@ html[data-pulse="flipped"] .work-card__chip::before {
   gap: 48px;
   align-items: start;
 }
-.contact__title {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 500;
-  font-size: clamp(26px, 3.2vw, 36px);
-  line-height: 1.08;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
-  margin-top: 18px;
-}
 .contact__lead {
   color: var(--text-dim);
   font-size: 15px;
@@ -681,12 +700,10 @@ html[data-pulse="flipped"] .work-card__chip::before {
 .contact__email {
   display: inline-block;
   margin-top: 22px;
-  font-family: var(--font-mono), monospace;
-  font-size: 13px;
-  letter-spacing: 0.04em;
+  font-size: var(--label-lg);
   color: var(--signal);
   border-bottom: 1px solid transparent;
-  transition: border-color 0.15s ease;
+  transition: border-color var(--t);
 }
 .contact__email:hover {
   border-bottom-color: var(--signal);
@@ -702,21 +719,17 @@ html[data-pulse="flipped"] .work-card__chip::before {
   gap: 8px;
 }
 .field__label {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
   color: var(--text-mute);
 }
 .field__input {
   background: var(--input-bg);
   border: 1px solid var(--line-strong);
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   padding: 13px 14px;
   color: var(--text);
   font-family: var(--font-body), sans-serif;
   font-size: 14px;
-  transition: border-color 0.15s ease;
+  transition: border-color var(--t);
 }
 .field__input::placeholder {
   color: var(--input-placeholder);
@@ -730,8 +743,7 @@ html[data-pulse="flipped"] .work-card__chip::before {
   min-height: 110px;
 }
 .form-note {
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
+  font-size: var(--label-md);
   line-height: 1.55;
   margin: 2px 0;
 }
@@ -748,62 +760,43 @@ html[data-pulse="flipped"] .work-card__chip::before {
   padding: 30px 0;
 }
 .footer__inner {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
 }
 .footer__lockup {
-  display: flex;
-  align-items: center;
   flex-wrap: wrap;
   gap: 10px;
 }
-.footer__brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 .footer__tagline {
-  font-family: var(--font-mono), monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  letter-spacing: var(--track-wide);
   color: var(--text-mute);
   padding-left: 14px;
   margin-left: 4px;
   border-left: 1px solid var(--line-strong);
 }
 .footer__links {
-  display: flex;
   gap: 24px;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: var(--label-sm);
+  letter-spacing: var(--track-tight);
   color: var(--text-mute);
 }
 .footer__links a:hover {
   color: var(--text);
 }
 .footer__copy {
-  font-family: var(--font-mono), monospace;
   color: var(--text-mute);
-  font-size: 11px;
-  letter-spacing: 0.06em;
 }
 
-/* ───────────────────────── Responsive ───────────────────────── */
+/* ───────────────────────── Responsive ─────────────────────────
+   One block per breakpoint. A component that changes at 860px changes here,
+   not next to its own rules. */
 @media (max-width: 860px) {
   :root {
     --pad: 18px;
   }
   .section {
     padding: 64px 0;
-  }
-  .about {
-    padding: 68px 0;
   }
   .nav__links {
     display: none;
@@ -817,6 +810,25 @@ html[data-pulse="flipped"] .work-card__chip::before {
   .nav__mobile {
     display: flex;
   }
+  .hero__cta {
+    flex-direction: column;
+    width: 100%;
+    max-width: 320px;
+  }
+  .hero__cta .btn {
+    width: 100%;
+  }
+  .about {
+    padding: 68px 0;
+  }
+  .about__grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .about__pillars {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
   .svc-grid {
     grid-template-columns: 1fr;
   }
@@ -826,14 +838,6 @@ html[data-pulse="flipped"] .work-card__chip::before {
   .contact__inner {
     grid-template-columns: 1fr;
     gap: 32px;
-  }
-  .hero__cta {
-    flex-direction: column;
-    width: 100%;
-    max-width: 320px;
-  }
-  .hero__cta .btn {
-    width: 100%;
   }
   .footer__tagline {
     padding-left: 0;
@@ -850,21 +854,28 @@ html[data-pulse="flipped"] .work-card__chip::before {
 }
 
 /* ───────────────────────── Theme flip ─────────────────────────
-   Colour transitions are switched on only for the ~300ms around a flip, so the
-   theme cross-fades instead of snapping — and nothing pays for it at rest.
-   ThemeToggle adds and removes the class. Must stay above the reduced-motion
-   block: equal !important weight, so the later rule wins. */
+   Surfaces cross-fade for the ~300ms around a flip, so the theme doesn't snap
+   — and nothing pays for it at rest. ThemeToggle adds and removes the class.
+   Must stay above the reduced-motion block: equal !important weight, so the
+   later rule wins.
+
+   `color` is deliberately absent. The two themes are near-exact inversions, so
+   interpolating text and page together puts both on the same mid-grey halfway
+   across (0.5·f2 + 0.5·17 = 0x84 either way) and the copy vanishes mid-flip.
+   Text now takes its new colour immediately and the background rises to meet
+   it, which reads as a fade-in rather than a dropout.
+
+   Icons inherit this: they draw with `currentColor`, so they snap with the
+   text. `fill`/`stroke` stay in the list only to cover SVG that sets a theme
+   token on them directly — nothing does today, and the hero convergence lines
+   won't ever, since gradient stop-colors don't transition. */
 html.theme-anim,
 html.theme-anim *,
 html.theme-anim *::before,
 html.theme-anim *::after {
-  transition:
-    background-color 0.28s ease,
-    background-image 0.28s ease,
-    border-color 0.28s ease,
-    color 0.28s ease,
-    fill 0.28s ease,
-    stroke 0.28s ease !important;
+  transition: var(--t-theme) !important;
+  transition-property: background-color, background-image, border-color, fill,
+    stroke !important;
 }
 
 /* ───────────────────────── Reduced motion ───────────────────────── */
