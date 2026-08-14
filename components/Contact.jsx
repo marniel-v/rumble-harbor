@@ -54,7 +54,7 @@ export default function Contact() {
       <PatternField className="contact__pattern" />
       <div className="container contact__inner">
         <div className="contact__intro">
-          <SignalMarker label="Get in touch" meta="Channel" status="Open" />
+          <SignalMarker label="Get in touch" />
           <h2 className="contact__title">
             Let&apos;s build
             <br />

@@ -62,12 +62,7 @@ export default function Services() {
     <section className="services section" id="services">
       <FrequencyField className="services__field" />
       <div className="container services__inner">
-        <SignalMarker
-          label="Capabilities"
-          meta="Core Modules"
-          status="Active"
-          className="marker--section"
-        />
+        <SignalMarker label="Capabilities" className="marker--section" />
 
         <div className="svc-grid">
           {services.map(({ key, index, title, body, Icon }) => (

@@ -225,6 +225,7 @@ p {
 .about__pillar-label,
 .footer__inner,
 .footer__lockup,
+.footer__links,
 .footer__brand {
   display: flex;
   align-items: center;
@@ -827,13 +828,17 @@ html[data-pulse="flipped"] .work-card__chip::before {
   border-left: 1px solid var(--line-strong);
 }
 .footer__links {
-  gap: 24px;
+  flex-wrap: wrap;
+  gap: 10px 28px;
   font-size: var(--label-sm);
   letter-spacing: var(--track-tight);
   color: var(--text-mute);
 }
+.footer__links a {
+  transition: color var(--t);
+}
 .footer__links a:hover {
-  color: var(--text);
+  color: var(--signal);
 }
 .footer__copy {
   color: var(--text-mute);
