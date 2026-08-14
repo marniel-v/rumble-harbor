@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import SignalMarker from "@/components/SignalMarker";
 
 const initial = { name: "", email: "", message: "" };
 
@@ -51,9 +52,13 @@ export default function Contact() {
     <section className="contact section" id="contact">
       <div className="container contact__inner">
         <div className="contact__intro">
-          <p className="eyebrow">GET IN TOUCH</p>
+          <SignalMarker label="Get in touch" meta="Channel" status="Open" />
           <h2 className="contact__title">
-            SET IT IN <span className="grad">MOTION</span>
+            Let&apos;s build
+            <br />
+            something
+            <br />
+            that holds<span className="stop">.</span>
           </h2>
           <p className="contact__lead">
             Tell us what you have in mind and we&apos;ll get back to you within
@@ -116,7 +121,7 @@ export default function Contact() {
             type="submit"
             disabled={status === "sending"}
           >
-            {status === "sending" ? "SENDING…" : "SEND MESSAGE"}
+            {status === "sending" ? "Transmitting…" : "Send message"}
           </button>
         </form>
       </div>

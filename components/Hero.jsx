@@ -1,32 +1,37 @@
-import { WaveLine } from "@/components/Icons";
+import { PulseField } from "@/components/Icons";
+import SignalMarker from "@/components/SignalMarker";
 
 export default function Hero() {
   return (
     <section className="hero" id="top">
       <div className="container hero__inner">
-        <span className="eyebrow eyebrow--boxed">EST 2026</span>
+        <SignalMarker
+          label="Software Engineering"
+          meta="For Complex Systems"
+          status="Est 2026"
+        />
 
         <h1 className="hero__title">
-          MOMENTUM
+          Systems That Hold
           <br />
-          <span className="grad">ENGINEERED</span>
+          Under Pressure<span className="stop">.</span>
         </h1>
 
-        <div className="hero__wave">
-          <WaveLine />
+        <div className="hero__field">
+          <PulseField />
         </div>
 
         <p className="hero__lead">
-          Shipping software that&apos;s built to scale, easy to maintain, and
-          fast — across web and mobile.
+          We don&apos;t just ship features. We build the architecture underneath
+          them — across web, mobile, and cloud.
         </p>
 
         <div className="hero__cta">
           <a href="#contact" className="btn btn--primary">
-            BOOK A CALL
+            Book a call
           </a>
           <a href="#work" className="btn btn--ghost">
-            SEE OUR WORK
+            See the work
           </a>
         </div>
       </div>

@@ -1,21 +1,24 @@
-import WaveMark from "@/components/WaveMark";
+import PulseMark from "@/components/PulseMark";
 
 export default function Footer() {
   const year = new Date().getFullYear();
   return (
     <footer className="footer">
       <div className="container footer__inner">
-        <a
-          href="#top"
-          className="footer__brand"
-          aria-label="Rumble Harbor home"
-        >
-          <WaveMark size={22} />
-          <span className="footer__name">Rumble Harbor</span>
-        </a>
+        <div className="footer__lockup">
+          <a
+            href="#top"
+            className="footer__brand"
+            aria-label="Rumble Harbor home"
+          >
+            <PulseMark size={12} />
+            <span className="footer__name">Rumble Harbor</span>
+          </a>
+          <span className="footer__tagline">Built to hold.</span>
+        </div>
         <nav className="footer__links" aria-label="Footer">
           <a href="#about">About</a>
-          <a href="#services">Services</a>
+          <a href="#services">Capabilities</a>
           <a href="#work">Work</a>
           <a href="#contact">Contact</a>
         </nav>

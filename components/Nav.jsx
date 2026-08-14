@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import WaveMark from "@/components/WaveMark";
+import PulseMark from "@/components/PulseMark";
+import ThemeToggle from "@/components/ThemeToggle";
 import { IconMenu, IconClose } from "@/components/Icons";
 
 const links = [
   { label: "About", href: "#about" },
-  { label: "Services", href: "#services" },
+  { label: "Capabilities", href: "#services" },
   { label: "Work", href: "#work" },
   { label: "Contact", href: "#contact" },
 ];
@@ -26,26 +27,32 @@ export default function Nav() {
     <header className={`nav ${scrolled ? "nav--scrolled" : ""}`}>
       <div className="nav__inner">
         <a href="#top" className="nav__brand" aria-label="Rumble Harbor home">
-          <WaveMark />
+          <PulseMark size={13} />
           <span className="nav__name">Rumble Harbor</span>
         </a>
 
-        <nav className="nav__links" aria-label="Primary">
-          {links.map((l) => (
-            <a key={l.href} href={l.href} className="nav__link">
-              {l.label}
-            </a>
-          ))}
-        </nav>
+        {/* Links collapse into the mobile sheet; the theme control never does
+            — it stays reachable at every width. */}
+        <div className="nav__end">
+          <nav className="nav__links" aria-label="Primary">
+            {links.map((l) => (
+              <a key={l.href} href={l.href} className="nav__link">
+                {l.label}
+              </a>
+            ))}
+          </nav>
 
-        <button
-          className="nav__toggle"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-label={open ? "Close menu" : "Open menu"}
-        >
-          {open ? <IconClose /> : <IconMenu />}
-        </button>
+          <ThemeToggle />
+
+          <button
+            className="nav__toggle"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-label={open ? "Close menu" : "Open menu"}
+          >
+            {open ? <IconClose /> : <IconMenu />}
+          </button>
+        </div>
       </div>
 
       {open && (

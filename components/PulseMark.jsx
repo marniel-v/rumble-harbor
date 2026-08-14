@@ -1,22 +1,62 @@
 /**
  * The Pulse — Rumble Harbor's mark.
- * Energy in motion: three forms compressing left to right, the last resolving
- * to a point. Always Signal Coral unless placed on coral itself.
+ * Energy in motion: three forms receding across the mark, each stepping down and
+ * tapering harder than the last. Always Signal Coral unless placed on coral.
+ *
+ * Official vector. These three paths are the source of truth for the mark —
+ * `PulseField` in Icons.jsx imports them. `app/icon.svg` is a static asset and
+ * has to carry its own copy; update it alongside any change here.
  */
-export default function PulseMark({ size = 16, className, color = "#F25F57" }) {
+export const PULSE_W = 155;
+export const PULSE_H = 129;
+export const PULSE_VIEWBOX = `0 0 ${PULSE_W} ${PULSE_H}`;
+
+export const PULSE_SHAPES = [
+  "M0 0 L45 15 L45 115 L0 129 Z",
+  "M65 23 L104 35 L104 96 L65 107 Z",
+  "M124 42 L155 51 L155 80 L124 89 Z",
+];
+
+/**
+ * ── The direction switch ─────────────────────────────────────────────────────
+ * Which way the pulse travels:
+ *   false — forms recede left to right, largest first (the supplied vector)
+ *   true  — mirrored on the Y axis, receding right to left
+ *
+ * Flip this one constant to change the whole site: nav, footer, signal markers,
+ * About pillars, the hero convergence field, and the work-card chips all follow.
+ * `app/icon.svg` is a static file and cannot read this — it carries a one-line
+ * note showing the same flip.
+ *
+ * Individual instances can still override with the `flip` prop, e.g. to show
+ * both directions side by side.
+ */
+export const PULSE_FLIPPED = true;
+
+/** Mirrors in place: x -> PULSE_W - x, so the forms stay inside the viewBox. */
+export const PULSE_FLIP_TRANSFORM = `translate(${PULSE_W} 0) scale(-1 1)`;
+
+export default function PulseMark({
+  size = 16,
+  className,
+  color = "var(--coral)",
+  flip = PULSE_FLIPPED,
+}) {
   return (
     <svg
       className={className}
-      width={(size * 100) / 60}
+      width={(size * PULSE_W) / PULSE_H}
       height={size}
-      viewBox="0 0 100 60"
+      viewBox={PULSE_VIEWBOX}
       fill={color}
       aria-hidden="true"
       style={{ display: "block", flex: "none" }}
     >
-      <path d="M0 0 L34 11.4 L34 48.6 L0 60 Z" />
-      <path d="M42 8 L70 16.4 L70 43.6 L42 52 Z" />
-      <path d="M78 15 L100 30 L78 45 Z" />
+      <g transform={flip ? PULSE_FLIP_TRANSFORM : undefined}>
+        {PULSE_SHAPES.map((d) => (
+          <path key={d} d={d} />
+        ))}
+      </g>
     </svg>
   );
 }

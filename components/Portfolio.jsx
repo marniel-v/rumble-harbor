@@ -1,3 +1,5 @@
+import SignalMarker from "@/components/SignalMarker";
+
 function MotifAnalytics() {
   return (
     <svg
@@ -6,7 +8,7 @@ function MotifAnalytics() {
       role="img"
       aria-label="Analytics dashboard"
     >
-      <g stroke="#16203a" strokeWidth="1">
+      <g stroke="#2B2F2D" strokeWidth="1">
         <line x1="28" y1="96" x2="282" y2="96" />
         <line x1="28" y1="70" x2="282" y2="70" />
         <line x1="28" y1="44" x2="282" y2="44" />
@@ -18,7 +20,7 @@ function MotifAnalytics() {
           width="24"
           height="36"
           rx="3"
-          fill="#2F68EC"
+          fill="#8C918F"
           opacity=".5"
         />
         <rect
@@ -27,7 +29,7 @@ function MotifAnalytics() {
           width="24"
           height="54"
           rx="3"
-          fill="#2F68EC"
+          fill="#8C918F"
           opacity=".62"
         />
         <rect
@@ -36,7 +38,7 @@ function MotifAnalytics() {
           width="24"
           height="44"
           rx="3"
-          fill="#2F68EC"
+          fill="#8C918F"
           opacity=".54"
         />
         <rect
@@ -45,20 +47,20 @@ function MotifAnalytics() {
           width="24"
           height="70"
           rx="3"
-          fill="#3F9BE0"
+          fill="#6E7573"
           opacity=".8"
         />
-        <rect x="232" y="14" width="24" height="82" rx="3" fill="#34E1E1" />
+        <rect x="232" y="14" width="24" height="82" rx="3" fill="#A5AAA7" />
       </g>
       <polyline
         points="76,54 118,38 160,46 202,22 244,12"
         fill="none"
-        stroke="#34E1E1"
+        stroke="#F25F57"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <g fill="#060c1c" stroke="#34E1E1" strokeWidth="1.5">
+      <g fill="#101312" stroke="#F25F57" strokeWidth="1.5">
         <circle cx="76" cy="54" r="2.6" />
         <circle cx="118" cy="38" r="2.6" />
         <circle cx="160" cy="46" r="2.6" />
@@ -77,7 +79,7 @@ function MotifLogistics() {
       role="img"
       aria-label="Logistics route"
     >
-      <g fill="#16203a">
+      <g fill="#2B2F2D">
         <circle cx="50" cy="30" r="1.3" />
         <circle cx="90" cy="30" r="1.3" />
         <circle cx="130" cy="30" r="1.3" />
@@ -100,7 +102,7 @@ function MotifLogistics() {
       <path
         d="M48,90 C78,84 82,46 108,46 C136,46 144,76 164,76"
         fill="none"
-        stroke="#2F68EC"
+        stroke="#8C918F"
         strokeWidth="2.2"
         strokeDasharray="6 6"
         strokeLinecap="round"
@@ -108,22 +110,22 @@ function MotifLogistics() {
       <path
         d="M164,76 C196,76 206,36 230,32"
         fill="none"
-        stroke="#34E1E1"
+        stroke="#F25F57"
         strokeWidth="2.4"
         strokeLinecap="round"
       />
-      <g fill="#060c1c" stroke="#2F68EC" strokeWidth="2">
+      <g fill="#101312" stroke="#8C918F" strokeWidth="2">
         <circle cx="48" cy="90" r="5" />
         <circle cx="108" cy="46" r="5" />
         <circle cx="164" cy="76" r="5" />
       </g>
-      <circle cx="230" cy="32" r="6.5" fill="#34E1E1" />
+      <circle cx="230" cy="32" r="6.5" fill="#F25F57" />
       <circle
         cx="230"
         cy="32"
         r="11"
         fill="none"
-        stroke="#34E1E1"
+        stroke="#F25F57"
         strokeWidth="1.2"
         opacity=".5"
       />
@@ -152,7 +154,7 @@ function MotifERP() {
           <path
             d="M2 2L7 5L2 8"
             fill="none"
-            stroke="#34E1E1"
+            stroke="#F25F57"
             strokeWidth="1.6"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -166,8 +168,8 @@ function MotifERP() {
           width="56"
           height="32"
           rx="7"
-          fill="#0a1330"
-          stroke="#2F68EC"
+          fill="#1C201E"
+          stroke="#8C918F"
           strokeWidth="1.4"
         />
         <rect
@@ -176,8 +178,8 @@ function MotifERP() {
           width="56"
           height="32"
           rx="7"
-          fill="#0a1330"
-          stroke="#34E1E1"
+          fill="#1C201E"
+          stroke="#F25F57"
           strokeWidth="1.6"
         />
         <rect
@@ -186,8 +188,8 @@ function MotifERP() {
           width="56"
           height="32"
           rx="7"
-          fill="#0a1330"
-          stroke="#2F68EC"
+          fill="#1C201E"
+          stroke="#8C918F"
           strokeWidth="1.4"
         />
         <line
@@ -195,7 +197,7 @@ function MotifERP() {
           y1="68"
           x2="120"
           y2="68"
-          stroke="#34E1E1"
+          stroke="#F25F57"
           strokeWidth="1.6"
           markerEnd="url(#erpArrow)"
         />
@@ -204,13 +206,13 @@ function MotifERP() {
           y1="68"
           x2="202"
           y2="68"
-          stroke="#34E1E1"
+          stroke="#F25F57"
           strokeWidth="1.6"
           markerEnd="url(#erpArrow)"
         />
 
         {/* Manufacturing — cog */}
-        <g stroke="#2F68EC" strokeWidth="1.4" fill="none">
+        <g stroke="#8C918F" strokeWidth="1.4" fill="none">
           <circle cx="68" cy="68" r="6" />
           <circle cx="68" cy="68" r="2.3" />
           <g strokeLinecap="round">
@@ -226,7 +228,7 @@ function MotifERP() {
         </g>
 
         {/* Billing — receipt */}
-        <g stroke="#34E1E1" fill="none" strokeLinejoin="round">
+        <g stroke="#F25F57" fill="none" strokeLinejoin="round">
           <path
             d="M142,57 H158 V77 l-2,2.5 l-2,-2.5 l-2,2.5 l-2,-2.5 l-2,2.5 l-2,-2.5 l-2,2.5 l-2,-2.5 Z"
             strokeWidth="1.4"
@@ -240,15 +242,15 @@ function MotifERP() {
 
         {/* Shipping — truck */}
         <g
-          stroke="#2F68EC"
+          stroke="#8C918F"
           strokeWidth="1.4"
           fill="none"
           strokeLinejoin="round"
         >
           <rect x="218" y="60" width="15" height="12" rx="1.5" />
           <path d="M233,63 H242 L246,67 V72 H233 Z" />
-          <circle cx="224" cy="73" r="2.2" fill="#0a1330" />
-          <circle cx="240" cy="73" r="2.2" fill="#0a1330" />
+          <circle cx="224" cy="73" r="2.2" fill="#1C201E" />
+          <circle cx="240" cy="73" r="2.2" fill="#1C201E" />
         </g>
       </g>
     </svg>
@@ -263,7 +265,7 @@ function MotifDetection() {
       role="img"
       aria-label="Label detection"
     >
-      <g stroke="#16203a" strokeWidth="1">
+      <g stroke="#2B2F2D" strokeWidth="1">
         <line x1="80" y1="16" x2="80" y2="100" />
         <line x1="140" y1="16" x2="140" y2="100" />
         <line x1="200" y1="16" x2="200" y2="100" />
@@ -274,9 +276,9 @@ function MotifDetection() {
         cx="118"
         cy="58"
         r="19"
-        fill="#2F68EC"
+        fill="#8C918F"
         opacity=".22"
-        stroke="#2F68EC"
+        stroke="#8C918F"
         strokeWidth="1.2"
       />
       <rect
@@ -285,18 +287,18 @@ function MotifDetection() {
         width="48"
         height="38"
         rx="7"
-        fill="#3F9BE0"
+        fill="#6E7573"
         opacity=".2"
-        stroke="#3F9BE0"
+        stroke="#6E7573"
         strokeWidth="1.2"
       />
-      <g stroke="#34E1E1" strokeWidth="2" fill="none" strokeLinecap="round">
+      <g stroke="#F25F57" strokeWidth="2" fill="none" strokeLinecap="round">
         <path d="M92,41 V32 H101" />
         <path d="M135,32 H144 V41" />
         <path d="M92,75 V84 H101" />
         <path d="M135,84 H144 V75" />
       </g>
-      <g stroke="#2F68EC" strokeWidth="1.8" fill="none" strokeLinecap="round">
+      <g stroke="#8C918F" strokeWidth="1.8" fill="none" strokeLinecap="round">
         <path d="M178,52 V44 H186" />
         <path d="M234,44 H242 V52" />
         <path d="M178,90 V98 H186" />
@@ -315,11 +317,11 @@ function MotifScan3D() {
       aria-label="Structured-light 3D scan"
     >
       <g transform="translate(0,-4)">
-        <g stroke="#34E1E1" strokeWidth="1" opacity=".3">
+        <g stroke="#6E7573" strokeWidth="1" opacity=".55">
           <line x1="108" y1="50" x2="192" y2="50" />
           <line x1="104" y1="74" x2="196" y2="74" />
         </g>
-        <g stroke="#2F68EC" strokeWidth="1.4" strokeLinecap="round">
+        <g stroke="#8C918F" strokeWidth="1.4" strokeLinecap="round">
           <line x1="150" y1="24" x2="104" y2="58" />
           <line x1="150" y1="24" x2="196" y2="58" />
           <line x1="150" y1="24" x2="168" y2="82" />
@@ -329,21 +331,22 @@ function MotifScan3D() {
           <line x1="104" y1="58" x2="168" y2="82" />
           <line x1="168" y1="82" x2="196" y2="58" />
         </g>
-        <g stroke="#2F68EC" strokeWidth="1" strokeLinecap="round" opacity=".4">
+        <g stroke="#8C918F" strokeWidth="1" strokeLinecap="round" opacity=".4">
           <line x1="150" y1="24" x2="132" y2="42" />
           <line x1="150" y1="100" x2="132" y2="42" />
           <line x1="196" y1="58" x2="132" y2="42" />
           <line x1="132" y1="42" x2="104" y2="58" />
         </g>
-        <g fill="#34E1E1">
-          <circle cx="150" cy="24" r="2.6" />
+        <g fill="#A5AAA7">
           <circle cx="150" cy="100" r="2.6" />
           <circle cx="104" cy="58" r="2.6" />
           <circle cx="196" cy="58" r="2.6" />
           <circle cx="168" cy="82" r="2.6" />
           <circle cx="132" cy="42" r="2.2" opacity=".6" />
         </g>
-        <g fill="#34E1E1" opacity=".45">
+        {/* Apex — the one point that carries the signal. */}
+        <circle cx="150" cy="24" r="3.2" fill="#F25F57" />
+        <g fill="#6E7573" opacity=".7">
           <circle cx="124" cy="70" r="1.3" />
           <circle cx="178" cy="50" r="1.3" />
           <circle cx="150" cy="88" r="1.3" />
@@ -363,7 +366,7 @@ function MotifCloud() {
       role="img"
       aria-label="Cloud control plane"
     >
-      <g stroke="#2F68EC" strokeWidth="1.3" opacity=".7" strokeLinecap="round">
+      <g stroke="#8C918F" strokeWidth="1.3" opacity=".7" strokeLinecap="round">
         <line x1="150" y1="58" x2="150" y2="22" />
         <line x1="150" y1="58" x2="212" y2="94" />
         <line x1="150" y1="58" x2="88" y2="94" />
@@ -374,7 +377,7 @@ function MotifCloud() {
         y1="58"
         x2="240"
         y2="42"
-        stroke="#34E1E1"
+        stroke="#F25F57"
         strokeWidth="1.6"
         strokeLinecap="round"
       />
@@ -384,16 +387,16 @@ function MotifCloud() {
         width="14"
         height="14"
         rx="3"
-        fill="#060c1c"
-        stroke="#2F68EC"
+        fill="#101312"
+        stroke="#8C918F"
         strokeWidth="1.4"
       />
       <circle
         cx="240"
         cy="42"
         r="7"
-        fill="#060c1c"
-        stroke="#2F68EC"
+        fill="#101312"
+        stroke="#8C918F"
         strokeWidth="1.4"
       />
       <rect
@@ -402,24 +405,24 @@ function MotifCloud() {
         width="14"
         height="14"
         rx="3"
-        fill="#060c1c"
-        stroke="#2F68EC"
+        fill="#101312"
+        stroke="#8C918F"
         strokeWidth="1.4"
       />
       <circle
         cx="88"
         cy="94"
         r="7"
-        fill="#060c1c"
-        stroke="#2F68EC"
+        fill="#101312"
+        stroke="#8C918F"
         strokeWidth="1.4"
       />
       <circle
         cx="60"
         cy="42"
         r="7"
-        fill="#060c1c"
-        stroke="#2F68EC"
+        fill="#101312"
+        stroke="#8C918F"
         strokeWidth="1.4"
       />
       <rect
@@ -428,11 +431,11 @@ function MotifCloud() {
         width="24"
         height="24"
         rx="6"
-        fill="#0a1330"
-        stroke="#34E1E1"
+        fill="#1C201E"
+        stroke="#F25F57"
         strokeWidth="1.8"
       />
-      <circle cx="150" cy="58" r="3" fill="#34E1E1" />
+      <circle cx="150" cy="58" r="3" fill="#F25F57" />
     </svg>
   );
 }
@@ -456,7 +459,7 @@ const projects = [
     key: "erp",
     title: "Operations · ERP",
     chip: "Unified ERP",
-    desc: "A single ERP running an entire operation, inlcuding manufacturing and inventory, shipping, staff access and BoM and schematic version control.",
+    desc: "A single ERP running an entire operation, including manufacturing and inventory, shipping, staff access, and BoM and schematic version control.",
     Motif: MotifERP,
   },
   {
@@ -486,7 +489,11 @@ export default function Portfolio() {
   return (
     <section className="work section" id="work">
       <div className="container">
-        <p className="eyebrow">SELECTED WORK</p>
+        <SignalMarker
+          label="Selected work"
+          meta="Field record"
+          className="marker--section"
+        />
 
         <div className="work-grid">
           {projects.map((p) => {

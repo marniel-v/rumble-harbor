@@ -8,7 +8,7 @@ import PulseMark from "@/components/PulseMark";
 export default function SignalMarker({ label, meta, status, className = "" }) {
   return (
     <p className={`marker ${className}`}>
-      <PulseMark size={9} className="marker__mark" />
+      <PulseMark size={8} className="marker__mark" />
       <span className="marker__label">{label}</span>
       {meta && (
         <>

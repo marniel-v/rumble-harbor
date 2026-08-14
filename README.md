@@ -1,6 +1,6 @@
 # Rumble Harbor
 
-Single-page site for the Rumble Harbor custom software studio. Built with Next.js (App Router) and React.
+Single-page site for the Rumble Harbor software studio — *software engineering for complex systems*. Built with Next.js (App Router) and React.
 
 ## Run it
 
@@ -18,28 +18,79 @@ npm run build
 npm start
 ```
 
+## Brand
+
+The site is built directly on the Rumble Harbor identity.
+
+| Token | Colour | Role |
+| --- | --- | --- |
+| `--ink` | `#171A19` Harbor Ink | ~65% — the page |
+| `--ivory` | `#F2E9DC` Warm Ivory | ~25% — type, and the About band |
+| `--fog` | `#A5AAA7` Fog Grey | ~8% — secondary type, diagram structure |
+| `--coral` | `#F25F57` Signal Coral | ~2% — **the signal, used with intention** |
+
+**Coral rule:** coral only ever appears on the pulse mark, the live `status` slot of a
+signal marker, the primary button, focus rings, the contact address, a coral full stop
+after a headline, and exactly one element per portfolio motif. If you're adding coral
+somewhere else, you're probably overspending it.
+
+- **Type** — three roles, wired up via `next/font` in `app/layout.js` (all self-hosted,
+  no external requests):
+  - **Bristone Medium** (`app/fonts/BristoneMedium.ttf`) — display only. It is
+    **single-weight**, so always request `font-weight: 500`; asking for 700 makes the
+    browser fake a bold. It is also **unicase** (x-height = cap height) and very
+    extended (`H` is 0.958em, ~33% wider than a normal grotesque), which is why it
+    never touches body copy and why headings are sized well below their old values.
+  - **Inter** — paragraphs, leads, form inputs.
+  - **IBM Plex Mono** — every technical label: markers, nav, buttons, chips, field
+    labels, card indices.
+- **Voice** — *Complexity is inevitable. Fragility isn't.* Architecture before
+  abstraction. We don't just ship features, we build systems.
+- **Tagline** — *Built to hold.* (alternates: *Complexity, anchored.* / *Software under
+  pressure.* / *Systems that hold.*)
+
 ## What's inside
 
-- **`app/layout.js`** — loads the fonts (Michroma for display, Inter for body) via `next/font`, sets page metadata.
-- **`app/page.js`** — composes the four sections.
-- **`app/globals.css`** — all design tokens (colours, type, spacing) and section styling, including the static ripple.
-- **`components/`** — one file per section: `Nav`, `Hero`, `Services`, `Portfolio`, `Contact`, `Footer`, plus `WaveMark` (logo) and `Icons`.
+- **`app/layout.js`** — declares the three fonts via `next/font` and exposes them as
+  `--font-display` / `--font-body` / `--font-mono` on `<html>`, sets page metadata.
+- **`app/page.js`** — composes the five sections.
+- **`app/globals.css`** — all design tokens (palette, type, spacing) and section styling.
+- **`app/icon.svg`** — favicon: the pulse on Harbor Ink.
+- **`components/`** — one file per section: `Nav`, `Hero`, `About`, `Services`,
+  `Portfolio`, `Contact`, `Footer`, plus `PulseMark` (the logo), `SignalMarker`
+  (the `▸▸ LABEL / META / STATUS` eyebrow), and `Icons`.
 - **`app/api/contact/route.js`** — receives contact-form submissions.
 
 ## Sections
 
-1. **Hero** — name, statement, calls to action.
-2. **Services** — what we do, with the left-edge gradient ripple.
-3. **Work** — portfolio grid (image-ready cards).
-4. **Contact** — working form with validation.
+1. **Hero** — descriptor, "Systems that hold under pressure.", the convergence field.
+2. **About** — the Warm Ivory band. Voice statement plus the three pillars
+   (Architecture / Control / Stability).
+3. **Capabilities** — four core modules over a faint frequency-field texture.
+4. **Work** — portfolio grid, each card a line diagram carrying a single coral accent.
+5. **Contact** — working form with validation.
 
 ## Things you'll want to change
 
-- **Logo** — `components/WaveMark.jsx` is a placeholder wave mark. Drop your real logo SVG in here.
-- **Typeface** — display type uses **Michroma** (a free Google Font, the closest web-embeddable match to Bank Gothic). If you license Bank Gothic, self-host it and replace the `Michroma` import in `app/layout.js` and the `--font-display` references.
-- **Colours** — every colour is a token at the top of `app/globals.css` (`--bg`, `--blue`, `--cyan`, …).
-- **Portfolio images** — set the `image` field for each project in `components/Portfolio.jsx` to a path like `/work/fintech.jpg` (put files in `public/work/`). Cards render a placeholder until then.
-- **Contact delivery** — `app/api/contact/route.js` currently logs submissions. Plug in an email provider (Resend, Postmark, SendGrid, Nodemailer) where the comment marks the spot.
+- **Logo** — `components/PulseMark.jsx` holds the pulse as three vector paths on a
+  `155 x 129` viewBox. Swap those three paths and everything follows: nav, footer,
+  signal markers, About pillars and the hero field. `app/icon.svg` is a static asset
+  and carries its own copy, so update it alongside.
+- **Mark direction** — `PULSE_FLIPPED` in `components/PulseMark.jsx` mirrors the mark
+  on its Y axis. It is the single switch for the whole site: flip it and the JSX
+  instances take an SVG transform while `<html data-pulse>` flips the CSS-drawn
+  work-card chevrons to match. `app/icon.svg` can't read it — that file has a one-line
+  note showing the same flip. Individual instances can override with the `flip` prop
+  (`<PulseMark flip />`) if you want both directions on screen at once.
+- **Graphic language** — `PulseField` in `components/Icons.jsx` is the *convergence*
+  motif. *Propagation*, *resonance*, *compression*, and *damping* are the other forms
+  in the brand's graphic language if you want variants per section.
+- **Portfolio images** — the cards currently render inline SVG motifs. To use photos,
+  replace `<Motif />` in `components/Portfolio.jsx` with an `<img>` / `next/image`
+  pointing at `public/work/`.
+- **Contact delivery** — `app/api/contact/route.js` currently logs submissions. Plug in
+  an email provider (Resend, Postmark, SendGrid, Nodemailer) where the comment marks
+  the spot.
 
 ## Notes
 

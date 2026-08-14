@@ -1,4 +1,5 @@
 import { IconWorld, IconMobile, IconScan } from "@/components/Icons";
+import SignalMarker from "@/components/SignalMarker";
 
 function IconServer({ size = 18 }) {
   return (
@@ -8,7 +9,7 @@ function IconServer({ size = 18 }) {
       height={size}
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -23,38 +24,30 @@ function IconServer({ size = 18 }) {
 const services = [
   {
     key: "web",
-    title: "WEB & CLOUD",
+    index: "01",
+    title: "Web & Cloud",
     body: "Full-stack apps and platforms, integrated with the major cloud providers and built to scale.",
-    accent: "var(--cyan)",
-    tint: "rgba(52,225,225,0.16)",
-    color: "#7ef0f0",
     Icon: IconWorld,
   },
   {
     key: "mobile",
-    title: "MOBILE & GAME",
+    index: "02",
+    title: "Mobile & Game",
     body: "Native iOS and Android apps from a single shared codebase. Multi-platform game development, from prototype to launch.",
-    accent: "#36a6e6",
-    tint: "rgba(54,166,230,0.16)",
-    color: "#8fcdf2",
     Icon: IconMobile,
   },
   {
     key: "ai",
-    title: "AI & VISION",
+    index: "03",
+    title: "AI & Vision",
     body: "Neural networks and image recognition at the core, with LLM features and automation ready when you need them.",
-    accent: "#3f9be0",
-    tint: "rgba(47,104,236,0.16)",
-    color: "#7ea4f5",
     Icon: IconScan,
   },
   {
     key: "ops",
-    title: "MANAGED OPS",
+    index: "04",
+    title: "Managed Ops",
     body: "Cloud ops, handled. We deploy, secure, scale, and maintain your apps so you can keep building.",
-    accent: "var(--blue)",
-    tint: "rgba(63,155,224,0.16)",
-    color: "#9fcdf2",
     Icon: IconServer,
   },
 ];
@@ -63,23 +56,24 @@ export default function Services() {
   return (
     <section className="services section" id="services">
       <div className="container services__inner">
-        <p className="eyebrow services__eyebrow">WHAT WE DO</p>
+        <SignalMarker
+          label="Capabilities"
+          meta="Core Modules"
+          status="Active"
+          className="marker--section"
+        />
 
         <div className="svc-grid">
-          {services.map(({ key, title, body, accent, tint, color, Icon }) => (
-            <article
-              key={key}
-              className="svc-card"
-              style={{ borderTopColor: accent }}
-            >
-              <span
-                className="svc-card__icon"
-                style={{ background: tint, color }}
-              >
+          {services.map(({ key, index, title, body, Icon }) => (
+            <article key={key} className="svc-card">
+              <span className="svc-card__icon">
                 <Icon />
               </span>
               <div className="svc-card__text">
-                <h3 className="svc-card__title">{title}</h3>
+                <div className="svc-card__head">
+                  <h3 className="svc-card__title">{title}</h3>
+                  <span className="svc-card__index">{index}</span>
+                </div>
                 <p className="svc-card__body">{body}</p>
               </div>
             </article>

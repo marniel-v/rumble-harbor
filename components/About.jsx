@@ -1,14 +1,32 @@
+import PulseMark from "@/components/PulseMark";
+import SignalMarker from "@/components/SignalMarker";
+
+const pillars = [
+  {
+    label: "Architecture",
+    text: "Structure before abstraction. The shape of the system comes first.",
+  },
+  {
+    label: "Control",
+    text: "Force, contained. Predictable behaviour under real load.",
+  },
+  {
+    label: "Stability",
+    text: "Built to hold when traffic, data, and deadlines arrive at once.",
+  },
+];
+
 export default function About() {
   return (
-    <section className="section" id="about">
+    <section className="section about" id="about">
       <div className="container">
         <div className="about__grid">
           <div>
-            <p className="eyebrow">ABOUT US</p>
+            <SignalMarker label="About" meta="The Studio" />
             <h2 className="about__title">
-              NEW STUDIO,
+              Complex Problems
               <br />
-              <span className="grad">DEEP ROOTS</span>
+              Calmly Engineered<span className="stop">.</span>
             </h2>
           </div>
 
@@ -24,28 +42,19 @@ export default function About() {
               That experience spans analytics-driven SaaS for B2B and C2B,
               logistics platforms for budget estimation and reporting, and ERP
               systems for manufacturing and shipping. Different domains, one way
-              of working.
+              of working — architecture before abstraction, every time.
             </p>
 
             <div className="about__pillars">
-              <div className="about__pillar">
-                <span className="about__pillar-label">SCALABLE</span>
-                <span className="about__pillar-text">
-                  Built to grow with your users and your data.
-                </span>
-              </div>
-              <div className="about__pillar">
-                <span className="about__pillar-label">MAINTAINABLE</span>
-                <span className="about__pillar-text">
-                  Clean codebases your team can live in.
-                </span>
-              </div>
-              <div className="about__pillar">
-                <span className="about__pillar-label">FAST</span>
-                <span className="about__pillar-text">
-                  Performance treated as a feature, not an afterthought.
-                </span>
-              </div>
+              {pillars.map((p) => (
+                <div className="about__pillar" key={p.label}>
+                  <span className="about__pillar-label">
+                    <PulseMark size={8} />
+                    {p.label}
+                  </span>
+                  <span className="about__pillar-text">{p.text}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

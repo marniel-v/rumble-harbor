@@ -1,7 +1,13 @@
+import {
+  PULSE_SHAPES,
+  PULSE_FLIPPED,
+  PULSE_FLIP_TRANSFORM,
+} from "@/components/PulseMark";
+
 const base = {
   fill: "none",
   stroke: "currentColor",
-  strokeWidth: 2,
+  strokeWidth: 1.5,
   strokeLinecap: "round",
   strokeLinejoin: "round",
 };
@@ -77,29 +83,101 @@ export function IconClose({ size = 22 }) {
   );
 }
 
-export function WaveLine({ className }) {
+/** Shown in dark mode: press for light. */
+export function IconSun({ size = 16 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} {...base}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2.5M12 19.5V22M4.22 4.22l1.77 1.77M18.01 18.01l1.77 1.77M2 12h2.5M19.5 12H22M4.22 19.78l1.77-1.77M18.01 5.99l1.77-1.77" />
+    </svg>
+  );
+}
+
+/** Shown in light mode: press for dark. */
+export function IconMoon({ size = 16 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} {...base}>
+      <path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2Z" />
+    </svg>
+  );
+}
+
+/**
+ * Convergence — from the brand's graphic language. Frequency lines collapse
+ * from both edges into the pulse. Force, focused and held.
+ */
+export function PulseField({ className }) {
+  const rows = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
+  const mid = 38; // centre line of the 76-unit band
+  const apexL = 250;
+  const apexR = 350;
+
   return (
     <svg
       className={className}
-      viewBox="0 0 600 48"
+      viewBox="0 0 600 76"
       width="100%"
-      height="34"
-      preserveAspectRatio="none"
+      height="76"
+      preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="lw-wave" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#2F68EC" stopOpacity="0.12" />
-          <stop offset="0.5" stopColor="#34E1E1" />
-          <stop offset="1" stopColor="#2F68EC" stopOpacity="0.12" />
+        <linearGradient
+          id="rh-converge-l"
+          gradientUnits="userSpaceOnUse"
+          x1="0"
+          y1="0"
+          x2={apexL}
+          y2="0"
+        >
+          <stop offset="0" stopColor="var(--field-stroke)" stopOpacity="0" />
+          <stop offset="1" stopColor="var(--field-stroke)" stopOpacity="0.85" />
+        </linearGradient>
+        <linearGradient
+          id="rh-converge-r"
+          gradientUnits="userSpaceOnUse"
+          x1="600"
+          y1="0"
+          x2={apexR}
+          y2="0"
+        >
+          <stop offset="0" stopColor="var(--field-stroke)" stopOpacity="0" />
+          <stop offset="1" stopColor="var(--field-stroke)" stopOpacity="0.85" />
         </linearGradient>
       </defs>
-      <path
-        d="M0,24 C25,6 75,6 100,24 S175,42 200,24 S275,6 300,24 S375,42 400,24 S475,6 500,24 S575,42 600,24"
-        fill="none"
-        stroke="url(#lw-wave)"
-        strokeWidth="2"
-      />
+
+      <g strokeWidth="1" fill="none">
+        {rows.map((i) => (
+          <line
+            key={`l${i}`}
+            x1="0"
+            y1={mid + i * 6.8}
+            x2={apexL}
+            y2={mid}
+            stroke="url(#rh-converge-l)"
+          />
+        ))}
+        {rows.map((i) => (
+          <line
+            key={`r${i}`}
+            x1="600"
+            y1={mid + i * 6.8}
+            x2={apexR}
+            y2={mid}
+            stroke="url(#rh-converge-r)"
+          />
+        ))}
+      </g>
+
+      {/* 155 x 129 scaled to 55.8 x 46.44, centred on (300, 38). The field is
+          symmetrical, so only the mark itself responds to PULSE_FLIPPED. */}
+      <g transform="translate(272.1 14.78) scale(0.36)" fill="var(--coral)">
+        <g transform={PULSE_FLIPPED ? PULSE_FLIP_TRANSFORM : undefined}>
+          {PULSE_SHAPES.map((d) => (
+            <path key={d} d={d} />
+          ))}
+        </g>
+      </g>
     </svg>
   );
 }
