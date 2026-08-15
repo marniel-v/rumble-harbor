@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import SignalMarker from "@/components/SignalMarker";
+import PulseText from "@/components/PulseText";
 import { PatternField } from "@/components/Icons";
 
 const initial = { name: "", email: "", message: "" };
@@ -52,81 +53,84 @@ export default function Contact() {
   return (
     <section className="contact section" id="contact">
       <PatternField className="contact__pattern" />
-      <div className="container contact__inner">
-        <div className="contact__intro">
-          <SignalMarker label="Get in touch" />
-          <h2 className="contact__title">
-            Let&apos;s build
-            <br />
-            something
-            <br />
-            that holds<span className="stop">.</span>
-          </h2>
-          <p className="contact__lead">
-            Tell us what you have in mind and we&apos;ll get back to you within
-            a day or two.
-          </p>
-          <a className="contact__email" href="mailto:hello@rumbleharbor.com">
-            hello@rumbleharbor.com
-          </a>
+
+      <PulseText>
+        <div className="container contact__inner">
+          <div className="contact__intro">
+            <SignalMarker label="Get in touch" />
+            <h2 className="contact__title">
+              Let&apos;s build
+              <br />
+              something
+              <br />
+              that holds<span className="stop">.</span>
+            </h2>
+            <p className="contact__lead">
+              Tell us what you have in mind and we&apos;ll get back to you
+              within a day or two.
+            </p>
+            <a className="contact__email" href="mailto:hello@rumbleharbor.com">
+              hello@rumbleharbor.com
+            </a>
+          </div>
+
+          <form className="contact__form" onSubmit={onSubmit} noValidate>
+            <label className="field">
+              <span className="field__label">Name</span>
+              <input
+                className="field__input"
+                type="text"
+                value={form.name}
+                onChange={update("name")}
+                placeholder="Your name"
+                autoComplete="name"
+              />
+            </label>
+
+            <label className="field">
+              <span className="field__label">Email</span>
+              <input
+                className="field__input"
+                type="email"
+                value={form.email}
+                onChange={update("email")}
+                placeholder="you@company.com"
+                autoComplete="email"
+              />
+            </label>
+
+            <label className="field">
+              <span className="field__label">Project</span>
+              <textarea
+                className="field__input field__input--area"
+                rows={4}
+                value={form.message}
+                onChange={update("message")}
+                placeholder="A few lines about what you're building…"
+              />
+            </label>
+
+            {status === "error" && (
+              <p className="form-note form-note--error" role="alert">
+                {error}
+              </p>
+            )}
+            {status === "sent" && (
+              <p className="form-note form-note--ok" role="status">
+                Thanks, your message is in. We&apos;ll be in touch shortly.
+              </p>
+            )}
+
+            <button
+              className="btn btn--primary btn--block"
+              type="submit"
+              disabled={status === "sending"}
+            >
+              {status === "sending" ? "Transmitting…" : "Send message"}
+            </button>
+          </form>
         </div>
-
-        <form className="contact__form" onSubmit={onSubmit} noValidate>
-          <label className="field">
-            <span className="field__label">Name</span>
-            <input
-              className="field__input"
-              type="text"
-              value={form.name}
-              onChange={update("name")}
-              placeholder="Your name"
-              autoComplete="name"
-            />
-          </label>
-
-          <label className="field">
-            <span className="field__label">Email</span>
-            <input
-              className="field__input"
-              type="email"
-              value={form.email}
-              onChange={update("email")}
-              placeholder="you@company.com"
-              autoComplete="email"
-            />
-          </label>
-
-          <label className="field">
-            <span className="field__label">Project</span>
-            <textarea
-              className="field__input field__input--area"
-              rows={4}
-              value={form.message}
-              onChange={update("message")}
-              placeholder="A few lines about what you're building…"
-            />
-          </label>
-
-          {status === "error" && (
-            <p className="form-note form-note--error" role="alert">
-              {error}
-            </p>
-          )}
-          {status === "sent" && (
-            <p className="form-note form-note--ok" role="status">
-              Thanks, your message is in. We&apos;ll be in touch shortly.
-            </p>
-          )}
-
-          <button
-            className="btn btn--primary btn--block"
-            type="submit"
-            disabled={status === "sending"}
-          >
-            {status === "sending" ? "Transmitting…" : "Send message"}
-          </button>
-        </form>
-      </div>
+      </PulseText>
     </section>
   );
 }

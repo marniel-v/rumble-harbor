@@ -21,7 +21,7 @@ export default function Footer() {
         </div>
         <nav className="footer__links" aria-label="Footer">
           <a href="#about">About</a>
-          <a href="#services">Capabilities</a>
+          <a href="#services">Services</a>
           <a href="#work">Work</a>
           <a href="#contact">Contact</a>
         </nav>

@@ -70,7 +70,7 @@
 
   --scrim: rgba(23, 26, 25, 0.78); /* nav over scrolled content */
   --scrim-solid: rgba(23, 26, 25, 0.95);
-  --glow: rgba(242, 233, 220, 0.05); /* hero wash */
+  --glow: rgba(242, 233, 220, 0.09); /* hero wash */
   --field-stroke: #a5aaa7; /* every graphic-language field */
   --input-bg: rgba(242, 233, 220, 0.04);
   --input-placeholder: #7b807d;
@@ -441,7 +441,7 @@ p {
   background:
     radial-gradient(
       ellipse 55% 42% at 50% 0%,
-      rgba(242, 95, 87, 0.11),
+      rgba(242, 95, 87, 0.17),
       transparent 70%
     ),
     radial-gradient(ellipse 95% 60% at 50% 0%, var(--glow), transparent 72%);
@@ -930,8 +930,85 @@ html.theme-anim *,
 html.theme-anim *::before,
 html.theme-anim *::after {
   transition: var(--t-theme) !important;
-  transition-property: background-color, background-image, border-color, fill,
-    stroke !important;
+  transition-property:
+    background-color, background-image, border-color, fill, stroke !important;
+}
+
+/* ───────────────────────── PulseText ─────────────────────────
+   The children hold the real text and own the layout; one canvas spans the
+   whole block and is painted on top at the same metrics. Hiding the glyphs with
+   -webkit-text-fill-color rather than `color` is deliberate — it keeps `color`
+   readable in getComputedStyle, which is where the canvas gets its fill. It
+   also inherits, so the one rule covers any markup nested inside.
+
+   No type of its own: the wrapper is layout-neutral and the surrounding
+   section styles the text, so .about__body p and friends keep working through
+   it untouched.
+
+   The handover is a hard swap, deliberately. The canvas draws each glyph at
+   the position the browser itself reported, so the two renderings are pixel
+   identical and there is nothing for a fade to smooth over. Cross-fading them
+   actively hurt: halfway through you get the canvas at 50% opacity plus the
+   text at 50% fill, which composites to roughly 90% strength, so the copy
+   visibly dimmed and recovered. Swapping between identical images shows
+   nothing at all. Don't reintroduce a transition here.
+
+   The block is the positioning context: glyph coordinates are relative to its
+   border box. The pulse originates level with the top of this box, on the
+   viewport's horizontal centre line — so it always travels downwards, and stays
+   on the screen's axis even where the text column isn't centred. */
+.pulse-text {
+  position: relative;
+}
+
+/* Hero drops PulseText into a centred flex column. The wrapper becomes the
+   single flex item, so it has to carry that layout itself or the title, field
+   and lead stop being centred individually — `text-align` still inherits, so
+   the symptom is boxes sitting flush left while their text looks fine.
+   `align-self: stretch` gives the wrapper the full container width so the
+   inner max-widths have something to centre against. */
+.hero__pulse {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
+}
+
+/* Demo harness only (app/test) — a centred column, so the wavefront radiates
+   symmetrically about the middle of the screen. */
+.pulse-demo {
+  --pulse-demo-w: 84ch;
+}
+.pulse-demo > .marker,
+.pulse-demo__col {
+  max-width: var(--pulse-demo-w);
+  margin-inline: auto;
+}
+.pulse-demo__col p {
+  color: var(--text-dim);
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 0 0 18px;
+}
+.pulse-demo__col p:last-of-type {
+  margin-bottom: 0;
+}
+/* Offset by the padding the canvas carries so letters thrown past the block's
+   own bounds aren't clipped. Must match PAD in components/PulseText.jsx. */
+.pulse-text__canvas {
+  position: absolute;
+  top: -32px;
+  left: -32px;
+  opacity: 0;
+  pointer-events: none;
+}
+/* Only the live pulse hides the glyphs. Every other phase — including the
+   "idle" the server renders — leaves the text plainly readable. */
+.pulse-text[data-phase="running"] {
+  -webkit-text-fill-color: transparent;
+}
+.pulse-text[data-phase="running"] .pulse-text__canvas {
+  opacity: 1;
 }
 
 /* ───────────────────────── Reduced motion ───────────────────────── */

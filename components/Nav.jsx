@@ -7,7 +7,7 @@ import { IconMenu, IconClose } from "@/components/Icons";
 
 const links = [
   { label: "About", href: "#about" },
-  { label: "Capabilities", href: "#services" },
+  { label: "Services", href: "#services" },
   { label: "Work", href: "#work" },
   { label: "Contact", href: "#contact" },
 ];

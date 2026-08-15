@@ -1,6 +1,6 @@
 # Rumble Harbor
 
-Single-page site for the Rumble Harbor software studio — *software engineering for complex systems*. Built with Next.js (App Router) and React.
+Single-page site for the Rumble Harbor software studio — _software engineering for complex systems_. Built with Next.js (App Router) and React.
 
 ## Run it
 
@@ -22,11 +22,11 @@ npm start
 
 The site is built directly on the Rumble Harbor identity.
 
-| Token | Colour | Role |
-| --- | --- | --- |
-| `--ink` | `#171A19` Harbor Ink | ~65% — the page |
-| `--ivory` | `#F2E9DC` Warm Ivory | ~25% — type, and the About band |
-| `--fog` | `#A5AAA7` Fog Grey | ~8% — secondary type, diagram structure |
+| Token     | Colour                 | Role                                      |
+| --------- | ---------------------- | ----------------------------------------- |
+| `--ink`   | `#171A19` Harbor Ink   | ~65% — the page                           |
+| `--ivory` | `#F2E9DC` Warm Ivory   | ~25% — type, and the About band           |
+| `--fog`   | `#A5AAA7` Fog Grey     | ~8% — secondary type, diagram structure   |
 | `--coral` | `#F25F57` Signal Coral | ~2% — **the signal, used with intention** |
 
 **Coral rule:** coral only ever appears on the pulse mark, the live `status` slot of a
@@ -44,10 +44,10 @@ somewhere else, you're probably overspending it.
   - **Inter** — paragraphs, leads, form inputs.
   - **IBM Plex Mono** — every technical label: markers, nav, buttons, chips, field
     labels, card indices.
-- **Voice** — *Complexity is inevitable. Fragility isn't.* Architecture before
+- **Voice** — _Complexity is inevitable. Fragility isn't._ Architecture before
   abstraction. We don't just ship features, we build systems.
-- **Tagline** — *Built to hold.* (alternates: *Complexity, anchored.* / *Software under
-  pressure.* / *Systems that hold.*)
+- **Tagline** — _Built to hold._ (alternates: _Complexity, anchored._ / _Software under
+  pressure._ / _Systems that hold._)
 
 ## What's inside
 
@@ -66,7 +66,7 @@ somewhere else, you're probably overspending it.
 1. **Hero** — descriptor, "Systems that hold under pressure.", the convergence field.
 2. **About** — the Warm Ivory band. Voice statement plus the three pillars
    (Architecture / Control / Stability).
-3. **Capabilities** — four core modules over a faint frequency-field texture.
+3. **Services** — four core modules over a faint frequency-field texture.
 4. **Work** — portfolio grid, each card a line diagram carrying a single coral accent.
 5. **Contact** — working form with validation.
 
@@ -82,8 +82,8 @@ somewhere else, you're probably overspending it.
   work-card chevrons to match. `app/icon.svg` can't read it — that file has a one-line
   note showing the same flip. Individual instances can override with the `flip` prop
   (`<PulseMark flip />`) if you want both directions on screen at once.
-- **Graphic language** — `PulseField` in `components/Icons.jsx` is the *convergence*
-  motif. *Propagation*, *resonance*, *compression*, and *damping* are the other forms
+- **Graphic language** — `PulseField` in `components/Icons.jsx` is the _convergence_
+  motif. _Propagation_, _resonance_, _compression_, and _damping_ are the other forms
   in the brand's graphic language if you want variants per section.
 - **Portfolio images** — the cards currently render inline SVG motifs. To use photos,
   replace `<Motif />` in `components/Portfolio.jsx` with an `<img>` / `next/image`

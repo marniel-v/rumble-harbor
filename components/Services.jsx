@@ -5,6 +5,7 @@ import {
   FrequencyField,
 } from "@/components/Icons";
 import SignalMarker from "@/components/SignalMarker";
+import PulseText from "@/components/PulseText";
 
 function IconServer({ size = 18 }) {
   return (
@@ -62,24 +63,26 @@ export default function Services() {
     <section className="services section" id="services">
       <FrequencyField className="services__field" />
       <div className="container services__inner">
-        <SignalMarker label="Capabilities" className="marker--section" />
+        <SignalMarker label="Services" className="marker--section" />
 
-        <div className="svc-grid">
-          {services.map(({ key, index, title, body, Icon }) => (
-            <article key={key} className="svc-card">
-              <span className="svc-card__icon">
-                <Icon />
-              </span>
-              <div className="svc-card__text">
-                <div className="svc-card__head">
-                  <h3 className="svc-card__title">{title}</h3>
-                  <span className="svc-card__index">{index}</span>
+        <PulseText>
+          <div className="svc-grid">
+            {services.map(({ key, index, title, body, Icon }) => (
+              <article key={key} className="svc-card">
+                <span className="svc-card__icon">
+                  <Icon />
+                </span>
+                <div className="svc-card__text">
+                  <div className="svc-card__head">
+                    <h3 className="svc-card__title">{title}</h3>
+                    <span className="svc-card__index">{index}</span>
+                  </div>
+                  <p className="svc-card__body">{body}</p>
                 </div>
-                <p className="svc-card__body">{body}</p>
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        </PulseText>
       </div>
     </section>
   );
