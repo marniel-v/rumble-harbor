@@ -8,6 +8,7 @@ const WIDTH = 110; // half-width of the wavefront, px — how thick the pulse is
 const RIPPLE = 2.2; // push-then-pull cycles across the front
 const DOWN = 0.4; // downward bias added to the radial direction
 const SPAN = WIDTH * 3;
+const TAIL = WIDTH * 1.6; // front is past the last glyph by a still-visible margin
 const RAMP = 24;
 const PAD = 32;
 const VISIBLE = 0.25;
@@ -137,16 +138,15 @@ export default function PulseText({ children, className = "" }) {
 
     function frame(now) {
       const progress = clamp01((now - start) / (DURATION * 1000));
+      const eased = 1 - (1 - progress) ** 2.2;
+      const front = nearest - SPAN + eased * (reach - nearest + SPAN * 2);
 
-      if (progress >= 1) {
+      if (progress >= 1 || front >= reach + TAIL) {
         setPhase("settled");
         ro.disconnect();
         return;
       }
       setPhase("running");
-
-      const eased = 1 - (1 - progress) ** 2.2;
-      const front = nearest - SPAN + eased * (reach - nearest + SPAN * 2);
 
       ctx.save();
       ctx.setTransform(1, 0, 0, 1, 0, 0);

@@ -489,7 +489,7 @@ export default function Portfolio() {
   return (
     <section className="work section" id="work">
       <div className="container">
-        <SignalMarker label="Selected work" className="marker--section" />
+        <SignalMarker label="SELECTED WORK" className="marker--section" />
         <div className="work-grid">
           {projects.map((p) => {
             const Motif = p.Motif;

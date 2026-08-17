@@ -5,15 +5,15 @@ import { Resonance } from "@/components/Icons";
 
 const pillars = [
   {
-    label: "Architecture",
+    label: "ARCHITECTURE",
     text: "Structure before abstraction. The shape of the system comes first.",
   },
   {
-    label: "Control",
+    label: "CONTROL",
     text: "Force, contained. Predictable behaviour under real load.",
   },
   {
-    label: "Stability",
+    label: "STABILITY",
     text: "Built to hold when traffic, data, and deadlines arrive at once.",
   },
 ];
@@ -25,7 +25,7 @@ export default function About() {
         <PulseText>
           <div className="about__grid">
             <div>
-              <SignalMarker label="About" />
+              <SignalMarker label="ABOUT" />
               <h2 className="about__title">
                 Complex Problems
                 <br />
