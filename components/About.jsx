@@ -36,11 +36,11 @@ export default function About() {
 
             <div className="about__body">
               <p>
-                Rumble Harbor is a new studio, founded by full-stack engineers
-                with 14+ years of experience behind them. We work across the
-                whole stack focusing on web and cloud platforms, native iOS and
-                Android apps, multi-platform games, and machine-learning tools
-                built on neural networks and image recognition.
+                Founded by full-stack engineers with 14+ years of experience
+                behind them. We work across the whole stack focusing on web and
+                cloud platforms, native iOS and Android apps, multi-platform
+                games, and machine-learning tools built on neural networks and
+                image recognition.
               </p>
               <p>
                 That experience spans analytics-driven SaaS for B2B and C2B,

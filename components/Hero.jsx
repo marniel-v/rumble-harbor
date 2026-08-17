@@ -7,6 +7,7 @@ export default function Hero() {
     <section className="hero" id="top">
       <div className="container hero__inner">
         <PulseText className="hero__pulse">
+          <SignalMarker label="DEV HOUSE" status="EST 2026" icon={false} />
           <h1 className="hero__title">
             Systems That Hold
             <br />

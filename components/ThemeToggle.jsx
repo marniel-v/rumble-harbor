@@ -3,23 +3,9 @@
 import { useEffect, useState } from "react";
 import { IconSun, IconMoon } from "@/components/Icons";
 
-/**
- * Theme control.
- *
- * The system preference is the default and stays live — while the visitor has
- * made no choice, flipping the OS between light and dark flips the page with
- * it. Pressing this button is that choice: it pins a theme in localStorage and
- * the system stops being consulted.
- *
- * `data-theme` is already on <html> before first paint (see the inline script
- * in app/layout.js), so this component only ever reads it back — it must not
- * be the thing that sets the initial theme, or the page flashes.
- */
 export const THEME_KEY = "rh-theme";
 
 export default function ThemeToggle() {
-  // Deliberately not seeded from localStorage: the server can't read it, so
-  // seeding here would mismatch on hydrate. The effect below fills it in.
   const [theme, setTheme] = useState("dark");
 
   useEffect(() => {
@@ -31,12 +17,9 @@ export default function ThemeToggle() {
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: light)");
     const onSystemChange = (e) => {
-      // A pinned choice outranks the system.
       try {
         if (localStorage.getItem(THEME_KEY)) return;
-      } catch {
-        // Storage blocked — nothing is pinned, so follow the system.
-      }
+      } catch {}
       const next = e.matches ? "light" : "dark";
       document.documentElement.dataset.theme = next;
       setTheme(next);
@@ -55,10 +38,7 @@ export default function ThemeToggle() {
 
     try {
       localStorage.setItem(THEME_KEY, next);
-    } catch {
-      // Private mode / storage disabled: the flip still applies, it just
-      // won't survive a reload.
-    }
+    } catch {}
     setTheme(next);
   };
 

@@ -102,10 +102,6 @@ export function IconMoon({ size = 16 }) {
   );
 }
 
-/**
- * Convergence — from the brand's graphic language. Frequency lines collapse
- * from both edges into the pulse. Force, focused and held.
- */
 export function PulseField({ className }) {
   const rows = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
   const mid = 38; // centre line of the 76-unit band

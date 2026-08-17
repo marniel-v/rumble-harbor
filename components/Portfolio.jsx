@@ -1,5 +1,4 @@
 import SignalMarker from "@/components/SignalMarker";
-import PulseText from "@/components/PulseText";
 
 function MotifAnalytics() {
   return (
@@ -491,26 +490,23 @@ export default function Portfolio() {
     <section className="work section" id="work">
       <div className="container">
         <SignalMarker label="Selected work" className="marker--section" />
-
-        <PulseText>
-          <div className="work-grid">
-            {projects.map((p) => {
-              const Motif = p.Motif;
-              return (
-                <article key={p.key} className="work-card">
-                  <div className="work-card__media">
-                    <Motif />
-                    <span className="work-card__chip">{p.chip}</span>
-                  </div>
-                  <div className="work-card__body-wrap">
-                    <h3 className="work-card__title">{p.title}</h3>
-                    <p className="work-card__desc">{p.desc}</p>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </PulseText>
+        <div className="work-grid">
+          {projects.map((p) => {
+            const Motif = p.Motif;
+            return (
+              <article key={p.key} className="work-card">
+                <div className="work-card__media">
+                  <Motif />
+                  <span className="work-card__chip">{p.chip}</span>
+                </div>
+                <div className="work-card__body-wrap">
+                  <h3 className="work-card__title">{p.title}</h3>
+                  <p className="work-card__desc">{p.desc}</p>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

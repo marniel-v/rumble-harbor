@@ -5,10 +5,16 @@ import PulseMark from "@/components/PulseMark";
  * `label` carries the weight, `meta` qualifies it, `status` is the live bit
  * and is the only part that ever takes coral.
  */
-export default function SignalMarker({ label, meta, status, className = "" }) {
+export default function SignalMarker({
+  icon = true,
+  label,
+  meta,
+  status,
+  className = "",
+}) {
   return (
     <p className={`marker ${className}`}>
-      <PulseMark size={8} className="marker__mark" />
+      {icon && <PulseMark size={8} className="marker__mark" />}
       <span className="marker__label">{label}</span>
       {meta && (
         <>
