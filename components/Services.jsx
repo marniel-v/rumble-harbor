@@ -2,7 +2,7 @@ import {
   IconWorld,
   IconMobile,
   IconScan,
-  FrequencyField,
+  PatternField,
 } from "@/components/Icons";
 import SignalMarker from "@/components/SignalMarker";
 
@@ -60,7 +60,7 @@ const services = [
 export default function Services() {
   return (
     <section className="services section" id="services">
-      <FrequencyField className="services__field" />
+      <PatternField className="services__field" />
       <div className="container services__inner">
         <SignalMarker label="SERVICES" className="marker--section" />
         <div className="svc-grid">

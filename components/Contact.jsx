@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import SignalMarker from "@/components/SignalMarker";
-import { PatternField } from "@/components/Icons";
+import { SpectrumField } from "@/components/Icons";
 
 const initial = { name: "", email: "", message: "" };
 
@@ -51,17 +51,11 @@ export default function Contact() {
 
   return (
     <section className="contact section" id="contact">
-      <PatternField className="contact__pattern" />
+      <SpectrumField className="contact__pattern" />
       <div className="container contact__inner">
         <div className="contact__intro">
           <SignalMarker label="GET IN TOUCH" />
-          <h2 className="contact__title">
-            Let&apos;s build
-            <br />
-            something
-            <br />
-            that holds<span className="stop">.</span>
-          </h2>
+          <h2 className="contact__title">Set it in motion</h2>
           <p className="contact__lead">
             Tell us what you have in mind and we&apos;ll get back to you within
             a day or two.

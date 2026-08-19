@@ -13,7 +13,7 @@ export default function Footer() {
           >
             <span className="footer__name">
               Ru
-              <PulseMark inline />
+              <PulseMark inline gap={32} />
               ble Harbor
             </span>
           </a>

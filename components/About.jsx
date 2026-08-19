@@ -29,24 +29,26 @@ export default function About() {
               <h2 className="about__title">
                 Complex Problems
                 <br />
-                Calmly Engineered<span className="stop">.</span>
+                Calmly Engineered
               </h2>
               <Resonance className="about__resonance" />
             </div>
 
             <div className="about__body">
               <p>
-                Founded by full-stack engineers with 14+ years of experience
-                behind them. We work across the whole stack focusing on web and
-                cloud platforms, native iOS and Android apps, multi-platform
-                games, and machine-learning tools built on neural networks and
-                image recognition.
+                With Rumble Harbor, there's no team to hand your project down to
+                and no layers to lose your problem in. Just one engineer with
+                14+ years of experience, working end to end across web and cloud
+                platforms, native iOS and Android apps, multi-platform games,
+                and machine-learning tools spanning neural networks and computer
+                vision.
               </p>
               <p>
-                That experience spans analytics-driven SaaS for B2B and C2B,
-                logistics platforms for budget estimation and reporting, and ERP
-                systems for manufacturing and shipping. Different domains, one
-                way of working — architecture before abstraction, every time.
+                That experience runs from analytics SaaS for B2B and consumer
+                markets, through logistics platforms for estimation and
+                reporting, to ERP for manufacturing and shipping. Different
+                domains, one discipline: architecture before abstraction, every
+                time.
               </p>
 
               <div className="about__pillars">

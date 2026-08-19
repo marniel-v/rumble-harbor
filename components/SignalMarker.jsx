@@ -14,7 +14,7 @@ export default function SignalMarker({
 }) {
   return (
     <p className={`marker ${className}`}>
-      {icon && <PulseMark size={8} className="marker__mark" />}
+      {icon && <PulseMark size={8} className="marker__mark" gap={32} />}
       <span className="marker__label">{label}</span>
       {meta && (
         <>

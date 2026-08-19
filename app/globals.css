@@ -72,6 +72,10 @@
   --scrim-solid: rgba(23, 26, 25, 0.95);
   --glow: rgba(242, 233, 220, 0.09); /* hero wash */
   --field-stroke: #a5aaa7; /* every graphic-language field */
+  /* Spectrum reads three bands apart, so it needs the palette itself, not one
+     stroke: warm ivory carries, fog grey recedes. */
+  --field-ivory: var(--ivory);
+  --field-fog: var(--fog);
   --input-bg: rgba(242, 233, 220, 0.04);
   --input-placeholder: #7b807d;
 }
@@ -93,6 +97,10 @@
   --scrim-solid: rgba(242, 233, 220, 0.96);
   --glow: rgba(23, 26, 25, 0.05);
   --field-stroke: #7c837f;
+  /* Inverted: on ivory the warm band has to be the darker of the two to stay
+     the one that carries. */
+  --field-ivory: #6b6152;
+  --field-fog: #949b97;
   --input-bg: rgba(255, 255, 255, 0.55);
   --input-placeholder: #8b918d;
 }
@@ -151,11 +159,6 @@ p {
   scroll-margin-top: var(--nav-h);
 }
 
-/* Coral full stop — the smallest possible dose of signal. */
-.stop {
-  color: var(--signal);
-}
-
 /* ═════════════════════════ Primitives ═════════════════════════
    Defined once here; every component rule below is only a *delta*. All are
    single-class selectors, so those later rules win on source order — keep
@@ -206,6 +209,7 @@ p {
    back out instead of closing. */
 .nav__name,
 .footer__name,
+.transmission__word,
 .svc-card__title,
 .work-card__title {
   font-family: var(--font-display), sans-serif;
@@ -479,7 +483,7 @@ p {
   margin-top: 28px;
 }
 .hero__field {
-  width: min(600px, 100%);
+  width: 100%;
   margin-top: 22px;
 }
 .hero__lead {
@@ -520,6 +524,7 @@ p {
   line-height: 1.7;
   margin: 0 0 18px;
   max-width: 58ch;
+  text-align: justify;
 }
 .about__pillars {
   display: grid;
@@ -549,7 +554,6 @@ p {
 .about__resonance {
   display: block;
   width: 100%;
-  max-width: 320px;
   height: auto;
   margin-top: 34px;
 }
@@ -560,24 +564,31 @@ p {
   overflow: hidden;
 }
 /* Frequency fields — brand graphic language as ambient texture. The rays fade
-   along their own length; the mask only pulls them off the section edges. */
+   along their own length; held to the container column so the texture lines up
+   with the cards rather than running out to the viewport edges. */
 .services__field {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(min(100%, var(--maxw)) - var(--pad) * 2);
   height: 100%;
   -webkit-mask-image: radial-gradient(
-    ellipse 70% 80% at 0% 50%,
+    ellipse 70% 80% at 50% 50%,
     #000,
     transparent 75%
   );
-  mask-image: radial-gradient(ellipse 70% 80% at 0% 50%, #000, transparent 75%);
+  mask-image: radial-gradient(
+    ellipse 70% 80% at 50% 50%,
+    #000,
+    transparent 75%
+  );
   pointer-events: none;
 }
 /* Rays travel with the pulse, so the source swaps edges with it. Follows
    PULSE_FLIPPED in components/PulseMark.jsx, via <html data-pulse>. */
 html[data-pulse="flipped"] .services__field {
-  transform: scaleX(-1);
+  transform: translateX(-50%) scaleX(-1);
 }
 .services__inner {
   position: relative;
@@ -713,24 +724,27 @@ html[data-pulse="flipped"] .work-card__chip::before {
 .contact {
   position: relative;
   overflow: hidden;
-  border-top: 1px solid var(--line);
 }
-/* Pattern & texture — the wave surface, banked into the bottom-left so it sits
-   under the intro column and stays off the form. */
+/* Pattern & texture — the wave surface, held to the container column. The mask
+   only softens the edges now; the container is what keeps it off the gutters. */
 .contact__pattern {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(min(100%, var(--maxw)) - var(--pad) * 2);
+  height: 40%;
+  z-index: 0;
+  opacity: 0.4;
   -webkit-mask-image: radial-gradient(
-    ellipse 75% 85% at 18% 88%,
-    #000,
-    transparent 72%
+    ellipse 95% 100% at 50% 92%,
+    #000 62%,
+    transparent 100%
   );
   mask-image: radial-gradient(
-    ellipse 75% 85% at 18% 88%,
-    #000,
-    transparent 72%
+    ellipse 95% 100% at 50% 92%,
+    #000 62%,
+    transparent 100%
   );
   pointer-events: none;
 }
@@ -747,7 +761,6 @@ html[data-pulse="flipped"] .work-card__chip::before {
   font-size: 15px;
   line-height: 1.65;
   margin-top: 16px;
-  max-width: 380px;
 }
 .contact__email {
   display: inline-block;
@@ -900,12 +913,20 @@ html[data-pulse="flipped"] .work-card__chip::before {
     margin-left: 0;
     border-left: 0;
   }
+  .transmission__trace {
+    height: 70px;
+  }
 }
 
 @media (max-width: 520px) {
   .marker {
     flex-wrap: wrap;
     row-gap: 6px;
+  }
+  /* Under about 90px of run the noise is a smudge and the beats collide, so
+     the traces come off entirely rather than shrink into mush. */
+  .transmission__trace {
+    display: none;
   }
 }
 
@@ -932,6 +953,75 @@ html.theme-anim *::after {
   transition: var(--t-theme) !important;
   transition-property:
     background-color, background-image, border-color, fill, stroke !important;
+}
+
+/* ───────────────────────── Transmission ─────────────────────────
+   Noise in, wordmark, signal out — three items on one centre line. The traces
+   are the flexible pair and the lockup is fixed, so the type never resizes to
+   fit the box; the field just gives more or less run to the signal either side.
+   `min-width: 0` because SVG flex items otherwise refuse to go below their
+   intrinsic width and push the lockup off centre. */
+.transmission {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2.4vw, 30px);
+  width: 100%;
+}
+.transmission__trace {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 96px;
+}
+/* Stacked, unlike the nav lockup — the two words are near enough the same
+   width in Bristone that the block squares up on its own. Tight leading keeps
+   the pair reading as one mass for the traces to point at.
+
+   `flex-start` is load-bearing, not a default worth trimming. The two words are
+   different widths, so anything that lets them size independently of each other
+   breaks the shared left edge: the default `stretch` gives both spans the full
+   block width and the inherited `text-align: center` from .hero__inner then
+   centres each one inside its own box, and `center` misaligns them directly.
+   Start-aligned, each span shrinks to its own text, so the edge holds and
+   text-align stops mattering wherever this is dropped. */
+.transmission__mark {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  line-height: 0.98;
+}
+/* Justified to a common width, both edges — the lockup is a block, not two
+   centred lines. The column has no width of its own, so it takes the wider
+   line's natural width; `stretch` above then hands that same width to the
+   shorter line, which spreads its letters to fill it. Nothing is measured and
+   nothing is hard-coded against Bristone's metrics: whichever line is wider
+   sets the measure and keeps its own natural spacing, because it has no slack
+   to distribute.
+   `baseline` is what puts the mark back on the baseline — as a flex item it
+   has lost the `vertical-align` that .pulse--inline relies on. Tracking moves
+   to `gap`: letter-spacing would add a phantom advance after the final glyph
+   and hold the line off its own right edge, which is the bug this rule
+   exists to fix. */
+.transmission__word {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.02em;
+  letter-spacing: normal;
+  font-size: clamp(34px, 6.2vw, 68px);
+}
+/* The mark still needs its optical nudge — the heavy edge lands on the right
+   under PULSE_FLIPPED, so an evenly distributed gap reads as a tight one and
+   the B closes on it — but not the full inline correction. Nav and Footer set
+   the mark in running text where the only thing holding it off the next letter
+   is tracking; here the distribution already opens every pair, so most of that
+   0.3em is being paid twice. Scoped rather than changed at source, since the
+   two cases genuinely want different numbers.
+   This trades against `gap` above: the margin widens the item, leaving less
+   free space to share, so raising it also pulls the other pairs in. */
+.transmission__word .pulse--inline {
+  margin-right: 0.16em;
 }
 
 /* ───────────────────────── PulseText ─────────────────────────

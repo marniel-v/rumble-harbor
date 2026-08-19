@@ -30,8 +30,7 @@ The site is built directly on the Rumble Harbor identity.
 | `--coral` | `#F25F57` Signal Coral | ~2% — **the signal, used with intention** |
 
 **Coral rule:** coral only ever appears on the pulse mark, the live `status` slot of a
-signal marker, the primary button, focus rings, the contact address, a coral full stop
-after a headline, and exactly one element per portfolio motif. If you're adding coral
+signal marker, the primary button, focus rings, the contact address, and exactly one element per portfolio motif. If you're adding coral
 somewhere else, you're probably overspending it.
 
 - **Type** — three roles, wired up via `next/font` in `app/layout.js` (all self-hosted,

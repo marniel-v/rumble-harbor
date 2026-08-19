@@ -1,8 +1,16 @@
 import {
-  PULSE_SHAPES,
+  generatePulse,
   PULSE_FLIPPED,
   PULSE_FLIP_TRANSFORM,
 } from "@/components/PulseMark";
+
+/** 32-bit integer hash — exact in doubles, so it is stable across engines.
+    Every field that needs noise reads off this, so server and client agree. */
+export const hash = (i) => {
+  let h = Math.imul(i ^ 0x9e3779b9, 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+};
 
 const base = {
   fill: "none",
@@ -169,7 +177,7 @@ export function PulseField({ className }) {
           symmetrical, so only the mark itself responds to PULSE_FLIPPED. */}
       <g transform="translate(272.1 14.78) scale(0.36)" fill="var(--coral)">
         <g transform={PULSE_FLIPPED ? PULSE_FLIP_TRANSFORM : undefined}>
-          {PULSE_SHAPES.map((d) => (
+          {generatePulse().map((d) => (
             <path key={d} d={d} />
           ))}
         </g>
@@ -241,17 +249,49 @@ export function FrequencyField({ className }) {
  * Resonance — from the brand's graphic language. One wave carried five times
  * at stepped phase: they pinch at the crossings and open between them. Same
  * frequency reinforcing itself, with the mark riding it.
+ *
+ * The box reads left to right as the five finding each other. They enter out of
+ * phase and off frequency, and both disagreements close by `settled` — from
+ * there on it is the stepped-phase figure and nothing else, which is where the
+ * mark sits. The chaos is added to that figure rather than replacing it, so the
+ * right of the box is the resonance and the left is it not having arrived yet.
  */
 export function Resonance({ className }) {
   const W = 320;
   const mid = 60;
   const amp = 34;
   const k = (2 * Math.PI) / 160; // two cycles across the box
+  const settled = 0.6; // where the disagreement is gone — the mark's own x
 
-  const wave = (phase) => {
+  // 1 at the left edge, 0 from `settled` on. Smoothstep run backwards: flat at
+  // both ends, so the field holds its chaos for a moment and then eases out of
+  // it instead of visibly closing on a deadline.
+  const unsettled = (t) => {
+    const u = Math.min(1, t / settled);
+    return (1 - u) * (1 - u) * (1 + 2 * u);
+  };
+
+  const wave = (j) => {
     let d = "";
     for (let x = 0; x <= W; x += 4) {
-      const y = mid + amp * Math.sin(k * x + phase);
+      const c = unsettled(x / W);
+      // Louder on the way in, closing to the figure's own amplitude: out of
+      // step alone reads as the same quiet wave merely offset. Swell, fan and
+      // drift together stay inside the box — 34 · 1.3 · 1.16 + 5 ≈ 56 against
+      // the 60 from `mid` to the edge — so raising any of them needs the other
+      // two checked.
+      const swell = 1 + 0.3 * c;
+      // The fan on its own reads as five tidy copies sliding apart, so each
+      // copy also carries a second wave at its own frequency — that is what
+      // makes them disagree rather than merely spread.
+      const drift = c * 5 * Math.sin(k * x * (1 + 0.37 * j) + 2.1 * j);
+      const y =
+        mid +
+        amp *
+          swell *
+          (1 + 0.08 * c * j) *
+          Math.sin(k * x + j * 0.4 + c * j * 1.7) +
+        drift;
       d += `${x === 0 ? "M" : "L"}${x} ${y.toFixed(1)}`;
     }
     return d;
@@ -274,8 +314,11 @@ export function Resonance({ className }) {
           y2="0"
         >
           <stop offset="0" stopColor="var(--field-stroke)" stopOpacity="0" />
+          {/* In earlier than the trailing edge fades out: the unsettled stretch
+              runs to 0.6, and a 0.26 ramp would spend most of it on ink that is
+              not there yet. */}
           <stop
-            offset="0.26"
+            offset="0.16"
             stopColor="var(--field-stroke)"
             stopOpacity="0.8"
           />
@@ -290,18 +333,135 @@ export function Resonance({ className }) {
 
       <g stroke="url(#rh-resonance)" strokeWidth="1" fill="none">
         {[-2, -1, 0, 1, 2].map((j) => (
-          <path key={j} d={wave(j * 0.4)} />
+          <path key={j} d={wave(j)} />
         ))}
       </g>
 
       {/* 155 x 129 at 0.2 = 31 x 25.8, centred on (198, 60). */}
-      <g transform="translate(182.5 47.1) scale(0.2)" fill="var(--coral)">
+      <g transform="translate(185.5 50.1) scale(0.2)" fill="var(--coral)">
         <g transform={PULSE_FLIPPED ? PULSE_FLIP_TRANSFORM : undefined}>
-          {PULSE_SHAPES.map((d) => (
+          {generatePulse().map((d) => (
             <path key={d} d={d} />
           ))}
         </g>
       </g>
+    </svg>
+  );
+}
+
+/**
+ * Spectrum — from the brand's graphic language. Three frequency bands stacked
+ * back to front, each running the full width, one per brand colour: fog grey
+ * behind, warm ivory carrying, coral in front. The two behind are noise floors;
+ * the coral one is the signal — it stays low across the band and takes the
+ * resonance at a point, which is the only place anything reaches full height.
+ *
+ * Every band is the same construction at different weights, so the shape is in
+ * the numbers rather than in three separate bits of code: a hashed noise floor,
+ * a broad `shoulder` working on the band around the resonance, and `peak`/
+ * `flank` giving the spike its tip and its ragged base. The bands share a
+ * resonance but not a seed — they agree about where the signal is and disagree
+ * everywhere else, and that disagreement is the depth.
+ *
+ * They sit on one grid rather than interleaving: a taller bar behind shows its
+ * top above the one in front, which is what makes the stack read as depth
+ * instead of as three times the bars. Nothing is dimmed to sell that depth —
+ * the bands are opaque and separate on colour alone.
+ *
+ * Heights are hashed off the bar index, not Math.random, so the server and the
+ * client draw the same field. The resonance sits at 42% across; moving `centre`
+ * moves all three bands together, since they read off the same curves.
+ */
+export function SpectrumField({ className }) {
+  const W = 600;
+  const H = 200;
+  const bars = 96;
+  const barW = 4.2; // against a 6.25 step — bars read as a band, not a comb
+  const centre = 0.42;
+
+  // The palette in prominence order, which is also the order the bands are
+  // drawn in — fog at the back, coral in front.
+  const tones = {
+    fog: "var(--field-fog)",
+    ivory: "var(--field-ivory)",
+    coral: "var(--coral)",
+  };
+
+  // Back to front, as fractions of the height. The coral band is the odd one:
+  // almost no floor, so it runs as a low rumble the noise bands sit on top of
+  // until the resonance takes it past them.
+  const bands = [
+    { tone: "fog", seed: 977, base: 0.055, noise: 0.33, shoulder: -0.06, peak: 0.03, flank: 0.05 }, // prettier-ignore
+    { tone: "ivory", seed: 431, base: 0.055, noise: 0.33, shoulder: -0.04, peak: 0.05, flank: 0.08 }, // prettier-ignore
+    { tone: "coral", seed: 0, base: 0.02, noise: 0.08, shoulder: 0.05, peak: 0.78, flank: 0.24 }, // prettier-ignore
+  ];
+
+  const bell = (d, sigma) => Math.exp(-(d * d) / (2 * sigma * sigma));
+
+  const bar = (i, band) => {
+    const t = i / (bars - 1);
+    const d = t - centre;
+    // The tip alone is a needle; the flank under it is what gives the spike a
+    // base wide enough to read as a peak rather than a stray bar.
+    const signal = band.peak * bell(d, 0.026) + band.flank * bell(d, 0.045);
+    const shoulder = bell(d, 0.1); // the band the resonance works on
+    const n = hash(i + band.seed);
+    // Noise is damped by the signal it sits under, or the spike comes out
+    // ragged instead of tapering. A negative `shoulder` thins a band out where
+    // the coral rises — the noise bands take it that way so they stay flat and
+    // grainy and leave the spike the only thing with height.
+    const floor =
+      (band.base + band.noise * n + band.shoulder * shoulder * (0.45 + 0.55 * n)) * // prettier-ignore
+      (1 - 0.55 * signal);
+    // Clamped, since a band ducking harder than its own floor would otherwise
+    // ask for a negative bar.
+    const h = Math.max(0.02, Math.min(1, floor + signal));
+    return { x: t * (W - barW), h: h * H };
+  };
+
+  return (
+    <svg
+      className={className}
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      {/* All three fade on the same schedule, or one outlasts the others at the
+          edges and the field ends on a colour it never starts on. */}
+      <defs>
+        {Object.entries(tones).map(([tone, colour]) => (
+          <linearGradient
+            key={tone}
+            id={`rh-spectrum-${tone}`}
+            gradientUnits="userSpaceOnUse"
+            x1="0"
+            y1="0"
+            x2={W}
+            y2="0"
+          >
+            <stop offset="0" stopColor={colour} stopOpacity="0" />
+            <stop offset="0.1" stopColor={colour} stopOpacity="1" />
+            <stop offset="0.9" stopColor={colour} stopOpacity="1" />
+            <stop offset="1" stopColor={colour} stopOpacity="0" />
+          </linearGradient>
+        ))}
+      </defs>
+
+      {bands.map((band, b) => (
+        <g key={b} fill={`url(#rh-spectrum-${band.tone})`}>
+          {Array.from({ length: bars }, (_, i) => bar(i, band)).map(
+            ({ x, h }, i) => (
+              <rect
+                key={i}
+                x={x.toFixed(2)}
+                y={(H - h).toFixed(2)}
+                width={barW}
+                height={h.toFixed(2)}
+              />
+            ),
+          )}
+        </g>
+      ))}
     </svg>
   );
 }
@@ -380,13 +540,7 @@ export function PatternField({ className }) {
             (129 * scale) / 2
           ).toFixed(1)}) scale(${scale})`}
           fill="var(--coral)"
-        >
-          <g transform={PULSE_FLIPPED ? PULSE_FLIP_TRANSFORM : undefined}>
-            {PULSE_SHAPES.map((d) => (
-              <path key={d} d={d} />
-            ))}
-          </g>
-        </g>
+        />
       ))}
     </svg>
   );

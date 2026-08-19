@@ -1,4 +1,4 @@
-import { PulseField } from "@/components/Icons";
+import Transmission from "@/components/Transmission";
 import PulseText from "@/components/PulseText";
 import SignalMarker from "@/components/SignalMarker";
 
@@ -6,23 +6,13 @@ export default function Hero() {
   return (
     <section className="hero" id="top">
       <div className="container hero__inner">
-        <PulseText className="hero__pulse">
-          <SignalMarker label="DEV HOUSE" status="EST 2026" icon={false} />
-          <h1 className="hero__title">
-            Systems That Hold
-            <br />
-            Under Pressure<span className="stop">.</span>
-          </h1>
+        <SignalMarker label="DEV HOUSE" status="EST 2026" icon={false} />
 
-          <div className="hero__field">
-            <PulseField />
-          </div>
+        <div className="hero__field">
+          <Transmission />
+        </div>
 
-          <p className="hero__lead">
-            We don&apos;t just ship features. We build the architecture
-            underneath them — across web, mobile, and cloud.
-          </p>
-        </PulseText>
+        <p className="hero__lead">From signal to system.</p>
 
         <div className="hero__cta">
           <a href="#contact" className="btn btn--primary">

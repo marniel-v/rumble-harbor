@@ -29,7 +29,7 @@ export default function Nav() {
         <a href="#top" className="nav__brand" aria-label="Rumble Harbor home">
           <span className="nav__name">
             Ru
-            <PulseMark inline />
+            <PulseMark inline gap={32} />
             ble Harbor
           </span>
         </a>
