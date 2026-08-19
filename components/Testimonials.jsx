@@ -18,20 +18,30 @@ const quotes = [
   {
     key: "logistics",
     text: "We came in with a half-finished estimation platform and a hard deadline. It shipped on time, and the architecture has held through every load spike since.",
-    role: "Head of Engineering",
-    sector: "Logistics SaaS",
+    name: "Chris Ryan",
+    photo: "/testimonials/chris-ryan.jpeg",
+    linkedin:
+      "https://ae.linkedin.com/in/chris-ryan-14557619https://ae.linkedin.com/in/chris-ryan-14557619",
+    role: "VP",
+    sector: "DSV - Global Products",
   },
   {
     key: "analytics",
-    text: "One person, no handoffs, no translation layer. The thing we described in the first call is the thing that went to production.",
-    role: "Founder",
-    sector: "B2B Analytics",
+    text: `He is a highly skilled engineer, a strong people person, and someone who genuinely understands business
+requirements. He has an excellent ability to translate those needs into reliable, secure, and well-engineered
+software.`,
+    name: "Dave Blakey",
+    photo: "/testimonials/dave-blakey.jpeg",
+    linkedin: "https://za.linkedin.com/in/daveblakey",
+    role: "CTO",
+    sector: "October Health",
   },
   {
     key: "manufacturing",
     text: "The vision models were the easy part. Getting them into an ERP that runs a factory floor was the work, and it was handled end to end.",
-    role: "Operations Director",
-    sector: "Manufacturing",
+    name: "Alwyn Lubbe",
+    role: "Engineer",
+    sector: "Mecalc",
   },
 ];
 

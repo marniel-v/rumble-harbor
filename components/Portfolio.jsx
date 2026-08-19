@@ -445,7 +445,7 @@ const projects = [
     key: "analytics",
     title: "Analytics · Insights",
     chip: "Live dashboards",
-    desc: "A B2B analytics platform that turns workforce data into early employee mental-health signals, enabling proactive care.",
+    desc: "A B2B analytics platform that turns high-volume behavioural time-series into early risk signals, with per-signal attribution behind every score.",
     Motif: MotifAnalytics,
   },
   {
