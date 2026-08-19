@@ -57,8 +57,7 @@ export default function Contact() {
           <SignalMarker label="GET IN TOUCH" />
           <h2 className="contact__title">Set it in motion</h2>
           <p className="contact__lead">
-            Tell us what you have in mind and we&apos;ll get back to you within
-            a day or two.
+            Tell us what you have in mind and we&apos;ll get back to you soon.
           </p>
           <a className="contact__email" href="mailto:hello@rumbleharbor.com">
             hello@rumbleharbor.com

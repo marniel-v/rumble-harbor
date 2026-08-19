@@ -36,12 +36,11 @@ export default function About() {
 
             <div className="about__body">
               <p>
-                With Rumble Harbor, there's no team to hand your project down to
-                and no layers to lose your problem in. Just one engineer with
-                14+ years of experience, working end to end across web and cloud
-                platforms, native iOS and Android apps, multi-platform games,
-                and machine-learning tools spanning neural networks and computer
-                vision.
+                One engineer. 14+ years of experience. No handoffs, no layers,
+                nothing lost between the person you brief and the person who
+                builds it. I work end to end: web and cloud platforms, native
+                iOS and Android apps, multi-platform games, and machine-learning
+                tools spanning neural networks and computer vision.
               </p>
               <p>
                 That experience runs from analytics SaaS for B2B and consumer
