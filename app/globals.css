@@ -174,6 +174,8 @@ p {
 .about__pillar-label,
 .svc-card__index,
 .work-card__chip,
+.quote-card__meta,
+.quote-card__monogram,
 .field__label,
 .footer__tagline,
 .footer__links {
@@ -211,7 +213,8 @@ p {
 .footer__name,
 .transmission__word,
 .svc-card__title,
-.work-card__title {
+.work-card__title,
+.quote-card__name {
   font-family: var(--font-display), sans-serif;
   font-weight: 500;
   font-size: var(--label-lg);
@@ -227,6 +230,9 @@ p {
 .nav__end,
 .nav__links,
 .about__pillar-label,
+.quote-card__by,
+.quote-card__profile,
+.quote-card__meta,
 .footer__inner,
 .footer__lockup,
 .footer__links,
@@ -239,15 +245,18 @@ p {
 .btn,
 .theme-toggle,
 .svc-card__icon,
-.work-card__chip {
+.work-card__chip,
+.quote-card__monogram {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Services and Work are the same panel; only their internals differ. */
+/* Services, Work and Testimonials are the same panel; only their internals
+   differ. */
 .svc-card,
-.work-card {
+.work-card,
+.quote-card {
   border: 1px solid var(--line);
   border-radius: var(--r-md);
 }
@@ -720,6 +729,94 @@ html[data-pulse="flipped"] .work-card__chip::before {
   color: var(--text-mute);
 }
 
+/* ───────────────────────── Testimonials ─────────────────────────
+   The Work panel with the plate taken out — quote on top, attribution on the
+   baseline. Cards are pushed apart rather than sized, so a short quote and a
+   long one still sit their attribution rows on the same line. */
+.quote-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.quote-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  background: var(--surface);
+  border-top: 1.5px solid var(--line-strong); /* the lit edge, as Services */
+  padding: 22px;
+  transition: var(--t);
+  transition-property: border-top-color, border-color;
+}
+.quote-card:hover {
+  border-top-color: var(--coral);
+}
+.quote-card__text {
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.quote-card__by {
+  gap: 11px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+/* Photo and name are one link target, so the whole block lights on hover. */
+.quote-card__profile {
+  gap: 11px;
+  min-width: 0;
+}
+.quote-card__ident {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+/* Fixed box either way — a 40px square that a photo fills and a monogram
+   centres in — so the row height doesn't move between cards that have a
+   headshot and cards that don't. */
+.quote-card__avatar {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  object-fit: cover;
+  background: var(--surface);
+}
+/* Tracking closes up — two letters centred in a circle, so the trailing
+   letterspace of the label default would push them off-centre. */
+.quote-card__monogram {
+  font-size: var(--label-sm);
+  letter-spacing: var(--track-tight);
+  text-indent: var(--track-tight);
+  color: var(--text-mute);
+  transition: color var(--t);
+}
+.quote-card__name {
+  line-height: 1.2;
+  transition: color var(--t);
+}
+.quote-card__profile:hover .quote-card__name,
+.quote-card__profile:hover .quote-card__monogram {
+  color: var(--signal);
+}
+.quote-card__meta {
+  gap: 7px;
+  min-width: 0;
+}
+.quote-card__role {
+  color: var(--text);
+  font-weight: 500;
+}
+.quote-card__rule {
+  color: var(--line-strong);
+}
+.quote-card__sector {
+  color: var(--text-mute);
+}
+
 /* ───────────────────────── Contact ───────────────────────── */
 .contact {
   position: relative;
@@ -902,6 +999,9 @@ html[data-pulse="flipped"] .work-card__chip::before {
     grid-template-columns: 1fr;
   }
   .work-grid {
+    grid-template-columns: 1fr;
+  }
+  .quote-grid {
     grid-template-columns: 1fr;
   }
   .contact__inner {
