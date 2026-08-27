@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>TRAMOS — Cost &amp; storage</title><style>
+:root{
+  --bg:#ffffff; --canvas:#eef0f3; --subtle:#f7f8fa; --raised:#fbfcfd;
+  --s1:#d3d8df; --s2:#e5e8ec; --s3:#eef0f3;
+  --fg1:#1c232c; --fg2:#59616d; --fg3:#7d8592;
+  --slate:#333d4a; --slate2:#3f4a58; --slate3:#5b6674;
+  --brand:#b26b00; --brand-h:#96590a; --brand-fg:#8a5300;
+  --brand-sub:#fdf3e3; --brand-bd:#e9c894;
+  --err:#b3261e; --err-sub:#fdf0ef; --err-bd:#eec4c1;
+  --warn:#8a6100; --warn-sub:#fbf4e4; --warn-bd:#e5d3a6;
+  --ok:#0e7a3c;
+  --road:#8892a0; --rail:#4b5765; --load:#b26b00;
+  --r4:4px; --r6:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{
+  background:var(--canvas); color:var(--fg1);
+  font:400 12px/1.4 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
+  display:flex; flex-direction:column;
+}
+.num{font-variant-numeric:tabular-nums}
+.mut{color:var(--fg3)}
+.em{color:var(--fg2)}
+
+/* ---- app bar (slate) ---- */
+.app{flex:0 0 48px;display:flex;align-items:stretch;background:var(--slate);color:#e8ebef;padding:0 14px 0 16px}
+.wm{display:flex;align-items:center;gap:9px;padding-right:16px}
+.wm b{font-size:14px;font-weight:600;letter-spacing:.185em;color:#fff}
+.wm .mk{width:17px;height:17px;border-radius:3px;background:var(--brand);position:relative;flex:0 0 17px}
+.wm .mk:after{content:"";position:absolute;left:3px;top:7px;width:11px;height:3px;background:#fff;border-radius:1px}
+.wm .mk:before{content:"";position:absolute;left:3px;top:3px;width:7px;height:2px;background:rgba(255,255,255,.55);border-radius:1px}
+.tabs{display:flex;align-items:stretch;gap:2px;margin-left:6px}
+.tab{display:flex;align-items:center;padding:0 13px;font-size:12.5px;color:#b9c1cb;border-bottom:2px solid transparent;cursor:default}
+.tab.on{color:#fff;font-weight:600;border-bottom-color:var(--brand)}
+.app .sp{flex:1}
+.app .rt{display:flex;align-items:center;gap:10px}
+.qf{width:196px;height:28px;border-radius:var(--r4);background:var(--slate2);border:1px solid #4d5866;display:flex;align-items:center;gap:7px;padding:0 9px;color:#98a2ae;font-size:12px}
+.qf .g{width:11px;height:11px;border:1.5px solid #98a2ae;border-radius:50%;position:relative;flex:0 0 11px}
+.qf .g:after{content:"";position:absolute;right:-3px;bottom:-2px;width:5px;height:1.5px;background:#98a2ae;transform:rotate(45deg)}
+.envp{height:20px;border-radius:10px;padding:0 9px;display:flex;align-items:center;font-size:10.5px;font-weight:600;letter-spacing:.06em;background:rgba(178,107,0,.22);color:#f0c37e;border:1px solid rgba(233,200,148,.35)}
+.av{width:28px;height:28px;border-radius:50%;background:#6a7686;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
+.ic{width:16px;height:16px;opacity:.72}
+
+/* ---- command bar ---- */
+.cmd{flex:0 0 44px;display:flex;align-items:center;gap:2px;background:var(--bg);border-bottom:1px solid var(--s2);padding:0 12px 0 14px}
+.vsel{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--fg1);padding-right:12px;letter-spacing:-.005em;white-space:nowrap}
+.vsel .cv{border:solid var(--fg2);border-width:0 1.4px 1.4px 0;padding:2.6px;transform:rotate(45deg) translateY(-2px)}
+.dv{width:1px;height:22px;background:var(--s2);margin:0 8px}
+.btn{height:30px;display:flex;align-items:center;gap:6px;padding:0 10px;border-radius:var(--r4);font-size:12.5px;color:var(--fg1);border:1px solid transparent;white-space:nowrap}
+.btn .gl{font-size:13px;line-height:1;color:var(--fg2)}
+.btn--p{background:var(--brand);color:#fff;font-weight:600;border-color:var(--brand)}
+.btn--p .gl{color:#fff}
+.btn--o{border-color:var(--s1);background:var(--bg)}
+.btn[aria-disabled]{opacity:.42}
+.cmd .sp{flex:1}
+.chip{height:24px;border-radius:12px;display:flex;align-items:center;gap:6px;padding:0 10px;font-size:11.5px;border:1px solid var(--s1);color:var(--fg2);background:var(--bg);white-space:nowrap}
+.chip--on{background:var(--brand-sub);border-color:var(--brand-bd);color:var(--brand-fg);font-weight:600}
+.chip .x{color:var(--fg3);font-size:12px}
+.chip--st{border-style:dashed;color:var(--warn);border-color:var(--warn-bd);background:var(--warn-sub)}
+
+/* ---- aggregate summary line (replaces the KPI tile strip) ---- */
+.sum{flex:0 0 32px;display:flex;align-items:center;gap:0;padding:0 16px;background:var(--bg);border-bottom:1px solid var(--s2);font-size:11.5px;color:var(--fg2);white-space:nowrap}
+.sum .g{display:flex;align-items:baseline;gap:5px;padding:0 14px;border-right:1px solid var(--s2);height:16px}
+.sum .g:first-child{padding-left:0}
+.sum .g:last-child{border-right:none}
+.sum b{font-weight:600;color:var(--fg1);font-size:12.5px}
+.sum .lb{font-size:10.5px;color:var(--fg3);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.sum .w b{color:var(--warn)}
+.sum .e b{color:var(--err)}
+.sum .sp{flex:1;border-right:none}
+
+/* ---- tabbed dock ---- */
+.dock{flex:0 0 208px;display:flex;flex-direction:column;min-height:0}
+.dock__t{flex:0 0 32px;display:flex;align-items:stretch;gap:2px;padding:0 8px;border-bottom:1px solid var(--s2)}
+.dtab{display:flex;align-items:center;gap:6px;padding:0 12px;font-size:11.5px;color:var(--fg2);border-bottom:2px solid transparent;cursor:default}
+.dtab.on{color:var(--fg1);font-weight:600;border-bottom-color:var(--brand)}
+.dtab .ct{font-size:10px;font-weight:700;background:var(--s3);color:var(--fg2);border-radius:8px;padding:1px 6px}
+.dtab.on .ct{background:var(--brand-sub);color:var(--brand-fg)}
+.dock__b{flex:1;min-height:0;overflow:hidden;position:relative}
+
+/* ---- cards ---- */
+.card{background:var(--bg);border:1px solid var(--s2);border-radius:var(--r6);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.card__h{flex:0 0 34px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--s2)}
+.card__h h2{font-size:12.5px;font-weight:600;letter-spacing:-.005em}
+.card__h .sp{flex:1}
+.card__b{flex:1;min-height:0;overflow:hidden;position:relative}
+.card__f{flex:0 0 28px;display:flex;align-items:center;gap:10px;padding:0 12px;border-top:1px solid var(--s2);font-size:11px;color:var(--fg3)}
+.tag{height:18px;border-radius:3px;padding:0 6px;display:inline-flex;align-items:center;font-size:10.5px;font-weight:600;letter-spacing:.02em}
+.tag--n{background:var(--s3);color:var(--fg2)}
+.tag--e{background:var(--err-sub);color:var(--err);border:1px solid var(--err-bd)}
+.tag--w{background:var(--warn-sub);color:var(--warn);border:1px solid var(--warn-bd)}
+.tag--o{background:#eaf6ee;color:var(--ok);border:1px solid #c3e3ce}
+.tag--b{background:var(--brand-sub);color:var(--brand-fg);border:1px solid var(--brand-bd)}
+
+/* ---- main ---- */
+.main{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:10px 14px}
+.hero{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+
+/* ---- full-width exception rows (dock) ---- */
+.exr{display:flex;align-items:center;gap:10px;height:35px;padding:0 14px;border-bottom:1px solid var(--s3);font-size:11.5px}
+.exr .bd{width:3px;height:18px;border-radius:2px;flex:0 0 3px}
+.exr--e .bd{background:var(--err)}.exr--w .bd{background:var(--warn)}
+.exr .ttl{font-weight:600;width:172px;flex:0 0 172px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exr .ref{width:190px;flex:0 0 190px;color:var(--fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exr .txt{flex:1;min-width:0;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exr .act{color:var(--brand-fg);font-weight:600;white-space:nowrap}
+
+/* ---- utilisation + candidate tables ---- */
+table.ut{width:100%;border-collapse:collapse;table-layout:fixed}
+table.ut th,table.ut td{padding:0 9px;height:21px;font-size:11px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.ut th.l,table.ut td.l{text-align:left}
+table.ut thead th{height:24px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--s1);background:var(--subtle)}
+table.ut tbody td{border-bottom:1px solid var(--s3)}
+table.ut tbody tr.grp td{background:var(--subtle);font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);height:20px}
+.mtr{display:inline-flex;align-items:center;gap:8px;width:100%;justify-content:flex-end}
+.mtr b{font-weight:600;width:46px;text-align:right;flex:0 0 46px}
+.mtr .bar2{width:56px;height:6px;border-radius:3px;background:var(--s3);overflow:hidden;flex:0 0 56px}
+.mtr .bar2 i{display:block;height:100%;background:var(--rail)}
+.mtr .bar2 i.w{background:var(--warn)}
+.mtr .bar2 i.o{background:var(--ok)}
+.cur td{background:var(--brand-sub)}
+.fail{color:var(--err);font-weight:600}
+.rec{color:var(--ok);font-weight:600}
+
+/* ---- topology ---- */
+.topo{height:100%;position:relative}
+.mini{position:absolute;right:14px;bottom:8px}
+.lgd{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--fg3);white-space:nowrap}
+.lgd i{width:9px;height:9px;border-radius:2px;display:block}
+.lgd i.ln{width:16px;height:0;border-top:2px solid #8892a0;border-radius:0}
+.lgd i.ln.dash{border-top-style:dashed}
+.zm{display:inline-flex;align-items:center;gap:0;border:1px solid var(--s1);border-radius:var(--r4);height:22px;overflow:hidden;margin-left:4px}
+.zm b{width:22px;text-align:center;font-size:12px;font-weight:600;color:var(--fg2);border-right:1px solid var(--s2);line-height:20px}
+.zm span{padding:0 8px;font-size:10.5px;color:var(--fg1);font-weight:600;border-right:1px solid var(--s2);line-height:20px}
+.zm b:last-of-type{border-right:1px solid var(--s2)}
+.zm em{font-style:normal;padding:0 8px;font-size:10.5px;color:var(--brand-fg);font-weight:600;line-height:20px}
+
+/* ---- foot ---- */
+.foot{flex:0 0 26px;display:flex;align-items:center;gap:9px;padding:0 16px;font-size:10.5px;color:var(--fg3);border-top:1px solid var(--s2);background:var(--bg)}
+.foot .d{width:3px;height:3px;border-radius:50%;background:var(--s1)}
+
+/* ---- gantt ---- */
+.gantt{position:relative;height:100%;overflow:hidden}
+.gov{position:absolute;left:464px;top:0;bottom:0;width:946px;z-index:0}
+.nowlayer{position:absolute;left:464px;top:0;bottom:0;width:946px;z-index:5}
+.wk{position:absolute;top:0;bottom:0;background:#f4f6f8}
+.nowl{position:absolute;top:0;bottom:0;width:1px;background:var(--err);opacity:.62}
+table.g{width:1410px;table-layout:fixed;border-collapse:collapse;position:relative;z-index:1}
+table.g th,table.g td{padding:0;text-align:left;vertical-align:middle}
+table.g thead th{height:34px;border-bottom:1px solid var(--s1);font-size:10px;font-weight:600;color:var(--fg3);text-transform:uppercase;letter-spacing:.05em;background:var(--bg);position:relative}
+table.g tbody tr{height:29px}
+table.g tbody td{border-bottom:1px solid var(--s3);height:29px}
+.fz{background:var(--bg);position:relative;z-index:2;padding:0 8px !important;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.fz.pl{padding-left:12px !important}
+td.trk{position:relative;background:transparent;background-image:repeating-linear-gradient(to right,var(--s3) 0 1px,transparent 1px 94.6px)}
+th.trk{background-image:repeating-linear-gradient(to right,var(--s3) 0 1px,transparent 1px 94.6px)}
+.dayh{position:absolute;top:0;height:34px;display:flex;flex-direction:column;justify-content:center;padding-left:8px}
+.dayh em{font-style:normal;font-size:10px;color:var(--fg3);letter-spacing:.06em}
+.dayh b{font-size:11.5px;font-weight:600;color:var(--fg2);letter-spacing:0;text-transform:none}
+.dayh.we b,.dayh.we em{color:#9aa3af}
+.bar{position:absolute;top:6px;height:17px;border-radius:3px;display:block}
+.bar--road{background:var(--road)}
+.bar--rail{background:var(--rail)}
+.bar--load{background:var(--load)}
+.bar em{font-style:normal;position:absolute;left:6px;top:0;line-height:17px;font-size:10px;font-weight:600;color:#fff;letter-spacing:.03em;white-space:nowrap}
+.bar.bad{outline:1.5px solid var(--err);outline-offset:1px}
+.bar.gh{background:transparent;border:1.5px dashed var(--s1);height:16px;top:9px}
+.dw{position:absolute;top:14px;height:2px;border-top:1.5px dotted #a8b0bb}
+.dwl{position:absolute;top:0;font-size:9.5px;color:var(--fg3);white-space:nowrap;line-height:12px}
+.vlbl{position:absolute;top:8px;font-size:10.5px;color:var(--fg2);white-space:nowrap;line-height:16px;overflow:hidden;text-overflow:ellipsis}
+.stat{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--fg2)}
+.stat .dot{width:6px;height:6px;border-radius:50%;flex:0 0 6px}
+.d-loading{background:var(--brand)}.d-committed{background:var(--ok)}.d-planned{background:#9aa3af}
+.d-held{background:var(--err)}.d-atrisk{background:var(--warn)}.d-unscheduled{background:#c6ccd4}
+
+/* ---- heat strip ---- */
+.heat{width:100%;border-collapse:collapse;table-layout:fixed}
+.heat th,.heat td{padding:0;height:22px;font-size:10.5px;text-align:center;color:var(--fg2)}
+.heat thead th{height:20px;font-size:9.5px;font-weight:600;color:var(--fg3);letter-spacing:.05em;border-bottom:1px solid var(--s2)}
+.heat th.lb{text-align:left;padding-left:12px;width:190px}
+.heat td.lb{text-align:left;padding-left:12px;font-size:11px;color:var(--fg1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.heat td.lb b{font-weight:600}
+.heat td.lb span{color:var(--fg3)}
+.heat td.cp{width:72px;text-align:right;padding-right:12px;font-size:10.5px;color:var(--fg3)}
+.hc{display:block;height:16px;margin:0 1px;border-radius:2px;line-height:16px;font-size:9.5px;color:var(--fg2)}
+.h0{background:#eef0f3}.h1{background:#dfe4ea}.h2{background:#c3cbd5}.h3{background:#a3adba;color:#fff}
+.h4{background:#f0d29b}.h5{background:var(--err);color:#fff;font-weight:700}
+
+/* ---- exception list ---- */
+.exl{list-style:none;height:100%}
+.ex{display:flex;gap:9px;padding:7px 12px 6px;border-bottom:1px solid var(--s3)}
+.ex .bd{width:3px;border-radius:2px;flex:0 0 3px}
+.ex--e .bd{background:var(--err)}.ex--w .bd{background:var(--warn)}
+.ex .tx{min-width:0;flex:1}
+.ex .t1{font-size:11px;font-weight:600;color:var(--fg1);display:flex;gap:6px;align-items:baseline}
+.ex .t1 span{font-weight:400;color:var(--fg3);font-size:10.5px}
+.ex .t2{font-size:10.5px;color:var(--fg2);margin-top:1px;line-height:1.32}
+
+/* ---- cost grid ---- */
+.cgw{display:flex;flex-direction:column;height:100%}
+.cgb{flex:1;min-height:0;overflow:hidden}
+table.cg{width:100%;border-collapse:collapse;table-layout:fixed}
+table.cg th,table.cg td{padding:0 10px;text-align:right;font-size:11px;height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.cg th.l,table.cg td.l{text-align:left}
+table.cg thead tr.g1 th{height:18px;font-size:9.5px;font-weight:700;color:var(--fg3);letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--s3);background:var(--subtle)}
+table.cg thead tr.g2 th{height:24px;font-size:10px;font-weight:600;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--s1)}
+table.cg tbody td{border-bottom:1px solid var(--s3);color:var(--fg1)}
+tr.pl td{font-weight:600;background:var(--bg)}
+tr.lg td{background:var(--subtle);color:var(--fg2);font-weight:400}
+tr.lg td.l{padding-left:26px;position:relative}
+tr.lg td.l:before{content:"";position:absolute;left:15px;top:0;bottom:14px;width:1px;background:var(--s1)}
+tr.lg td.l:after{content:"";position:absolute;left:15px;top:12px;width:6px;height:1px;background:var(--s1)}
+table.cg tfoot td{height:30px;font-weight:700;font-size:12px;border-top:1px solid var(--s1);background:var(--raised)}
+.dim td{color:var(--fg3)}
+.sc{box-shadow:inset 3px 0 0 var(--brand)}
+
+/* ---- occupancy chart ---- */
+.occ{position:relative;height:100%;padding:8px 12px 0}
+/* ---- re-priced lane list ---- */
+.ln{display:flex;align-items:center;gap:8px;padding:0 12px;height:20px;font-size:10.5px;border-bottom:1px solid var(--s3);color:var(--fg2)}
+.ln .a{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg1)}
+.ln .b{width:96px;text-align:right;white-space:nowrap}
+.ln .c{width:64px;text-align:right;font-weight:600}
+.lnh{display:flex;align-items:center;gap:6px;padding:0 12px;height:22px;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3);background:var(--subtle);border-top:1px solid var(--s2);border-bottom:1px solid var(--s3)}
+.occl{position:absolute;left:12px;right:12px;border-top:1px dashed var(--err);z-index:2}
+.occlt{position:absolute;font-size:9.5px;font-weight:700;color:var(--err);background:var(--bg);padding:0 4px;z-index:3}
+
+/* ---- key/value panel ---- */
+.kv{list-style:none}
+.kv li{display:flex;align-items:baseline;gap:8px;padding:0 12px;height:25px;border-bottom:1px solid var(--s3);font-size:11.5px}
+.kv li .k{color:var(--fg2);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv li .v{font-weight:600;white-space:nowrap}
+.kv li.tt{background:var(--raised);font-weight:700;border-bottom:none}
+.kv li.tt .k{color:var(--fg1);font-weight:700}
+
+/* ---- version rows ---- */
+.vr{display:flex;gap:9px;padding:8px 12px 7px;border-bottom:1px solid var(--s3)}
+.vr .id{font-weight:600;font-size:11.5px;width:88px;flex:0 0 88px}
+.vr .bd2{flex:1;min-width:0}
+.vr .l1{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg2)}
+.vr .l2{font-size:11px;color:var(--fg3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vr .nums{text-align:right;font-size:11px;color:var(--fg2);white-space:nowrap}
+.vr .nums b{display:block;font-size:12px;color:var(--fg1)}
+</style></head>
+<body>
+
+<header class="app">
+  <div class="wm"><i class="mk"></i><b>TRAMOS</b></div>
+  <nav class="tabs">
+    <div class="tab">Schedule board</div>
+    <div class="tab on">Cost &amp; storage</div>
+    <div class="tab">Routing</div>
+    <div class="tab">Terminals</div>
+    <div class="tab">Rate cards</div>
+    <div class="tab">Nominations</div>
+  </nav>
+  <div class="sp"></div>
+  <div class="rt">
+    <div class="qf"><i class="g"></i>Search plans, sites, vessels</div>
+    <div class="envp">PROD</div>
+    <div class="av">KV</div>
+  </div>
+</header>
+
+<div class="cmd">
+  <div class="vsel">Cost &amp; storage &middot; 06&ndash;15 Feb<i class="cv"></i></div>
+  <div class="dv"></div>
+  <div class="btn"><i class="gl">&#8635;</i>Re-cost corridor</div>
+  <div class="btn btn--p" aria-disabled="true"><i class="gl">&#10003;</i>Publish r-2026.02-b</div>
+  <div class="btn btn--o">Compare rate cards</div>
+  <div class="btn btn--o">Accrue storage</div>
+  <div class="btn">Export<i class="gl">&#9662;</i></div>
+  <div class="btn"><i class="gl">&#8943;</i></div>
+  <div class="sp"></div>
+  <div class="chip chip--on">Expanded: DO-51261<i class="x">&times;</i></div>
+  <div class="chip">Basis: forecast</div>
+  <div class="chip chip--st">1 lane lapsed</div>
+  <div class="chip">Synced <span data-check="synced">09:14:52</span></div>
+</div>
+<div class="sum"><div class="g "><span class="lb">Forecast</span><b data-check="sum-forecast">A$ 1,492,060.36</b></div><div class="g "><span class="lb">Freight</span><b data-check="sum-freight">A$ 968,364.00</b></div><div class="g "><span class="lb">Handling</span><b data-check="sum-handling">A$ 471,544.00</b></div><div class="g "><span class="lb">Storage</span><b data-check="sum-storage">A$ 43,126.36</b></div><div class="g w"><span class="lb">Accessorial</span><b data-check="sum-accessorial">A$ 9,026.00</b></div><div class="g "><span class="lb">Per tonne</span><b data-check="sum-per-tonne">A$ 28.86</b></div><div class="g "><span class="lb">Dwells</span><b data-check="sum-dwells">22</b></div><div class="g sp"></div><div class="g "><span class="lb">Rate card</span><b data-check="sum-rate-card">r-2026.02-a</b></div></div>
+<main class="main">
+<section class="card" style="flex:1;min-height:0">
+  <div class="card__h"><h2>Leg cost buildup &middot; 39 legs across 16 plans</h2>
+    <span class="tag tag--b">DO-51261 expanded</span><div class="sp"></div>
+    <span class="mut" style="font-size:11px">basis: forecast, rate card r-2026.02-a &middot; sorted by order</span></div>
+  <div class="card__b cgw">
+    <table class="cg"><colgroup><col style="width:376px"><col style="width:114px"><col style="width:74px"><col style="width:126px"><col style="width:122px"><col style="width:114px"><col style="width:122px"><col style="width:140px"><col style="width:78px"><col style="width:134px"><col style="width:110px"></colgroup>
+      <thead>
+        <tr class="g1"><th class="l" colspan="3">Plan</th><th colspan="4">Cost components &mdash; A$</th><th colspan="2">Landed</th><th class="l" colspan="2">State</th></tr>
+        <tr class="g2"><th class="l">Order / leg</th><th class="l">Destination</th><th>Tonnes</th><th>Freight</th><th>Handling</th><th>Storage</th><th>Accessorial</th><th>Total</th><th>A$/t</th><th class="l">Status</th><th class="l">Vessel / rate</th></tr>
+      </thead>
+    </table>
+    <div class="cgb"><table class="cg"><colgroup><col style="width:376px"><col style="width:114px"><col style="width:74px"><col style="width:126px"><col style="width:122px"><col style="width:114px"><col style="width:122px"><col style="width:140px"><col style="width:78px"><col style="width:134px"><col style="width:110px"></colgroup><tbody><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51188" data-tonnes="6480" data-legs="3">
+      <td class="l">DO-51188 <span class="mut" style="font-weight:400">&middot; NUN-1 Nungarin</span></td>
+      <td class="l">Kwinana</td>
+      <td>6,480</td>
+      <td data-f="freight">149,688.00</td>
+      <td data-f="handling">67,068.00</td>
+      <td data-f="storage">2,661.75</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">219,417.75</td>
+      <td data-f="pert">33.86</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Aegean Harmony</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51194" data-tonnes="3240" data-legs="2">
+      <td class="l">DO-51194 <span class="mut" style="font-weight:400">&middot; KLB-1 Kellerberrin</span></td>
+      <td class="l">Kwinana</td>
+      <td>3,240</td>
+      <td data-f="freight">40,176.00</td>
+      <td data-f="handling">25,920.00</td>
+      <td data-f="storage">2,379.15</td>
+      <td data-f="acc">1,296.00</td>
+      <td data-f="total">69,771.15</td>
+      <td data-f="pert">21.53</td>
+      <td class="l"><span class="tag tag--w">Deadfreight</span></td>
+      <td class="l"><span class="mut">MV Aegean Harmony</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51203" data-tonnes="4860" data-legs="2">
+      <td class="l">DO-51203 <span class="mut" style="font-weight:400">&middot; CDN-2 Cunderdin</span></td>
+      <td class="l">Kwinana</td>
+      <td>4,860</td>
+      <td data-f="freight">48,843.00</td>
+      <td data-f="handling">38,880.00</td>
+      <td data-f="storage">5,599.80</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">93,322.80</td>
+      <td data-f="pert">19.20</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Pacific Ibis</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51209" data-tonnes="5760" data-legs="3">
+      <td class="l">DO-51209 <span class="mut" style="font-weight:400">&middot; WGN-4 Wongan Hills</span></td>
+      <td class="l">Kwinana</td>
+      <td>5,760</td>
+      <td data-f="freight">126,432.00</td>
+      <td data-f="handling">59,616.00</td>
+      <td data-f="storage">6,049.20</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">192,097.20</td>
+      <td data-f="pert">33.35</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Pacific Ibis</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51212" data-tonnes="3960" data-legs="2">
+      <td class="l">DO-51212 <span class="mut" style="font-weight:400">&middot; DAL-1 Dalwallinu</span></td>
+      <td class="l">Kwinana</td>
+      <td>3,960</td>
+      <td data-f="freight">58,410.00</td>
+      <td data-f="handling">31,680.00</td>
+      <td data-f="storage">2,870.45</td>
+      <td data-f="acc">2,640.00</td>
+      <td data-f="total">95,600.45</td>
+      <td data-f="pert">24.14</td>
+      <td class="l"><span class="tag tag--w">Cell breach</span></td>
+      <td class="l"><span class="mut">MV Pacific Ibis</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51217" data-tonnes="2880" data-legs="3">
+      <td class="l">DO-51217 <span class="mut" style="font-weight:400">&middot; MUK-2 Mukinbudin–Bonnie Rock</span></td>
+      <td class="l">Kwinana</td>
+      <td>2,880</td>
+      <td data-f="freight">80,784.00</td>
+      <td data-f="handling">29,808.00</td>
+      <td data-f="storage">1,838.00</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">112,430.00</td>
+      <td data-f="pert">39.04</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Star Aquila</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51221" data-tonnes="3600" data-legs="2">
+      <td class="l">DO-51221 <span class="mut" style="font-weight:400">&middot; BRK-2 Bruce Rock</span></td>
+      <td class="l">Kwinana</td>
+      <td>3,600</td>
+      <td data-f="freight">51,480.00</td>
+      <td data-f="handling">28,800.00</td>
+      <td data-f="storage">1,479.00</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">81,759.00</td>
+      <td data-f="pert">22.71</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Star Aquila</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51226" data-tonnes="2340" data-legs="2">
+      <td class="l">DO-51226 <span class="mut" style="font-weight:400">&middot; CRG-2 Corrigin</span></td>
+      <td class="l">Albany</td>
+      <td>2,340</td>
+      <td data-f="freight">68,796.00</td>
+      <td data-f="handling">20,124.00</td>
+      <td data-f="storage">1,707.23</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">90,627.23</td>
+      <td data-f="pert">38.73</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Ocean Melody</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51231" data-tonnes="1980" data-legs="2">
+      <td class="l">DO-51231 <span class="mut" style="font-weight:400">&middot; LKG-1 Lake Grace</span></td>
+      <td class="l">Albany</td>
+      <td>1,980</td>
+      <td data-f="freight">43,857.00</td>
+      <td data-f="handling">17,028.00</td>
+      <td data-f="storage">995.77</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">61,880.77</td>
+      <td data-f="pert">31.25</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Ocean Melody</span></td></tr><tr class="pl dim" data-row="cost" data-kind="plan" data-do="DO-51234" data-tonnes="1180" data-legs="1">
+      <td class="l">DO-51234 <span class="mut" style="font-weight:400">&middot; KAT-5 Katanning</span></td>
+      <td class="l">Albany</td>
+      <td>1,180</td>
+      <td data-f="freight">23,364.00</td>
+      <td data-f="handling">4,012.00</td>
+      <td data-f="storage">&mdash;</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">27,376.00</td>
+      <td data-f="pert">23.20</td>
+      <td class="l"><span class="tag tag--w">Rate lapsed</span></td>
+      <td class="l"><span class="mut">&mdash;</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51239" data-tonnes="4320" data-legs="2">
+      <td class="l">DO-51239 <span class="mut" style="font-weight:400">&middot; MLW-1 Mullewa</span></td>
+      <td class="l">Geraldton</td>
+      <td>4,320</td>
+      <td data-f="freight">32,832.00</td>
+      <td data-f="handling">33,048.00</td>
+      <td data-f="storage">2,199.12</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">68,079.12</td>
+      <td data-f="pert">15.76</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Cape Bellina</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51243" data-tonnes="2760" data-legs="3">
+      <td class="l">DO-51243 <span class="mut" style="font-weight:400">&middot; YUN-3 Yuna</span></td>
+      <td class="l">Geraldton</td>
+      <td>2,760</td>
+      <td data-f="freight">47,610.00</td>
+      <td data-f="handling">27,600.00</td>
+      <td data-f="storage">1,205.58</td>
+      <td data-f="acc">5,090.00</td>
+      <td data-f="total">81,505.58</td>
+      <td data-f="pert">29.53</td>
+      <td class="l"><span class="tag tag--e">Held</span></td>
+      <td class="l"><span class="mut">MV Cape Bellina</span></td></tr><tr class="pl dim" data-row="cost" data-kind="plan" data-do="DO-51248" data-tonnes="2460">
+        <td class="l">DO-51248 <span class="mut" style="font-weight:400">&middot; SGM-1 Salmon Gums</span></td>
+        <td class="l">Esperance</td>
+        <td>2,460</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td class="l"><span class="tag tag--n">Unscheduled</span></td><td class="l"><span class="mut">no stem</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51252" data-tonnes="2160" data-legs="2">
+      <td class="l">DO-51252 <span class="mut" style="font-weight:400">&middot; WUB-1 Wubin</span></td>
+      <td class="l">Kwinana</td>
+      <td>2,160</td>
+      <td data-f="freight">34,776.00</td>
+      <td data-f="handling">17,280.00</td>
+      <td data-f="storage">2,473.50</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">54,529.50</td>
+      <td data-f="pert">25.25</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Golden Wattle</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51256" data-tonnes="1740" data-legs="2">
+      <td class="l">DO-51256 <span class="mut" style="font-weight:400">&middot; NYB-1 Nyabing</span></td>
+      <td class="l">Albany</td>
+      <td>1,740</td>
+      <td data-f="freight">42,282.00</td>
+      <td data-f="handling">14,964.00</td>
+      <td data-f="storage">2,391.05</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">59,637.05</td>
+      <td data-f="pert">34.27</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Ocean Melody</span></td></tr><tr class="pl sc" data-row="cost" data-kind="plan" data-do="DO-51261" data-tonnes="2520" data-legs="4">
+      <td class="l">DO-51261 <span class="mut" style="font-weight:400">&middot; BEN-1 Bencubbin</span></td>
+      <td class="l">Kwinana</td>
+      <td>2,520</td>
+      <td data-f="freight">68,922.00</td>
+      <td data-f="handling">32,004.00</td>
+      <td data-f="storage">6,080.89</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">107,006.89</td>
+      <td data-f="pert">42.46</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Golden Wattle</span></td></tr><tr class="lg" data-row="cost" data-kind="leg" data-do="DO-51261" data-leg="0" data-tonnes="2520" data-rate="10.2" data-hand="2.35" data-store-rate="0.42" data-dwell-ms="41100000" data-acc="0">
+        <td class="l">Road &middot; BEN-1 &rarr; Merredin siding <span class="mut">75 km</span></td>
+        <td class="l"><span class="mut">Merredin siding</span></td>
+        <td>2,520</td>
+        <td data-f="freight">25,704.00</td>
+        <td data-f="handling">5,922.00</td>
+        <td data-f="storage">503.47</td>
+        <td data-f="acc">&mdash;</td>
+        <td data-f="total">32,129.47</td>
+        <td data-f="pert">12.75</td>
+        <td class="l"><span class="mut" style="font-size:10.5px">dwell 11h 25m</span></td>
+        <td class="l"><span class="mut" style="font-size:10.5px">A$ 10.20/t</span></td></tr><tr class="lg" data-row="cost" data-kind="leg" data-do="DO-51261" data-leg="1" data-tonnes="2520" data-rate="9.8" data-hand="2.35" data-store-rate="0.42" data-dwell-ms="71100000" data-acc="0">
+        <td class="l">Rail &middot; Merredin siding &rarr; Northam yard <span class="mut">160 km</span></td>
+        <td class="l"><span class="mut">Northam yard</span></td>
+        <td>2,520</td>
+        <td data-f="freight">24,696.00</td>
+        <td data-f="handling">5,922.00</td>
+        <td data-f="storage">870.97</td>
+        <td data-f="acc">&mdash;</td>
+        <td data-f="total">31,488.97</td>
+        <td data-f="pert">12.50</td>
+        <td class="l"><span class="mut" style="font-size:10.5px">dwell 19h 45m</span></td>
+        <td class="l"><span class="mut" style="font-size:10.5px">A$ 9.80/t</span></td></tr><tr class="lg" data-row="cost" data-kind="leg" data-do="DO-51261" data-leg="2" data-tonnes="2520" data-rate="7.35" data-hand="3.15" data-store-rate="0.68" data-dwell-ms="237300000" data-acc="0">
+        <td class="l">Rail &middot; Northam yard &rarr; Kwinana <span class="mut">100 km</span></td>
+        <td class="l"><span class="mut">Kwinana</span></td>
+        <td>2,520</td>
+        <td data-f="freight">18,522.00</td>
+        <td data-f="handling">7,938.00</td>
+        <td data-f="storage">4,706.45</td>
+        <td data-f="acc">&mdash;</td>
+        <td data-f="total">31,166.45</td>
+        <td data-f="pert">12.37</td>
+        <td class="l"><span class="mut" style="font-size:10.5px">dwell 2d 17h 55m</span></td>
+        <td class="l"><span class="mut" style="font-size:10.5px">A$ 7.35/t</span></td></tr><tr class="lg" data-row="cost" data-kind="leg" data-do="DO-51261" data-leg="3" data-tonnes="2520" data-rate="0" data-hand="4.85" data-store-rate="0" data-dwell-ms="0" data-acc="0">
+        <td class="l">Ship loading &middot; MV Golden Wattle</td>
+        <td class="l"><span class="mut">Berth 4</span></td>
+        <td>2,520</td>
+        <td data-f="freight">&mdash;</td>
+        <td data-f="handling">12,222.00</td>
+        <td data-f="storage">&mdash;</td>
+        <td data-f="acc">&mdash;</td>
+        <td data-f="total">12,222.00</td>
+        <td data-f="pert">4.85</td>
+        <td class="l"><span class="mut" style="font-size:10.5px">&mdash;</span></td>
+        <td class="l"><span class="mut" style="font-size:10.5px">A$ 4.85/t</span></td></tr><tr class="pl" data-row="cost" data-kind="plan" data-do="DO-51266" data-tonnes="1920" data-legs="4">
+      <td class="l">DO-51266 <span class="mut" style="font-weight:400">&middot; PJR-1 Perenjori</span></td>
+      <td class="l">Geraldton</td>
+      <td>1,920</td>
+      <td data-f="freight">50,112.00</td>
+      <td data-f="handling">23,712.00</td>
+      <td data-f="storage">3,195.87</td>
+      <td data-f="acc">&mdash;</td>
+      <td data-f="total">77,019.87</td>
+      <td data-f="pert">40.11</td>
+      <td class="l"><span class="tag tag--o">Confirmed</span></td>
+      <td class="l"><span class="mut">MV Cape Bellina</span></td></tr></tbody></table></div>
+    <table class="cg"><colgroup><col style="width:376px"><col style="width:114px"><col style="width:74px"><col style="width:126px"><col style="width:122px"><col style="width:114px"><col style="width:122px"><col style="width:140px"><col style="width:78px"><col style="width:134px"><col style="width:110px"></colgroup>
+      <tfoot><tr><td class="l">Corridor forecast &middot; 16 scheduled plans</td>
+        <td class="l">4 ports</td>
+        <td data-check="footT">51,700</td>
+        <td data-check="footFreight">968,364.00</td>
+        <td data-check="footHand">471,544.00</td>
+        <td data-check="footStore">43,126.36</td>
+        <td data-check="footAcc">9,026.00</td>
+        <td data-check="footTotal">1,492,060.36</td>
+        <td data-check="footPerT">28.86</td>
+        <td class="l"></td><td class="l"></td></tr></tfoot>
+    </table>
+  </div>
+</section>
+
+<section class="card dock">
+  <div class="dock__t"><div class="dtab on">Storage forecast</div><div class="dtab">Rate cards<span class="ct">5</span></div><div class="dtab">Exposure</div><div class="dtab">Lane changes<span class="ct">6</span></div>
+    <div style="flex:1"></div>
+    <div class="dtab" style="color:var(--fg3)">KWI-C4 peak <b style="color:#b3261e">23,820 t</b> on 13 Feb &middot; 1,320 t over &middot; clears if DO-51212 defers <b data-check="deferBy">11h 15m</b></div>
+  </div>
+  <div class="dock__b"><div class="occ"><div style="position:absolute;left:14px;top:6px;font-size:11px;color:var(--fg3)">KWI-C4 &middot; APW1 segregated cell &mdash; forecast peak held per day &middot; opening <b style="color:var(--fg2);font-weight:600" data-check="c4open">9,240</b> t &middot; driven by 10 scheduled movements</div>
+   <div style="padding-top:18px"><svg width="1384" height="146" viewBox="0 0 1384 146">
+    <rect data-occ="0" data-peak="9240" x="8" y="83.66" width="122.4" height="42.34" rx="2" fill="#a3adba"></rect><text x="69.2" y="78.66" text-anchor="middle" font-size="10" fill="#7d8592">9,240</text><rect data-occ="1" data-peak="9240" x="146.4" y="83.66" width="122.4" height="42.34" rx="2" fill="#a3adba"></rect><text x="207.6" y="78.66" text-anchor="middle" font-size="10" fill="#7d8592">9,240</text><rect data-occ="2" data-peak="18960" x="284.8" y="39.13" width="122.4" height="86.87" rx="2" fill="#a3adba"></rect><text x="346" y="34.13" text-anchor="middle" font-size="10" fill="#7d8592">18,960</text><rect data-occ="3" data-peak="18960" x="423.2" y="39.13" width="122.4" height="86.87" rx="2" fill="#a3adba"></rect><text x="484.4" y="34.13" text-anchor="middle" font-size="10" fill="#7d8592">18,960</text><rect data-occ="4" data-peak="12480" x="561.6" y="68.82" width="122.4" height="57.18" rx="2" fill="#a3adba"></rect><text x="622.8" y="63.82" text-anchor="middle" font-size="10" fill="#7d8592">12,480</text><rect data-occ="5" data-peak="14100" x="700" y="61.4" width="122.4" height="64.6" rx="2" fill="#a3adba"></rect><text x="761.2" y="56.4" text-anchor="middle" font-size="10" fill="#7d8592">14,100</text><rect data-occ="6" data-peak="19860" x="838.4" y="35.01" width="122.4" height="90.99" rx="2" fill="#a3adba"></rect><text x="899.6" y="30.01" text-anchor="middle" font-size="10" fill="#7d8592">19,860</text><rect data-occ="7" data-peak="23820" x="976.8" y="16.86" width="122.4" height="109.14" rx="2" fill="#b3261e"></rect><text x="1038" y="29.86" text-anchor="middle" font-size="10.5" font-weight="700" fill="#fff">23,820</text><rect data-occ="8" data-peak="18960" x="1115.2" y="39.13" width="122.4" height="86.87" rx="2" fill="#a3adba"></rect><text x="1176.4" y="34.13" text-anchor="middle" font-size="10" fill="#7d8592">18,960</text><rect data-occ="9" data-peak="9240" x="1253.6" y="83.66" width="122.4" height="42.34" rx="2" fill="#a3adba"></rect><text x="1314.8" y="78.66" text-anchor="middle" font-size="10" fill="#7d8592">9,240</text>
+    <line x1="0" y1="22.91" x2="1384" y2="22.91" stroke="#b3261e" stroke-width="1" stroke-dasharray="4 3"></line>
+    <text x="2" y="17.91" font-size="9.5" font-weight="700" fill="#b3261e">CAPACITY 22,500 t</text>
+    <line x1="0" y1="126" x2="1384" y2="126" stroke="#d3d8df" stroke-width="1"></line>
+    <text x="69.2" y="141" text-anchor="middle" font-size="10" fill="#7d8592">Fri 06 Feb</text><text x="207.6" y="141" text-anchor="middle" font-size="10" fill="#a3abb6">Sat 07 Feb</text><text x="346" y="141" text-anchor="middle" font-size="10" fill="#a3abb6">Sun 08 Feb</text><text x="484.4" y="141" text-anchor="middle" font-size="10" fill="#7d8592">Mon 09 Feb</text><text x="622.8" y="141" text-anchor="middle" font-size="10" fill="#7d8592">Tue 10 Feb</text><text x="761.2" y="141" text-anchor="middle" font-size="10" fill="#7d8592">Wed 11 Feb</text><text x="899.6" y="141" text-anchor="middle" font-size="10" fill="#7d8592">Thu 12 Feb</text><text x="1038" y="141" text-anchor="middle" font-size="10" fill="#7d8592">Fri 13 Feb</text><text x="1176.4" y="141" text-anchor="middle" font-size="10" fill="#a3abb6">Sat 14 Feb</text><text x="1314.8" y="141" text-anchor="middle" font-size="10" fill="#a3abb6">Sun 15 Feb</text>
+  </svg></div></div></div>
+</section></main>
+
+<footer class="foot">
+  <span>Corridor <b style="font-weight:600;color:var(--fg2)">WA Grain</b></span><i class="d"></i>
+  <span>Rate card <span data-check="footRate">r-2026.02-a</span></span><i class="d"></i>
+  <span>Telematics feed synced <span data-check="footSync">09:12:47</span> &middot; <span style="color:var(--warn)">2 h stale</span></span><i class="d"></i>
+  <span>Basis forecast &middot; 39 legs costed</span>
+  <div style="flex:1"></div>
+  <span>TRAMOS <b style="font-weight:600;color:var(--fg2)">4.8.2</b> &middot; build 20260209.3</span>
+</footer>
+</body></html>

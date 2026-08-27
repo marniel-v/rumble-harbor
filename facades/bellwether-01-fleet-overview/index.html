@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bellwether — Fleet Overview</title>
+<style>
+  /* ------------------------------------------------------------------
+     Bellwether — fleet overview. Static only; nothing here functions.
+     Built to be screenshotted at exactly 1440x900 @2x.
+     Deliberately NOT in the Rumble Harbor design language.
+     ------------------------------------------------------------------ */
+
+  :root {
+    --rail:        #1e1b4b;
+    --rail-2:      #2a2560;
+    --brand:       #4f46e5;
+    --brand-soft:  #eef0fe;
+    --accent:      #818cf8;
+
+    --page:        #f5f6fa;
+    --card:        #ffffff;
+    --line:        #e3e6ef;
+    --line-soft:   #eef0f6;
+
+    --text:        #16181d;
+    --dim:         #5b6172;
+    --mute:        #8f95a6;
+
+    --red:         #c62828;
+    --red-bg:      #fdf3f3;
+    --amber:       #a85806;
+    --amber-bg:    #fdf8ef;
+    --green:       #05714f;
+
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 400 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: #babfcc;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  .app {
+    width: 1440px; height: 900px; overflow: hidden;
+    display: flex; background: var(--page);
+  }
+
+  /* ---------------- left rail ---------------- */
+  .rail {
+    width: 224px; flex: 0 0 224px;
+    background: var(--rail); color: #c7c9e0;
+    display: flex; flex-direction: column;
+  }
+  .rail__brand {
+    height: 56px; display: flex; align-items: center; gap: 9px;
+    padding: 0 16px; color: #fff;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .rail__glyph {
+    width: 22px; height: 22px; border-radius: 5px; flex: 0 0 22px;
+    background: linear-gradient(135deg, var(--accent), var(--brand));
+    position: relative;
+  }
+  .rail__glyph::after {
+    content: ""; position: absolute; inset: 6px 5px;
+    border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+    opacity: .9;
+  }
+  .rail__name { font-size: 14.5px; font-weight: 600; letter-spacing: -.1px; }
+  .rail__env {
+    margin-left: auto; font-size: 9px; letter-spacing: .5px; font-weight: 600;
+    color: #a5a8c9; border: 1px solid rgba(255,255,255,.16);
+    border-radius: 3px; padding: 1px 4px;
+  }
+
+  .rail__nav { padding: 10px 8px; display: flex; flex-direction: column; gap: 1px; }
+  .rail__group {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .9px; color: #7d81a6;
+    padding: 12px 8px 5px;
+  }
+  .navitem {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 8px; border-radius: 5px;
+    font-size: 12.5px; color: #c0c3dc; text-decoration: none;
+  }
+  .navitem svg { flex: 0 0 15px; opacity: .72; }
+  .navitem--on { background: rgba(129,140,248,.16); color: #fff; font-weight: 500; }
+  .navitem--on svg { opacity: 1; }
+  .navitem__badge {
+    margin-left: auto; font-family: var(--mono); font-size: 10px;
+    background: #b3271f; color: #fff; border-radius: 8px; padding: 0 5px;
+    line-height: 15px; font-weight: 600;
+  }
+
+  .rail__foot {
+    margin-top: auto; padding: 10px 12px 12px;
+    border-top: 1px solid rgba(255,255,255,.07);
+    display: flex; align-items: center; gap: 9px;
+  }
+  .rail__avatar {
+    width: 26px; height: 26px; border-radius: 50%; flex: 0 0 26px;
+    background: #4a4390; color: #fff; font-size: 10.5px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .rail__who { font-size: 11.5px; color: #dcdeef; line-height: 1.25; }
+  .rail__who span { display: block; font-size: 10px; color: #868ab0; }
+
+  /* ---------------- shell ---------------- */
+  .shell { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  .topbar {
+    height: 56px; flex: 0 0 56px; background: var(--card);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; padding: 0 18px; gap: 16px;
+  }
+  .crumb { font-size: 12.5px; color: var(--mute); display: flex; align-items: center; gap: 7px; }
+  .crumb b { color: var(--text); font-weight: 600; font-size: 14px; }
+  .search {
+    margin-left: 12px; width: 268px; height: 32px;
+    border: 1px solid var(--line); border-radius: 6px; background: #fafbfd;
+    display: flex; align-items: center; gap: 7px; padding: 0 9px;
+    color: var(--mute); font-size: 12.5px;
+  }
+  .topbar__right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .selector {
+    height: 32px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--card); display: flex; align-items: center; gap: 7px;
+    padding: 0 10px; font-size: 12.5px; color: var(--dim);
+  }
+  .iconbtn {
+    width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--card); display: flex; align-items: center; justify-content: center;
+    color: var(--dim); position: relative;
+  }
+  .iconbtn__dot {
+    position: absolute; top: 5px; right: 5px; width: 6px; height: 6px;
+    border-radius: 50%; background: #b3271f; border: 1.5px solid #fff;
+  }
+
+  /* ---------------- filter bar ---------------- */
+  .filterbar {
+    height: 48px; flex: 0 0 48px; background: var(--card);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 8px; padding: 0 18px;
+  }
+  .chip {
+    height: 26px; border-radius: 13px; display: inline-flex; align-items: center;
+    gap: 6px; padding: 0 6px 0 10px; font-size: 12px; font-weight: 500;
+    background: var(--brand-soft); color: #3b32c9; border: 1px solid #d9dcfb;
+  }
+  .chip__x { color: #7d78d8; font-size: 13px; line-height: 1; padding: 0 2px; }
+  .filt {
+    height: 26px; border-radius: 5px; border: 1px solid var(--line);
+    background: var(--card); display: inline-flex; align-items: center; gap: 6px;
+    padding: 0 8px; font-size: 12px; color: var(--dim);
+  }
+  .filt--ghost { border-style: dashed; color: var(--mute); }
+  .btn-sm {
+    height: 26px; border-radius: 5px; border: 1px solid var(--line);
+    background: var(--card); padding: 0 10px; font-size: 12px; color: var(--dim);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-sm[data-disabled] { color: #b9bdc9; background: #f7f8fb; border-color: var(--line-soft); }
+  .filterbar__right {
+    margin-left: auto; display: flex; align-items: center; gap: 12px;
+    font-size: 11.5px; color: var(--mute);
+  }
+
+  /* ---------------- main ---------------- */
+  main { flex: 1; min-height: 0; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+
+  .metrics { flex: 0 0 92px; display: grid; grid-template-columns: repeat(4, 1fr) 1.55fr; gap: 14px; }
+  .metric {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 11px 14px; box-shadow: 0 1px 2px rgba(22,24,29,.04);
+    display: flex; flex-direction: column;
+  }
+  .metric__k {
+    font-size: 10.5px; font-weight: 600; letter-spacing: .45px; color: var(--mute);
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .metric__v {
+    font-family: var(--mono); font-variant-numeric: tabular-nums;
+    font-size: 25px; font-weight: 500; letter-spacing: -.6px; margin-top: 5px;
+    line-height: 1.05; display: flex; align-items: baseline; gap: 7px;
+  }
+  .metric__v small { font-size: 12px; font-weight: 500; letter-spacing: 0; }
+  .up { color: var(--red); }
+  .down { color: var(--green); }
+  .metric__sub { margin-top: auto; font-size: 10.5px; color: var(--mute); }
+
+  .dist { display: flex; align-items: flex-end; gap: 7px; height: 38px; margin-top: 4px; }
+  .dist__col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; }
+  .dist__bar { background: #c8cbf2; border-radius: 2px 2px 0 0; min-height: 2.5px; }
+  .dist__col:last-child .dist__bar { background: #c62828; }
+  .dist__n {
+    font-family: var(--mono); font-size: 9.5px; color: var(--mute);
+    text-align: center; letter-spacing: -.2px;
+  }
+  .dist__x {
+    display: flex; gap: 7px; margin-top: 3px;
+    font-family: var(--mono); font-size: 9px; color: #a9aebd;
+  }
+  .dist__x span { flex: 1; text-align: center; }
+
+  .content { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 380px; gap: 14px; }
+
+  /* ---------------- table ---------------- */
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(22,24,29,.04);
+    display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+  }
+  .thead {
+    flex: 0 0 40px; display: flex; align-items: center;
+    border-bottom: 1px solid var(--line); background: #fafbfd;
+    font-size: 10.5px; font-weight: 600; letter-spacing: .4px; color: var(--mute);
+    text-transform: uppercase; padding: 0 14px;
+  }
+  .tbody { flex: 1; min-height: 0; overflow-y: scroll; }
+  .tbody::-webkit-scrollbar { width: 11px; }
+  .tbody::-webkit-scrollbar-track { background: #fafbfd; border-left: 1px solid var(--line-soft); }
+  .tbody::-webkit-scrollbar-thumb {
+    background: #c9cdd9; border-radius: 6px; border: 3px solid #fafbfd;
+  }
+  .tr {
+    display: flex; align-items: center; padding: 0 14px; height: 44px;
+    border-bottom: 1px solid var(--line-soft); position: relative;
+  }
+  .tr--sel { background: #f4f5ff; }
+  .tr--sel::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--brand);
+  }
+  .tr--muted { background: #fbfbfc; }
+  .tr--muted .c-asset b, .tr--muted .num { color: #9aa0ad; }
+  .tr--stale .num { color: #a9aebd; }
+
+  .c-asset { width: 186px; flex: 0 0 186px; min-width: 0; padding-right: 8px; }
+  .c-asset b {
+    display: block; font-family: var(--mono); font-size: 12.5px; font-weight: 500;
+    letter-spacing: -.2px;
+  }
+  .c-asset span {
+    display: block; font-size: 10.5px; color: var(--mute); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .c-site {
+    width: 116px; flex: 0 0 116px; font-size: 12px; color: var(--dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 10px;
+  }
+  .c-n { width: 74px; flex: 0 0 74px; text-align: right; font-size: 12.5px; padding-right: 12px; }
+  .c-score { width: 130px; flex: 0 0 130px; display: flex; align-items: center; gap: 8px; }
+  .c-seen { flex: 1; text-align: right; font-size: 11.5px; color: var(--mute); white-space: nowrap; }
+
+  .sortcaret { color: var(--brand); font-size: 9px; }
+  .thead .c-n, .thead .c-score, .thead .c-seen { padding-right: 12px; }
+  .thead .c-score { padding-right: 0; }
+
+  .sbar { width: 46px; height: 5px; border-radius: 3px; background: #ecedf3; overflow: hidden; }
+  .sbar i { display: block; height: 100%; }
+  .sval { font-family: var(--mono); font-size: 12.5px; font-weight: 500; width: 24px; }
+  .band-red .sbar i { background: var(--red); }
+  .band-red .sval { color: var(--red); }
+  .band-amber .sbar i { background: var(--amber); }
+  .band-amber .sval { color: var(--amber); }
+
+  .flag {
+    font-size: 9px; font-weight: 700; letter-spacing: .35px; text-transform: uppercase;
+    border-radius: 3px; padding: 1px 4px; white-space: nowrap;
+  }
+  .flag--partial { background: var(--amber-bg); color: var(--amber); border: 1px solid #f0e0c4; }
+  .flag--wo { background: #eef1f6; color: #5b6172; border: 1px solid #dfe3ec; }
+  .flag--stale { background: #f4f5f7; color: #8f95a6; border: 1px solid #e6e8ee; }
+  .flag--edge { background: transparent; color: var(--amber); border: 1px dashed #d9b877; }
+  .dash { color: #c2c6d2; }
+
+  .tfoot {
+    flex: 0 0 44px; display: flex; align-items: center; padding: 0 14px;
+    border-top: 1px solid var(--line); background: #fafbfd;
+    font-size: 11.5px; color: var(--dim);
+  }
+  .pager { margin-left: auto; display: flex; align-items: center; gap: 3px; }
+  .pg {
+    min-width: 25px; height: 25px; border-radius: 4px; display: flex;
+    align-items: center; justify-content: center; font-family: var(--mono);
+    font-size: 11.5px; color: var(--dim);
+  }
+  .pg--on { background: var(--brand); color: #fff; font-weight: 600; }
+  .pg--off { color: #c2c6d2; }
+
+  /* ---------------- detail panel ---------------- */
+  .panel { display: flex; flex-direction: column; min-height: 0; }
+  .panel__hd { padding: 14px 16px 12px; border-bottom: 1px solid var(--line); }
+  .panel__eyebrow {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .8px; color: var(--mute);
+    text-transform: uppercase; margin-bottom: 7px;
+  }
+  .panel__id {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .panel__id b { font-family: var(--mono); font-size: 17px; font-weight: 500; letter-spacing: -.3px; }
+  .panel__score {
+    font-family: var(--mono); font-size: 27px; font-weight: 500; color: var(--red);
+    letter-spacing: -1px; line-height: 1;
+  }
+  .panel__meta { font-size: 11.5px; color: var(--mute); margin-top: 3px; }
+  .sev {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 9px;
+    background: var(--red-bg); color: var(--red); border: 1px solid #f2d7d5;
+    border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700;
+    letter-spacing: .4px; text-transform: uppercase;
+  }
+
+  .spark { padding: 12px 16px 10px; border-bottom: 1px solid var(--line); }
+  .spark__hd {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 10.5px; color: var(--mute); margin-bottom: 6px;
+  }
+  .spark__note { font-size: 10px; color: #a9aebd; margin-top: 5px; }
+
+  .sig {
+    flex: 1; min-height: 0; padding: 12px 16px 12px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .sig__hd {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .8px; color: var(--mute);
+    text-transform: uppercase; display: flex; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .sig__row { margin-bottom: 8px; }
+  .sig__top {
+    display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; margin-bottom: 4px;
+  }
+  .sig__top b { font-weight: 500; }
+  .sig__w {
+    margin-left: auto; font-family: var(--mono); font-size: 12.5px; font-weight: 500;
+    color: var(--text);
+  }
+  .sig__track { height: 4px; border-radius: 2px; background: #eff0f5; overflow: hidden; }
+  .sig__track i { display: block; height: 100%; background: #7c74e8; }
+  .sig__sub {
+    font-family: var(--mono); font-size: 10px; color: var(--mute); margin-top: 4px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sig__total {
+    display: flex; align-items: center; border-top: 1px solid var(--line);
+    padding-top: 10px; margin-top: auto; font-size: 12px; color: var(--dim);
+  }
+  .sig__total b {
+    margin-left: auto; font-family: var(--mono); font-size: 15px; font-weight: 600;
+    color: var(--text);
+  }
+
+  .panel__ft {
+    flex: 0 0 auto; padding: 12px 16px; border-top: 1px solid var(--line);
+    display: flex; gap: 8px; background: #fafbfd;
+  }
+  .btn {
+    height: 33px; border-radius: 6px; font-size: 12.5px; font-weight: 500;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 0 13px;
+  }
+  .btn--pri { background: var(--brand); color: #fff; flex: 1; box-shadow: 0 1px 2px rgba(79,70,229,.3); }
+  .btn--sec { background: var(--card); color: var(--dim); border: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ rail ============ -->
+  <aside class="rail">
+    <div class="rail__brand">
+      <div class="rail__glyph"></div>
+      <div class="rail__name">Bellwether</div>
+      <div class="rail__env">PRD</div>
+    </div>
+
+    <nav class="rail__nav">
+      <a class="navitem navitem--on" href="#">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="1.8" y="1.8" width="5" height="5" rx="1"/><rect x="9.2" y="1.8" width="5" height="5" rx="1"/>
+          <rect x="1.8" y="9.2" width="5" height="5" rx="1"/><rect x="9.2" y="9.2" width="5" height="5" rx="1"/>
+        </svg>Overview</a>
+      <a class="navitem" href="#">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 12.5V6l6-3.5L14 6v6.5"/><path d="M6.2 12.5V9h3.6v3.5"/>
+        </svg>Assets</a>
+      <a class="navitem" href="#">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 2.2 14.2 13H1.8L8 2.2Z"/><path d="M8 6.4v3.1"/><circle cx="8" cy="11.2" r=".5" fill="currentColor" stroke="none"/>
+        </svg>Alerts<span class="navitem__badge">13</span></a>
+      <a class="navitem" href="#">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2.2" y="3.4" width="11.6" height="10.2" rx="1.2"/><path d="M5.4 3.4V1.9m5.2 1.5V1.9M5 7.4h6M5 10.2h3.6"/>
+        </svg>Work orders</a>
+
+      <div class="rail__group">TELEMETRY</div>
+      <a class="navitem" href="#">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M1.5 8.6h2.4l1.5-4.3 2.2 7.4 1.7-5 1.3 2.4h3.9"/>
+        </svg>Sensors</a>
+      <a class="navitem" href="#">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2.4 13.2V7m3.8 6.2V3.6m3.8 9.6V9.2m3.6 4V5.4"/>
+        </svg>Models</a>
+      <a class="navitem" href="#">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3.4 2.2h6.2l3 3v8.6H3.4z"/><path d="M9.4 2.4V5.4h3"/>
+        </svg>Reports</a>
+    </nav>
+
+    <div class="rail__foot">
+      <div class="rail__avatar">RE</div>
+      <div class="rail__who">M. Andersen<span>Reliability eng.</span></div>
+    </div>
+  </aside>
+
+  <!-- ============ shell ============ -->
+  <div class="shell">
+
+    <header class="topbar">
+      <div class="crumb">Fleet <span>/</span> <b>Overview</b></div>
+      <div class="search">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="7" cy="7" r="4.4"/><path d="M10.4 10.4 14 14"/>
+        </svg>
+        Search assets, sensors, work orders
+      </div>
+      <div class="topbar__right">
+        <div class="selector">Last 14 days
+          <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l3 3 3-3"/></svg>
+        </div>
+        <div class="iconbtn">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 6.4a4 4 0 0 1 8 0c0 3 1.2 4.2 1.2 4.2H2.8S4 9.4 4 6.4Z"/><path d="M6.6 12.8a1.6 1.6 0 0 0 2.8 0"/>
+          </svg>
+          <span class="iconbtn__dot"></span>
+        </div>
+      </div>
+    </header>
+
+    <div class="filterbar">
+      <span class="chip">At risk only <span class="chip__x">×</span></span>
+      <span class="chip">Score ≥ 70 <span class="chip__x">×</span></span>
+      <span class="filt">Site: all
+        <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l3 3 3-3"/></svg>
+      </span>
+      <span class="filt">Asset class: all
+        <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l3 3 3-3"/></svg>
+      </span>
+      <span class="filt filt--ghost">+ Add filter</span>
+      <span class="btn-sm" data-disabled>Bulk assign</span>
+      <div class="filterbar__right">
+        <span>Synced 14:07:33</span>
+        <span>·</span>
+        <span>Model v4.2.1</span>
+      </div>
+    </div>
+
+    <main>
+      <!-- ---------- metrics ---------- -->
+      <section class="metrics">
+        <div class="metric">
+          <div class="metric__k">Assets monitored</div>
+          <div class="metric__v">1,284</div>
+          <div class="metric__sub">across 5 sites</div>
+        </div>
+        <div class="metric">
+          <div class="metric__k">At risk</div>
+          <div class="metric__v">13 <small class="up">▲ 4</small></div>
+          <div class="metric__sub">vs. 14 d prior</div>
+        </div>
+        <div class="metric">
+          <div class="metric__k">Fleet mean score</div>
+          <div class="metric__v">26.4 <small class="down">▼ 1.2</small></div>
+          <div class="metric__sub">all 1,284 assets</div>
+        </div>
+        <div class="metric">
+          <div class="metric__k">Open work orders</div>
+          <div class="metric__v">18</div>
+          <div class="metric__sub">6 awaiting parts</div>
+        </div>
+        <div class="metric">
+          <div class="metric__k">Score distribution</div>
+          <div class="dist">
+            <div class="dist__col"><div class="dist__n">720</div><div class="dist__bar" style="height:23px"></div></div>
+            <div class="dist__col"><div class="dist__n">389</div><div class="dist__bar" style="height:12.4px"></div></div>
+            <div class="dist__col"><div class="dist__n">98</div><div class="dist__bar" style="height:3.1px"></div></div>
+            <div class="dist__col"><div class="dist__n">64</div><div class="dist__bar" style="height:2.5px"></div></div>
+            <div class="dist__col"><div class="dist__n">13</div><div class="dist__bar" style="height:2.5px"></div></div>
+          </div>
+          <div class="dist__x">
+            <span>0–20</span><span>21–40</span><span>41–55</span><span>56–69</span><span>70+</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- table + panel ---------- -->
+      <section class="content">
+
+        <div class="card">
+          <div class="thead">
+            <div class="c-asset">Asset</div>
+            <div class="c-site">Site</div>
+            <div class="c-n">Vib mm/s</div>
+            <div class="c-n">Brg °C</div>
+            <div class="c-n">Duty</div>
+            <div class="c-score">Score <span class="sortcaret">▼</span></div>
+            <div class="c-seen">Last seen</div>
+          </div>
+
+          <div class="tbody">
+
+            <div class="tr tr--sel band-red">
+              <div class="c-asset"><b>CP-4468</b><span>Screw compressor · Line 3</span></div>
+              <div class="c-site">Gliwice-2</div>
+              <div class="c-n num">6.7</div>
+              <div class="c-n num">88</div>
+              <div class="c-n num">94%</div>
+              <div class="c-score"><span class="sval">91</span><span class="sbar"><i style="width:71.9%"></i></span></div>
+              <div class="c-seen">2 min ago</div>
+            </div>
+
+            <div class="tr band-red">
+              <div class="c-asset"><b>CP-4471</b><span>Screw compressor · Line 1</span></div>
+              <div class="c-site">Ostrava</div>
+              <div class="c-n num">7.4</div>
+              <div class="c-n num">91</div>
+              <div class="c-n num">89%</div>
+              <div class="c-score"><span class="sval">88</span><span class="sbar"><i style="width:62.5%"></i></span></div>
+              <div class="c-seen">2 min ago</div>
+            </div>
+
+            <div class="tr band-red">
+              <div class="c-asset"><b>GB-2207</b><span>Gearbox · Mill 4</span></div>
+              <div class="c-site">Nyíregyháza-Kelet 2</div>
+              <div class="c-n num">6.2</div>
+              <div class="c-n num">84</div>
+              <div class="c-n num">76%</div>
+              <div class="c-score"><span class="sval">86</span><span class="sbar"><i style="width:56.3%"></i></span></div>
+              <div class="c-seen">3 min ago</div>
+            </div>
+
+            <div class="tr band-red">
+              <div class="c-asset"><b>PU-0942</b><span>Centrifugal pump · Utility</span></div>
+              <div class="c-site">Kraków</div>
+              <div class="c-n num">3.8</div>
+              <div class="c-n num dash">—</div>
+              <div class="c-n num">72%</div>
+              <div class="c-score">
+                <span class="sval">84</span><span class="sbar"><i style="width:50%"></i></span>
+                <span class="flag flag--partial">Partial</span>
+              </div>
+              <div class="c-seen">2 min ago</div>
+            </div>
+
+            <div class="tr band-red">
+              <div class="c-asset"><b>EX-1183</b><span>Twin-screw extruder · Line 2</span></div>
+              <div class="c-site">Timișoara</div>
+              <div class="c-n num">5.1</div>
+              <div class="c-n num">79</div>
+              <div class="c-n num">88%</div>
+              <div class="c-score"><span class="sval">83</span><span class="sbar"><i style="width:46.9%"></i></span></div>
+              <div class="c-seen">2 min ago</div>
+            </div>
+
+            <div class="tr band-red">
+              <div class="c-asset"><b>CH-0518</b><span>Chiller · Utility loop</span></div>
+              <div class="c-site">Ostrava</div>
+              <div class="c-n num">4.9</div>
+              <div class="c-n num">86</div>
+              <div class="c-n num">61%</div>
+              <div class="c-score"><span class="sval">82</span><span class="sbar"><i style="width:43.8%"></i></span></div>
+              <div class="c-seen">4 min ago</div>
+            </div>
+
+            <div class="tr band-red">
+              <div class="c-asset"><b>CV-3364</b><span>Belt conveyor · Pack hall</span></div>
+              <div class="c-site">Gliwice-2</div>
+              <div class="c-n num">5.6</div>
+              <div class="c-n num">68</div>
+              <div class="c-n num">97%</div>
+              <div class="c-score"><span class="sval">81</span><span class="sbar"><i style="width:40.6%"></i></span></div>
+              <div class="c-seen">2 min ago</div>
+            </div>
+
+            <div class="tr tr--muted band-amber">
+              <div class="c-asset"><b>CP-4402</b><span>Screw compressor · Line 5</span></div>
+              <div class="c-site">Kraków</div>
+              <div class="c-n num">4.4</div>
+              <div class="c-n num">82</div>
+              <div class="c-n num">84%</div>
+              <div class="c-score">
+                <span class="sval">79</span><span class="sbar"><i style="width:34.4%"></i></span>
+                <span class="flag flag--wo">WO-2291</span>
+              </div>
+              <div class="c-seen">2 min ago</div>
+            </div>
+
+            <div class="tr band-red">
+              <div class="c-asset"><b>PU-1130</b><span>Centrifugal pump · Line 2</span></div>
+              <div class="c-site">Ostrava</div>
+              <div class="c-n num">4.1</div>
+              <div class="c-n num">77</div>
+              <div class="c-n num">79%</div>
+              <div class="c-score"><span class="sval">77</span><span class="sbar"><i style="width:28.1%"></i></span></div>
+              <div class="c-seen">3 min ago</div>
+            </div>
+
+            <div class="tr band-amber">
+              <div class="c-asset"><b>EX-1176</b><span>Twin-screw extruder · Line 4</span></div>
+              <div class="c-site">Timișoara</div>
+              <div class="c-n num">4.7</div>
+              <div class="c-n num">81</div>
+              <div class="c-n num">66%</div>
+              <div class="c-score"><span class="sval">75</span><span class="sbar"><i style="width:21.9%"></i></span></div>
+              <div class="c-seen">2 min ago</div>
+            </div>
+
+            <div class="tr band-amber">
+              <div class="c-asset"><b>GB-2244</b><span>Gearbox · Mill 1</span></div>
+              <div class="c-site">Ostrava</div>
+              <div class="c-n num">5.3</div>
+              <div class="c-n num">74</div>
+              <div class="c-n num">83%</div>
+              <div class="c-score"><span class="sval">73</span><span class="sbar"><i style="width:15.6%"></i></span></div>
+              <div class="c-seen">2 min ago</div>
+            </div>
+
+            <div class="tr tr--stale band-amber">
+              <div class="c-asset"><b>CV-3319</b><span>Belt conveyor · Pack hall</span></div>
+              <div class="c-site">Nyíregyháza-Kelet 2</div>
+              <div class="c-n num">3.9</div>
+              <div class="c-n num">71</div>
+              <div class="c-n num">91%</div>
+              <div class="c-score">
+                <span class="sval">71</span><span class="sbar"><i style="width:9.4%"></i></span>
+                <span class="flag flag--stale">Stale</span>
+              </div>
+              <div class="c-seen">4 h 12 m ago</div>
+            </div>
+
+            <div class="tr band-amber">
+              <div class="c-asset"><b>CH-0503</b><span>Chiller · Utility loop</span></div>
+              <div class="c-site">Gliwice-2</div>
+              <div class="c-n num">4.6</div>
+              <div class="c-n num">83</div>
+              <div class="c-n num">58%</div>
+              <div class="c-score">
+                <span class="sval">70</span><span class="sbar"><i style="width:6.3%"></i></span>
+                <span class="flag flag--edge">At threshold</span>
+              </div>
+              <div class="c-seen">2 min ago</div>
+            </div>
+
+          </div>
+
+          <div class="tfoot">
+            <span>Showing <span class="num">1–13</span> of <span class="num">13</span> at risk</span>
+            <div class="pager">
+              <span style="margin-right:10px">Rows per page 25 ▾</span>
+              <span class="pg pg--off">‹</span>
+              <span class="pg pg--on">1</span>
+              <span class="pg pg--off">›</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- detail panel ---------- -->
+        <div class="card panel">
+          <div class="panel__hd">
+            <div class="panel__eyebrow">Selected asset</div>
+            <div class="panel__id">
+              <b>CP-4468</b>
+              <div class="panel__score">91</div>
+            </div>
+            <div class="panel__meta">Screw compressor · Gliwice-2 · Line 3</div>
+            <div class="sev">▲ Critical · dispatch advised</div>
+          </div>
+
+          <div class="spark">
+            <div class="spark__hd">
+              <span>Score, last 14 days</span>
+              <span class="num">42 → 91</span>
+            </div>
+            <svg width="348" height="58" viewBox="0 0 348 58" fill="none">
+              <line x1="0" y1="52" x2="348" y2="52" stroke="#eff0f5" stroke-width="1"/>
+              <line x1="0" y1="27" x2="348" y2="27" stroke="#f6f7fa" stroke-width="1"/>
+              <path d="M0 50.3 L26.8 48.7 L53.5 49.5 L80.3 46.1 L107 42.8 L133.8 36.9"
+                    stroke="#7c74e8" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M133.8 36.9 L214.1 30.3"
+                    stroke="#c5c8d6" stroke-width="1.6" stroke-dasharray="3 3"/>
+              <path d="M214.1 30.3 L240.9 26.1 L267.6 23.6 L294.4 18.6 L321.2 13.5 L348 9.4"
+                    stroke="#7c74e8" stroke-width="1.8" stroke-linejoin="round"/>
+              <circle cx="348" cy="9.4" r="3" fill="#c62828"/>
+            </svg>
+            <div class="spark__note">Dashed segment: sensor gateway outage, 2 d — score carried forward.</div>
+          </div>
+
+          <div class="sig">
+            <div class="sig__hd"><span>Contributing signals</span><span>Weight</span></div>
+
+            <div class="sig__row">
+              <div class="sig__top"><b>Vibration trend</b><span class="sig__w">+38</span></div>
+              <div class="sig__track"><i style="width:100%"></i></div>
+              <div class="sig__sub">6.7 mm/s RMS · ISO 10816 alarm 4.5 · rising 9 d</div>
+            </div>
+
+            <div class="sig__row">
+              <div class="sig__top"><b>Bearing temperature</b><span class="sig__w">+27</span></div>
+              <div class="sig__track"><i style="width:71%"></i></div>
+              <div class="sig__sub">88 °C · baseline 71 °C</div>
+            </div>
+
+            <div class="sig__row">
+              <div class="sig__top"><b>Duty cycle</b><span class="sig__w">+14</span></div>
+              <div class="sig__track"><i style="width:37%"></i></div>
+              <div class="sig__sub">94 % · sustained 6 d</div>
+            </div>
+
+            <div class="sig__row">
+              <div class="sig__top"><b>Oil particulate</b><span class="sig__w">+9</span></div>
+              <div class="sig__track"><i style="width:24%"></i></div>
+              <div class="sig__sub">ISO 4406 19/17/14 <span class="flag flag--stale">12 d old</span></div>
+            </div>
+
+            <div class="sig__row">
+              <div class="sig__top"><b>Ambient derate</b><span class="sig__w">+3</span></div>
+              <div class="sig__track"><i style="width:8%"></i></div>
+              <div class="sig__sub">34 °C intake</div>
+            </div>
+
+            <div class="sig__total">Composite score <b>91</b></div>
+          </div>
+
+          <div class="panel__ft">
+            <span class="btn btn--pri">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7">
+                <path d="M8 3.2v9.6M3.2 8h9.6"/>
+              </svg>
+              Create work order
+            </span>
+            <span class="btn btn--sec">Snooze 7 d</span>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+</div>
+</body>
+</html>

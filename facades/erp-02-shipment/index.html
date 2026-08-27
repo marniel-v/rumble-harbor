@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Millrace — Shipment PKG-4471</title>
+<style>
+  /* ------------------------------------------------------------------
+     Millrace — shipment view for a staged package.
+
+     Same product, second view. Reuses view 1's shell VERBATIM: 52px
+     header (same wordmark, site selector, scan pill, links, avatar),
+     420px right accordion, 28px footer, same type scale, same hairline
+     rules, same status vocabulary, same teal tint. The left region is
+     the only thing that changes: a toolbar over the package contents
+     instead of the tool grid.
+
+     Vertical budget, 900px:
+       header 52 + main 820 + footer 28
+       main.left = toolbar 40 + notice 28 + table(flex: thead 34 /
+                   tbody flex,hidden / tfoot 28)
+       main.side = 420px accordion; last section absorbs the overflow
+     ------------------------------------------------------------------ */
+
+  :root {
+    --ink:      #22262a;
+    --ink-2:    #6d7278;
+    --ink-3:    #9aa0a6;
+    --ink-4:    #b6bbc0;
+    --hair:     #d7dade;
+    --hair-2:   #e7e9ec;
+    --bg:       #ffffff;
+    --bg-2:     #f7f7f8;
+    --bg-3:     #eff0f2;
+
+    --tint:     #16a3aa;
+    --tint-dk:  #0f6b70;
+    --tint-bg:  #e7f5f6;
+
+    --ok:       #2fa360;
+    --ok-bg:    #e8f6ee;
+    --warn:     #c97a06;
+    --warn-bg:  #fdf3e2;
+    --bad:      #cf3b30;
+    --bad-bg:   #fceceb;
+
+    --r:        5px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; }
+  body {
+    font: 400 12px/1.42 "Helvetica Neue", -apple-system, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  .icn { display: block; }
+  .app { display: flex; flex-direction: column; height: 900px; }
+
+  /* ---------- header (identical to view 1) ---------- */
+  .hdr {
+    flex: 0 0 52px; display: flex; align-items: center; gap: 0;
+    padding: 0 18px 0 22px; border-bottom: 1px solid var(--hair);
+    background: var(--bg-2);
+  }
+  .wm { font-size: 15px; font-weight: 300; letter-spacing: .215em; color: var(--tint-dk); }
+  .hdr__div { width: 1px; height: 24px; background: var(--hair); margin: 0 16px; }
+  .site { display: flex; align-items: baseline; gap: 5px; font-size: 12.5px; color: var(--ink); }
+  .site em { font-style: normal; color: var(--ink-3); }
+  .cv { color: var(--ink-4); font-size: 9px; }
+  .crumb { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2); }
+  .crumb b { font-weight: 500; color: var(--ink); }
+  .crumb a { color: var(--tint-dk); }
+  .crumb span { color: var(--ink-4); }
+  .spacer { flex: 1; }
+
+  .scan {
+    display: flex; align-items: center; gap: 8px;
+    width: 292px; height: 30px; padding: 0 11px 0 10px;
+    border: 1px solid var(--tint); border-radius: 15px; background: #fff;
+    box-shadow: 0 0 0 3px rgba(22,163,170,.14);
+  }
+  .scan__v { font-size: 13px; letter-spacing: .01em; }
+  .scan__t { margin-left: auto; font-size: 10px; color: var(--ink-3); }
+  .hdr__lnk { font-size: 12.5px; color: var(--tint-dk); margin-left: 20px; }
+  .hdr__lnk.is-off { color: var(--ink-4); }
+  .av {
+    width: 27px; height: 27px; border-radius: 50%; margin-left: 18px;
+    background: var(--bg-3); border: 1px solid var(--hair);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10.5px; font-weight: 500; color: var(--ink-2); letter-spacing: .03em;
+  }
+
+  /* ---------- main ---------- */
+  .main { flex: 1; display: flex; min-height: 0; }
+  .left { flex: 1; display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--hair); }
+  .side { flex: 0 0 420px; display: flex; flex-direction: column; min-height: 0; background: var(--bg-2); }
+
+  /* ---------- toolbar ---------- */
+  .tb { flex: 0 0 40px; display: flex; align-items: center; gap: 8px; padding: 0 22px; border-bottom: 1px solid var(--hair-2); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px;
+    border: 1px solid var(--hair); border-radius: 4px; background: #fff;
+    font-size: 12px; color: var(--ink); white-space: nowrap;
+  }
+  .btn--p { border-color: var(--tint); background: var(--tint); color: #fff; }
+  .btn.is-off { background: var(--bg-2); color: var(--ink-4); border-color: var(--hair-2); }
+  .btn .icn { stroke: currentColor; stroke-width: 1.3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .tb__div { width: 1px; height: 18px; background: var(--hair-2); margin: 0 4px; }
+  .chip-f { display: inline-flex; align-items: center; gap: 5px; height: 19px; white-space: nowrap; padding: 0 7px; border-radius: 10px; background: var(--tint-bg); color: var(--tint-dk); font-size: 10.5px; }
+  .chip-f i { font-style: normal; color: var(--ink-4); font-size: 11px; }
+
+  /* ---------- notice ---------- */
+  .ntc {
+    flex: 0 0 28px; display: flex; align-items: center; gap: 8px; padding: 0 22px;
+    background: var(--warn-bg); border-bottom: 1px solid #f0dfbe; font-size: 11.5px; color: #8a5504;
+  }
+  .ntc b { font-weight: 500; }
+  .ntc__x { margin-left: auto; color: var(--ink-4); font-size: 12px; }
+
+  /* ---------- contents table ---------- */
+  .cnt { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .cnt__hd { flex: 0 0 34px; }
+  .cnt__bd { flex: 1; min-height: 0; overflow: hidden; }
+  .cnt__ft { flex: 0 0 28px; border-top: 1px solid var(--hair); background: var(--bg-2); }
+  table.ct { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .ct th {
+    height: 34px; font-size: 9.5px; font-weight: 500; letter-spacing: .085em; color: var(--ink-3);
+    text-transform: uppercase; text-align: left; padding: 0 8px; border-bottom: 1px solid var(--hair);
+    vertical-align: middle;
+  }
+  .ct td { height: 28px; padding: 0 8px; font-size: 12px; border-bottom: 1px solid var(--hair-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ct th:first-child, .ct td:first-child { padding-left: 22px; }
+  .ct th:last-child, .ct td:last-child { padding-right: 22px; }
+  .ct .n { text-align: right; }
+  .ct .sq { color: var(--ink-4); font-size: 10.5px; }
+  .ct tr.is-trace td { background: var(--tint-bg); }
+  .ct tr.is-trace td:first-child { box-shadow: inset 2px 0 0 var(--tint); }
+  .ct tr.is-held td { background: var(--warn-bg); }
+  .ct tr.is-held td:first-child { box-shadow: inset 2px 0 0 var(--warn); }
+  .ct .ft td { height: 28px; font-size: 11.5px; border-bottom: 0; color: var(--ink-2); }
+  .ct .ft td b { font-weight: 500; color: var(--ink); }
+  .mu { color: var(--ink-4); }
+  .vd { font-size: 9.5px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+  .vd--ok { color: var(--ok); }
+  .vd--bad { color: var(--bad); }
+  .vd--hold { color: var(--warn); }
+  .st { font-size: 11.5px; }
+  .st--hold { color: var(--warn); font-weight: 500; }
+  .st--flag { color: var(--warn); }
+
+  /* ---------- accordion (identical component to view 1) ---------- */
+  .idn { flex: 0 0 auto; padding: 9px 16px 8px; border-bottom: 1px solid var(--hair); background: #fff; }
+  .idn__t { display: flex; align-items: flex-start; gap: 10px; }
+  .idn__m { font-size: 19px; font-weight: 300; letter-spacing: .01em; line-height: 1.15; }
+  .idn__s { font-size: 12px; color: var(--ink-2); margin-top: 1px; letter-spacing: .02em; }
+  .idn__c { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .chip { display: inline-flex; align-items: center; height: 17px; padding: 0 7px; border-radius: 3px; font-size: 10px; font-weight: 500; letter-spacing: .02em; }
+  .chip--ok { background: var(--ok-bg); color: var(--ok); }
+  .chip--warn { background: var(--warn-bg); color: var(--warn); }
+  .chip--nt { background: var(--bg-3); color: var(--ink-2); }
+  .idn__meta { margin-top: 9px; font-size: 10.5px; color: var(--ink-3); letter-spacing: .01em; }
+
+  .sec { border-bottom: 1px solid var(--hair); display: flex; flex-direction: column; min-height: 0; }
+  .sec__h { flex: 0 0 32px; display: flex; align-items: center; gap: 8px; padding: 0 16px; }
+  .sec__h b { font-size: 11px; font-weight: 500; letter-spacing: .085em; text-transform: uppercase; color: var(--ink-2); }
+  .sec__h em { font-style: normal; font-size: 10.5px; color: var(--ink-3); margin-left: auto; text-align: right;
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; }
+  .dis { width: 7px; height: 7px; border-right: 1.3px solid var(--ink-4); border-bottom: 1.3px solid var(--ink-4); transform: rotate(45deg); margin-right: 1px; }
+  .dis--open { transform: rotate(-135deg); position: relative; top: 2px; }
+  .sec__b { background: #fff; border-top: 1px solid var(--hair-2); min-height: 0; overflow: hidden; }
+
+  .kv { padding: 9px 16px 10px; }
+  .kv__r { display: flex; align-items: baseline; gap: 10px; padding: 1px 0; }
+  .kv__r > span { flex: 0 0 92px; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+  .kv__r b { font-weight: 400; font-size: 11.5px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kv__r b.wrap { white-space: normal; }
+  .kv__r b .mu { font-size: 10px; }
+  .kv__n { font-size: 10.5px; color: var(--ink-2); margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--hair-2); }
+  .kv__n b { font-weight: 500; }
+
+  .fig { display: flex; padding: 9px 16px 2px; }
+  .fig div { flex: 1; }
+  .fig span { display: block; font-size: 9.5px; letter-spacing: .085em; text-transform: uppercase; color: var(--ink-3); }
+  .fig b { display: block; font-size: 14px; font-weight: 300; margin-top: 2px; letter-spacing: .01em; }
+  .fig u { text-decoration: none; font-size: 10px; color: var(--ink-3); }
+
+  table.mx { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .mx td { height: 20px; padding: 0 8px; font-size: 11.5px; border-bottom: 1px solid var(--hair-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mx td:first-child { padding-left: 16px; }
+  .mx td:last-child { padding-right: 16px; text-align: right; }
+  .mx .n { text-align: right; }
+  .mx tr.tot td { border-top: 1px solid var(--hair); font-weight: 500; }
+  .mx tr.less td { color: var(--warn); }
+  .mx tr.shp td { background: var(--tint-bg); font-weight: 500; border-bottom: 0; }
+
+  .log { padding: 4px 0 0; }
+  .log__ln { display: flex; gap: 9px; padding: 4px 16px 5px; font-size: 11px; border-bottom: 1px solid var(--hair-2); }
+  .log__ln time { flex: 0 0 52px; color: var(--ink-3); }
+  .log__ln p { flex: 1; min-width: 0; color: var(--ink-2); line-height: 1.35; }
+  .log__ln p b { font-weight: 500; color: var(--ink); }
+
+  /* ---------- footer (identical to view 1) ---------- */
+  .ftr {
+    flex: 0 0 28px; display: flex; align-items: center; gap: 16px;
+    padding: 0 18px 0 22px; border-top: 1px solid var(--hair);
+    background: var(--bg-2); font-size: 10.5px; color: var(--ink-3);
+  }
+  .ftr b { font-weight: 400; color: var(--ink-2); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-bar" viewBox="0 0 24 24"><path d="M3 5v14M6 5v14M8.5 5v14M12 5v14M14 5v14M17 5v14M19 5v14M21.5 5v14"/></symbol>
+  <symbol id="i-pr" viewBox="0 0 24 24"><path d="M7 9V3h10v6"/><rect x="3.5" y="9" width="17" height="7" rx="1.5"/><path d="M7 14h10v7H7z"/></symbol>
+  <symbol id="i-lb" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="1.5"/><path d="M6 9v6M8.5 9v6M11.5 9v6M14 9v6M17.5 9v6"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 15.5h4"/></symbol>
+  <symbol id="i-tk" viewBox="0 0 24 24"><path d="M1.8 6.5h12v10h-12z"/><path d="M13.8 10h4.2l3.2 3.2v3.3h-7.4z"/><circle cx="6" cy="18.4" r="1.9"/><circle cx="17" cy="18.4" r="1.9"/></symbol>
+  <symbol id="i-sp" viewBox="0 0 24 24"><path d="M4 12h6M14 12h6"/><path d="M10 8v8M14 8v8"/></symbol>
+</defs></svg>
+
+<div class="app">
+
+  <!-- ======================= header ======================= -->
+  <header class="hdr">
+    <div class="wm">MILLRACE</div>
+    <div class="hdr__div"></div>
+    <div class="site">Vila&nbsp;do&nbsp;Conde <em>· Line&nbsp;3</em> <span class="cv">▼</span></div>
+    <div class="hdr__div"></div>
+    <nav class="crumb"><a>Portal</a><span>›</span><a>Shipments</a><span>›</span><b data-check="pkg">PKG-4471</b></nav>
+    <div class="spacer"></div>
+    <div class="scan">
+      <svg class="icn" width="15" height="15" style="stroke:#16a3aa;stroke-width:1.2;fill:none"><use href="#i-bar"/></svg>
+      <span class="scan__v">PKG-4471</span>
+      <span class="scan__t">scanned 14:14:52</span>
+    </div>
+    <a class="hdr__lnk">Search</a>
+    <a class="hdr__lnk is-off">Help</a>
+    <div class="av">RS</div>
+  </header>
+
+  <!-- ======================= main ======================= -->
+  <div class="main">
+
+    <!-- ---------------- left: toolbar + package contents ---------------- -->
+    <div class="left">
+
+      <div class="tb">
+        <button class="btn btn--p"><svg class="icn" width="14" height="14"><use href="#i-pr"/></svg>Print packing list</button>
+        <button class="btn"><svg class="icn" width="14" height="14"><use href="#i-lb"/></svg>Print labels</button>
+        <button class="btn is-off" data-btn="commercial-invoice" data-state="disabled">
+          <svg class="icn" width="14" height="14"><use href="#i-doc"/></svg>Commercial invoice</button>
+        <div class="tb__div"></div>
+        <button class="btn"><svg class="icn" width="14" height="14"><use href="#i-tk"/></svg>Book carrier</button>
+        <button class="btn"><svg class="icn" width="14" height="14"><use href="#i-sp"/></svg>Split package</button>
+        <button class="btn is-off" data-btn="cancel" data-state="disabled">Cancel shipment</button>
+        <span class="chip-f" style="margin-left:auto">Pack sequence ↑ <i>×</i></span>
+        <span style="font-size:10.5px;color:var(--ink-3)">staged 14:03:19</span>
+      </div>
+
+      <div class="ntc">
+        <b>Line 17</b> has no HS classification (24-0836551) — commercial invoice cannot be produced.
+        <span class="ntc__x">×</span>
+      </div>
+
+      <div class="cnt">
+        <div class="cnt__hd">
+          <table class="ct">
+            <colgroup>
+              <col style="width:46px"><col style="width:90px"><col style="width:110px"><col style="width:92px">
+              <col style="width:96px"><col style="width:78px"><col style="width:66px"><col style="width:66px">
+              <col style="width:86px"><col style="width:96px"><col>
+            </colgroup>
+            <thead><tr>
+              <th>#</th><th>Model</th><th>Serial</th><th>Work order</th><th>As-built</th><th>Test</th>
+              <th>Bin</th><th class="n">Net kg</th><th class="n">Value €</th><th>HS code</th><th>Status</th>
+            </tr></thead>
+          </table>
+        </div>
+
+        <div class="cnt__bd">
+          <table class="ct">
+            <colgroup>
+              <col style="width:46px"><col style="width:90px"><col style="width:110px"><col style="width:92px">
+              <col style="width:96px"><col style="width:78px"><col style="width:66px"><col style="width:66px">
+              <col style="width:86px"><col style="width:96px"><col>
+            </colgroup>
+            <tbody>
+              <tr data-row="line" data-n="1" data-model="MX-410R" data-serial="24-0837390" data-net="1.347" data-value="742.50" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">1</td><td>MX-410R</td><td>24-0837390</td><td>WO-61208</td><td>G · 2.7.14</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-14</td><td class="n">1.347</td><td class="n">742.50</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="2" data-model="MX-410" data-serial="24-0819907" data-net="1.284" data-value="618.00" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">2</td><td>MX-410</td><td>24-0819907</td><td>WO-61044</td><td>F · 2.7.11</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-14</td><td class="n">1.284</td><td class="n">618.00</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="3" data-model="MX-410R" data-serial="24-0837404" data-net="1.347" data-value="742.50" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">3</td><td>MX-410R</td><td>24-0837404</td><td>WO-61208</td><td>G · 2.7.14</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-14</td><td class="n">1.347</td><td class="n">742.50</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="4" data-model="TX-880" data-serial="24-0655019" data-net="2.415" data-value="1486.40" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">4</td><td>TX-880</td><td>24-0655019</td><td>WO-60877</td><td>D · 3.1.02</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>C-03</td><td class="n">2.415</td><td class="n">1 486.40</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="5" data-model="MX-410" data-serial="24-0820015" data-net="1.284" data-value="618.00" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">5</td><td>MX-410</td><td>24-0820015</td><td>WO-61044</td><td>F · 2.7.11</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-15</td><td class="n">1.284</td><td class="n">618.00</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="6" data-model="MX-410R" data-serial="24-0836977" data-net="1.347" data-value="742.50" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">6</td><td>MX-410R</td><td>24-0836977</td><td>WO-61201</td><td>G · 2.7.14</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-12</td><td class="n">1.347</td><td class="n">742.50</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="7" data-model="MX-220" data-serial="24-0791336" data-net="1.092" data-value="431.25" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">7</td><td>MX-220</td><td>24-0791336</td><td>WO-60912</td><td>C · 1.9.08</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>B-07</td><td class="n">1.092</td><td class="n">431.25</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="8" data-model="MX-410" data-serial="24-0819883" data-net="1.284" data-value="618.00" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">8</td><td>MX-410</td><td>24-0819883</td><td>WO-61044</td><td>F · 2.7.11</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-15</td><td class="n">1.284</td><td class="n">618.00</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr class="is-held" data-row="line" data-n="9" data-model="MX-220" data-serial="23-0774102" data-net="1.092" data-value="431.25" data-hs="9028.30.90" data-status="held">
+                <td class="sq">9</td><td>MX-220</td><td>23-0774102</td><td>WO-58330</td><td>B · 1.9.04</td>
+                <td><span class="vd vd--bad">Fail</span></td><td>B-07</td><td class="n">1.092</td><td class="n">431.25</td><td>9028.30.90</td><td class="st st--hold">Held — seal verify</td></tr>
+              <tr class="is-trace" data-row="line" data-n="10" data-model="MX-410R" data-serial="24-0837412" data-net="1.347" data-value="742.50" data-hs="9028.30.90" data-status="ship" data-asbuilt="G · 2.7.14">
+                <td class="sq">10</td><td>MX-410R</td><td>24-0837412</td><td>WO-77341</td><td data-check="trace-asbuilt">G · 2.7.14</td>
+                <td><span class="vd vd--ok">Pass</span> <span class="mu" style="font-size:10px">retest</span></td><td>R-02</td><td class="n">1.347</td><td class="n">742.50</td><td>9028.30.90</td><td class="st">Repaired · re-ship</td></tr>
+              <tr data-row="line" data-n="11" data-model="MX-410" data-serial="24-0820147" data-net="1.284" data-value="618.00" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">11</td><td>MX-410</td><td>24-0820147</td><td>WO-61044</td><td>F · 2.7.11</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-15</td><td class="n">1.284</td><td class="n">618.00</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="12" data-model="MX-410R" data-serial="24-0837118" data-net="1.347" data-value="742.50" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">12</td><td>MX-410R</td><td>24-0837118</td><td>WO-61201</td><td>G · 2.7.14</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-12</td><td class="n">1.347</td><td class="n">742.50</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="13" data-model="TX-880" data-serial="24-0655127" data-net="2.415" data-value="1486.40" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">13</td><td>TX-880</td><td>24-0655127</td><td>WO-60877</td><td>D · 3.1.02</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>C-03</td><td class="n">2.415</td><td class="n">1 486.40</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="14" data-model="MX-410" data-serial="24-0819962" data-net="1.284" data-value="618.00" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">14</td><td>MX-410</td><td>24-0819962</td><td>WO-61044</td><td>F · 2.7.11</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-15</td><td class="n">1.284</td><td class="n">618.00</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="15" data-model="MX-410R" data-serial="24-0836824" data-net="1.347" data-value="742.50" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">15</td><td>MX-410R</td><td>24-0836824</td><td>WO-61201</td><td>G · 2.7.14</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-12</td><td class="n">1.347</td><td class="n">742.50</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="16" data-model="MX-220" data-serial="24-0791512" data-net="1.092" data-value="431.25" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">16</td><td>MX-220</td><td>24-0791512</td><td>WO-60912</td><td>C · 1.9.08</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>B-07</td><td class="n">1.092</td><td class="n">431.25</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="17" data-model="MX-410R" data-serial="24-0836551" data-net="1.347" data-value="742.50" data-hs="" data-status="ship">
+                <td class="sq">17</td><td>MX-410R</td><td>24-0836551</td><td>WO-61198</td><td>G · 2.7.13</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-12</td><td class="n">1.347</td><td class="n">742.50</td><td class="mu">—</td><td class="st st--flag">Unclassified</td></tr>
+              <tr data-row="line" data-n="18" data-model="MX-410" data-serial="24-0820088" data-net="1.284" data-value="618.00" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">18</td><td>MX-410</td><td>24-0820088</td><td>WO-61044</td><td>F · 2.7.11</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-15</td><td class="n">1.284</td><td class="n">618.00</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="19" data-model="MX-410R" data-serial="24-0837451" data-net="1.347" data-value="742.50" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">19</td><td>MX-410R</td><td>24-0837451</td><td>WO-61208</td><td>G · 2.7.14</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-14</td><td class="n">1.347</td><td class="n">742.50</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="20" data-model="MX-220" data-serial="23-0774288" data-net="1.092" data-value="431.25" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">20</td><td>MX-220</td><td>23-0774288</td><td>WO-58330</td><td>B · 1.9.04</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>B-07</td><td class="n">1.092</td><td class="n">431.25</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="21" data-model="MX-410" data-serial="24-0819771" data-net="1.284" data-value="618.00" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">21</td><td>MX-410</td><td>24-0819771</td><td>WO-61011</td><td>F · 2.7.11</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-16</td><td class="n">1.284</td><td class="n">618.00</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="22" data-model="MX-410R" data-serial="24-0836509" data-net="1.347" data-value="742.50" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">22</td><td>MX-410R</td><td>24-0836509</td><td>WO-61198</td><td>G · 2.7.13</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-12</td><td class="n">1.347</td><td class="n">742.50</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="23" data-model="MX-410" data-serial="24-0820203" data-net="1.284" data-value="618.00" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">23</td><td>MX-410</td><td>24-0820203</td><td>WO-61044</td><td>F · 2.7.11</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-15</td><td class="n">1.284</td><td class="n">618.00</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="24" data-model="MX-410R" data-serial="24-0837233" data-net="1.347" data-value="742.50" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">24</td><td>MX-410R</td><td>24-0837233</td><td>WO-61208</td><td>G · 2.7.14</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-14</td><td class="n">1.347</td><td class="n">742.50</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="25" data-model="MX-410" data-serial="24-0819840" data-net="1.284" data-value="618.00" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">25</td><td>MX-410</td><td>24-0819840</td><td>WO-61011</td><td>F · 2.7.11</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-16</td><td class="n">1.284</td><td class="n">618.00</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+              <tr data-row="line" data-n="26" data-model="MX-410R" data-serial="24-0836742" data-net="1.347" data-value="742.50" data-hs="9028.30.90" data-status="ship">
+                <td class="sq">26</td><td>MX-410R</td><td>24-0836742</td><td>WO-61198</td><td>G · 2.7.13</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>A-12</td><td class="n">1.347</td><td class="n">742.50</td><td>9028.30.90</td><td class="st">Ready to ship</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="cnt__ft">
+          <table class="ct">
+            <colgroup>
+              <col style="width:46px"><col style="width:90px"><col style="width:110px"><col style="width:92px">
+              <col style="width:96px"><col style="width:78px"><col style="width:66px"><col style="width:66px">
+              <col style="width:86px"><col style="width:96px"><col>
+            </colgroup>
+            <tr class="ft">
+              <td colspan="6"><b data-check="line-count">26</b> lines ·
+                  <b data-check="shippable-count">25</b> shippable ·
+                  <b data-check="held-count">1</b> held</td>
+              <td>net</td>
+              <td class="n"><b data-check="net-shippable">34.479</b></td>
+              <td class="n"><b data-check="value-shippable">17 996.05</b></td>
+              <td colspan="2" style="color:var(--ink-3)">shippable only · held line excluded</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------------- right: shipment accordion ---------------- -->
+    <aside class="side">
+
+      <div class="idn">
+        <div class="idn__t">
+          <div>
+            <div class="idn__m">PKG-4471</div>
+            <div class="idn__s">Consignment CN-2026-1188 · 1 of 1</div>
+          </div>
+          <div class="idn__c">
+            <span class="chip chip--nt">Staged</span>
+            <span class="chip chip--warn">Booking retry</span>
+          </div>
+        </div>
+        <div class="idn__meta">
+          26 lines · 25 shippable · Vila do Conde Line 3 · staged 14:03:19 by RS
+        </div>
+      </div>
+
+      <section class="sec" style="flex:0 0 auto">
+        <div class="sec__h"><i class="dis"></i><b>Consignee</b>
+          <em data-check="consignee">Águas e Energia do Vale do Sousa, S.A. · DAP Lousada · PO-2026-04417</em></div>
+      </section>
+
+      <section class="sec" style="flex:0 0 auto">
+        <div class="sec__h"><i class="dis dis--open"></i><b>Carrier &amp; booking</b><em>2 attempts</em></div>
+        <div class="sec__b">
+          <div class="kv">
+            <div class="kv__r"><span>Carrier</span><b>TNL Express · Road, 2-day</b></div>
+            <div class="kv__r"><span>Tracking</span><b class="mu">— not yet booked</b></div>
+            <div class="kv__r"><span>Pickup</span><b>21 Aug · 08:00–12:00</b></div>
+            <div class="kv__n">Attempt 1 failed <b>13:47:02</b> — address validation rejected postal
+              code <b>4620-091</b> against the street. Retry queued <b>14:06:11</b>.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" style="flex:0 0 auto">
+        <div class="sec__h"><i class="dis dis--open"></i><b>Weights &amp; dimensions</b><em>chargeable is volumetric</em></div>
+        <div class="sec__b">
+          <div class="fig">
+            <div><span>Net</span><b data-check="net">34.479</b><u>kg · 25 lines</u></div>
+            <div><span>Tare</span><b data-check="tare">2.860</b><u>kg · carton + inserts</u></div>
+            <div><span>Gross</span><b data-check="gross">37.339</b><u>kg</u></div>
+          </div>
+          <div class="kv" style="padding-top:4px">
+            <div class="kv__r"><span>Dimensions</span><b><span data-check="dim-l">78</span> × <span data-check="dim-w">58</span> × <span data-check="dim-h">46</span> cm</b></div>
+            <div class="kv__r"><span>Volumetric</span><b data-check="volumetric">41.621 kg <span class="mu">(÷ 5000)</span></b></div>
+            <div class="kv__r"><span>Chargeable</span><b style="color:var(--warn);font-weight:500" data-check="chargeable">41.621 kg</b></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" style="flex:0 0 auto">
+        <div class="sec__h"><i class="dis dis--open"></i><b>Value &amp; customs</b><em data-check="customs-summary">1 line unclassified</em></div>
+        <div class="sec__b">
+          <div class="kv">
+            <div class="kv__r"><span>Goods</span><b>€ <span data-check="cust-goods">17 996.05</span> <span class="mu">25 shippable lines</span></b></div>
+            <div class="kv__r"><span>Freight</span><b>€ <span data-check="cust-freight">214.80</span></b></div>
+            <div class="kv__r"><span>Insurance</span><b>€ <span data-check="cust-insurance">89.98</span> <span class="mu">0.5% of goods</span></b></div>
+            <div class="kv__r"><span>Declared</span><b style="font-weight:500">€ <span data-check="cust-declared">18 300.83</span></b></div>
+            <div class="kv__n">Documents <b>3 of 4</b> ready — commercial invoice blocked by line 17.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" style="flex:0 0 auto">
+        <div class="sec__h"><i class="dis dis--open"></i><b>Contents summary</b><em>packing-list totals</em></div>
+        <div class="sec__b">
+          <table class="mx">
+            <colgroup><col><col style="width:54px"><col style="width:82px"></colgroup>
+            <tr data-row="mix" data-model="MX-410R" data-qty="11" data-net="14.817">
+              <td>MX-410R <span class="mu" style="font-size:10px">remote disc.</span></td><td class="n">11</td><td>14.817</td></tr>
+            <tr data-row="mix" data-model="MX-410" data-qty="9" data-net="11.556">
+              <td>MX-410 <span class="mu" style="font-size:10px">single-phase</span></td><td class="n">9</td><td>11.556</td></tr>
+            <tr data-row="mix" data-model="MX-220" data-qty="4" data-net="4.368">
+              <td>MX-220 <span class="mu" style="font-size:10px">basic</span></td><td class="n">4</td><td>4.368</td></tr>
+            <tr data-row="mix" data-model="TX-880" data-qty="2" data-net="4.830">
+              <td>TX-880 <span class="mu" style="font-size:10px">three-phase</span></td><td class="n">2</td><td>4.830</td></tr>
+            <tr class="tot"><td>Packed</td><td class="n" data-check="mix-qty">26</td><td data-check="mix-net">35.571</td></tr>
+            <tr class="shp"><td>Shippable <span class="mu" style="font-size:10px">less 23-0774102</span></td><td class="n">25</td><td>34.479</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section class="sec" style="flex:1 1 0;border-bottom:0">
+        <div class="sec__h"><i class="dis dis--open"></i><b>Activity</b><em data-check="activity-count">4</em></div>
+        <div class="sec__b" style="flex:1;min-height:0">
+          <div class="log">
+            <div class="log__ln" data-log="carrier:retry"><time>14:06:11</time>
+              <p>Carrier booking retry queued — <b>TNL Express</b>, road 2-day.</p></div>
+            <div class="log__ln" data-log="carrier:fail"><time>13:47:02</time>
+              <p>Booking failed — address validation rejected <b>4620-091</b>.</p></div>
+            <div class="log__ln" data-log="line:add"><time>13:31:55</time>
+              <p><b>24-0837412</b> added after repair on <b>WO-77341</b>; previously shipped on PKG-3928.</p></div>
+            <div class="log__ln" data-log="line:hold"><time>13:22:40</time>
+              <p><b>23-0774102</b> held — seal verification failed at SEAL-01.</p></div>
+          </div>
+        </div>
+      </section>
+
+    </aside>
+  </div>
+
+  <!-- ======================= footer ======================= -->
+  <footer class="ftr">
+    <span>Vila do Conde · Line 3</span>
+    <span>MES sync <b>14:13:52</b></span>
+    <span>Printer <b>ZT411 (Pack 2)</b></span>
+    <span style="margin-left:auto">Millrace <b>4.6.2</b></span>
+  </footer>
+
+</div>
+</body>
+</html>

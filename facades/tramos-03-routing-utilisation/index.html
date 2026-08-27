@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>TRAMOS — Routing &amp; utilisation</title><style>
+:root{
+  --bg:#ffffff; --canvas:#eef0f3; --subtle:#f7f8fa; --raised:#fbfcfd;
+  --s1:#d3d8df; --s2:#e5e8ec; --s3:#eef0f3;
+  --fg1:#1c232c; --fg2:#59616d; --fg3:#7d8592;
+  --slate:#333d4a; --slate2:#3f4a58; --slate3:#5b6674;
+  --brand:#b26b00; --brand-h:#96590a; --brand-fg:#8a5300;
+  --brand-sub:#fdf3e3; --brand-bd:#e9c894;
+  --err:#b3261e; --err-sub:#fdf0ef; --err-bd:#eec4c1;
+  --warn:#8a6100; --warn-sub:#fbf4e4; --warn-bd:#e5d3a6;
+  --ok:#0e7a3c;
+  --road:#8892a0; --rail:#4b5765; --load:#b26b00;
+  --r4:4px; --r6:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{
+  background:var(--canvas); color:var(--fg1);
+  font:400 12px/1.4 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
+  display:flex; flex-direction:column;
+}
+.num{font-variant-numeric:tabular-nums}
+.mut{color:var(--fg3)}
+.em{color:var(--fg2)}
+
+/* ---- app bar (slate) ---- */
+.app{flex:0 0 48px;display:flex;align-items:stretch;background:var(--slate);color:#e8ebef;padding:0 14px 0 16px}
+.wm{display:flex;align-items:center;gap:9px;padding-right:16px}
+.wm b{font-size:14px;font-weight:600;letter-spacing:.185em;color:#fff}
+.wm .mk{width:17px;height:17px;border-radius:3px;background:var(--brand);position:relative;flex:0 0 17px}
+.wm .mk:after{content:"";position:absolute;left:3px;top:7px;width:11px;height:3px;background:#fff;border-radius:1px}
+.wm .mk:before{content:"";position:absolute;left:3px;top:3px;width:7px;height:2px;background:rgba(255,255,255,.55);border-radius:1px}
+.tabs{display:flex;align-items:stretch;gap:2px;margin-left:6px}
+.tab{display:flex;align-items:center;padding:0 13px;font-size:12.5px;color:#b9c1cb;border-bottom:2px solid transparent;cursor:default}
+.tab.on{color:#fff;font-weight:600;border-bottom-color:var(--brand)}
+.app .sp{flex:1}
+.app .rt{display:flex;align-items:center;gap:10px}
+.qf{width:196px;height:28px;border-radius:var(--r4);background:var(--slate2);border:1px solid #4d5866;display:flex;align-items:center;gap:7px;padding:0 9px;color:#98a2ae;font-size:12px}
+.qf .g{width:11px;height:11px;border:1.5px solid #98a2ae;border-radius:50%;position:relative;flex:0 0 11px}
+.qf .g:after{content:"";position:absolute;right:-3px;bottom:-2px;width:5px;height:1.5px;background:#98a2ae;transform:rotate(45deg)}
+.envp{height:20px;border-radius:10px;padding:0 9px;display:flex;align-items:center;font-size:10.5px;font-weight:600;letter-spacing:.06em;background:rgba(178,107,0,.22);color:#f0c37e;border:1px solid rgba(233,200,148,.35)}
+.av{width:28px;height:28px;border-radius:50%;background:#6a7686;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
+.ic{width:16px;height:16px;opacity:.72}
+
+/* ---- command bar ---- */
+.cmd{flex:0 0 44px;display:flex;align-items:center;gap:2px;background:var(--bg);border-bottom:1px solid var(--s2);padding:0 12px 0 14px}
+.vsel{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--fg1);padding-right:12px;letter-spacing:-.005em;white-space:nowrap}
+.vsel .cv{border:solid var(--fg2);border-width:0 1.4px 1.4px 0;padding:2.6px;transform:rotate(45deg) translateY(-2px)}
+.dv{width:1px;height:22px;background:var(--s2);margin:0 8px}
+.btn{height:30px;display:flex;align-items:center;gap:6px;padding:0 10px;border-radius:var(--r4);font-size:12.5px;color:var(--fg1);border:1px solid transparent;white-space:nowrap}
+.btn .gl{font-size:13px;line-height:1;color:var(--fg2)}
+.btn--p{background:var(--brand);color:#fff;font-weight:600;border-color:var(--brand)}
+.btn--p .gl{color:#fff}
+.btn--o{border-color:var(--s1);background:var(--bg)}
+.btn[aria-disabled]{opacity:.42}
+.cmd .sp{flex:1}
+.chip{height:24px;border-radius:12px;display:flex;align-items:center;gap:6px;padding:0 10px;font-size:11.5px;border:1px solid var(--s1);color:var(--fg2);background:var(--bg);white-space:nowrap}
+.chip--on{background:var(--brand-sub);border-color:var(--brand-bd);color:var(--brand-fg);font-weight:600}
+.chip .x{color:var(--fg3);font-size:12px}
+.chip--st{border-style:dashed;color:var(--warn);border-color:var(--warn-bd);background:var(--warn-sub)}
+
+/* ---- aggregate summary line (replaces the KPI tile strip) ---- */
+.sum{flex:0 0 32px;display:flex;align-items:center;gap:0;padding:0 16px;background:var(--bg);border-bottom:1px solid var(--s2);font-size:11.5px;color:var(--fg2);white-space:nowrap}
+.sum .g{display:flex;align-items:baseline;gap:5px;padding:0 14px;border-right:1px solid var(--s2);height:16px}
+.sum .g:first-child{padding-left:0}
+.sum .g:last-child{border-right:none}
+.sum b{font-weight:600;color:var(--fg1);font-size:12.5px}
+.sum .lb{font-size:10.5px;color:var(--fg3);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.sum .w b{color:var(--warn)}
+.sum .e b{color:var(--err)}
+.sum .sp{flex:1;border-right:none}
+
+/* ---- tabbed dock ---- */
+.dock{flex:0 0 208px;display:flex;flex-direction:column;min-height:0}
+.dock__t{flex:0 0 32px;display:flex;align-items:stretch;gap:2px;padding:0 8px;border-bottom:1px solid var(--s2)}
+.dtab{display:flex;align-items:center;gap:6px;padding:0 12px;font-size:11.5px;color:var(--fg2);border-bottom:2px solid transparent;cursor:default}
+.dtab.on{color:var(--fg1);font-weight:600;border-bottom-color:var(--brand)}
+.dtab .ct{font-size:10px;font-weight:700;background:var(--s3);color:var(--fg2);border-radius:8px;padding:1px 6px}
+.dtab.on .ct{background:var(--brand-sub);color:var(--brand-fg)}
+.dock__b{flex:1;min-height:0;overflow:hidden;position:relative}
+
+/* ---- cards ---- */
+.card{background:var(--bg);border:1px solid var(--s2);border-radius:var(--r6);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.card__h{flex:0 0 34px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--s2)}
+.card__h h2{font-size:12.5px;font-weight:600;letter-spacing:-.005em}
+.card__h .sp{flex:1}
+.card__b{flex:1;min-height:0;overflow:hidden;position:relative}
+.card__f{flex:0 0 28px;display:flex;align-items:center;gap:10px;padding:0 12px;border-top:1px solid var(--s2);font-size:11px;color:var(--fg3)}
+.tag{height:18px;border-radius:3px;padding:0 6px;display:inline-flex;align-items:center;font-size:10.5px;font-weight:600;letter-spacing:.02em}
+.tag--n{background:var(--s3);color:var(--fg2)}
+.tag--e{background:var(--err-sub);color:var(--err);border:1px solid var(--err-bd)}
+.tag--w{background:var(--warn-sub);color:var(--warn);border:1px solid var(--warn-bd)}
+.tag--o{background:#eaf6ee;color:var(--ok);border:1px solid #c3e3ce}
+.tag--b{background:var(--brand-sub);color:var(--brand-fg);border:1px solid var(--brand-bd)}
+
+/* ---- main ---- */
+.main{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:10px 14px}
+.hero{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+
+/* ---- full-width exception rows (dock) ---- */
+.exr{display:flex;align-items:center;gap:10px;height:35px;padding:0 14px;border-bottom:1px solid var(--s3);font-size:11.5px}
+.exr .bd{width:3px;height:18px;border-radius:2px;flex:0 0 3px}
+.exr--e .bd{background:var(--err)}.exr--w .bd{background:var(--warn)}
+.exr .ttl{font-weight:600;width:172px;flex:0 0 172px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exr .ref{width:190px;flex:0 0 190px;color:var(--fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exr .txt{flex:1;min-width:0;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exr .act{color:var(--brand-fg);font-weight:600;white-space:nowrap}
+
+/* ---- utilisation + candidate tables ---- */
+table.ut{width:100%;border-collapse:collapse;table-layout:fixed}
+table.ut th,table.ut td{padding:0 9px;height:21px;font-size:11px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.ut th.l,table.ut td.l{text-align:left}
+table.ut thead th{height:24px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--s1);background:var(--subtle)}
+table.ut tbody td{border-bottom:1px solid var(--s3)}
+table.ut tbody tr.grp td{background:var(--subtle);font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);height:20px}
+.mtr{display:inline-flex;align-items:center;gap:8px;width:100%;justify-content:flex-end}
+.mtr b{font-weight:600;width:46px;text-align:right;flex:0 0 46px}
+.mtr .bar2{width:56px;height:6px;border-radius:3px;background:var(--s3);overflow:hidden;flex:0 0 56px}
+.mtr .bar2 i{display:block;height:100%;background:var(--rail)}
+.mtr .bar2 i.w{background:var(--warn)}
+.mtr .bar2 i.o{background:var(--ok)}
+.cur td{background:var(--brand-sub)}
+.fail{color:var(--err);font-weight:600}
+.rec{color:var(--ok);font-weight:600}
+
+/* ---- topology ---- */
+.topo{height:100%;position:relative}
+.mini{position:absolute;right:14px;bottom:8px}
+.lgd{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--fg3);white-space:nowrap}
+.lgd i{width:9px;height:9px;border-radius:2px;display:block}
+.lgd i.ln{width:16px;height:0;border-top:2px solid #8892a0;border-radius:0}
+.lgd i.ln.dash{border-top-style:dashed}
+.zm{display:inline-flex;align-items:center;gap:0;border:1px solid var(--s1);border-radius:var(--r4);height:22px;overflow:hidden;margin-left:4px}
+.zm b{width:22px;text-align:center;font-size:12px;font-weight:600;color:var(--fg2);border-right:1px solid var(--s2);line-height:20px}
+.zm span{padding:0 8px;font-size:10.5px;color:var(--fg1);font-weight:600;border-right:1px solid var(--s2);line-height:20px}
+.zm b:last-of-type{border-right:1px solid var(--s2)}
+.zm em{font-style:normal;padding:0 8px;font-size:10.5px;color:var(--brand-fg);font-weight:600;line-height:20px}
+
+/* ---- foot ---- */
+.foot{flex:0 0 26px;display:flex;align-items:center;gap:9px;padding:0 16px;font-size:10.5px;color:var(--fg3);border-top:1px solid var(--s2);background:var(--bg)}
+.foot .d{width:3px;height:3px;border-radius:50%;background:var(--s1)}
+
+/* ---- gantt ---- */
+.gantt{position:relative;height:100%;overflow:hidden}
+.gov{position:absolute;left:464px;top:0;bottom:0;width:946px;z-index:0}
+.nowlayer{position:absolute;left:464px;top:0;bottom:0;width:946px;z-index:5}
+.wk{position:absolute;top:0;bottom:0;background:#f4f6f8}
+.nowl{position:absolute;top:0;bottom:0;width:1px;background:var(--err);opacity:.62}
+table.g{width:1410px;table-layout:fixed;border-collapse:collapse;position:relative;z-index:1}
+table.g th,table.g td{padding:0;text-align:left;vertical-align:middle}
+table.g thead th{height:34px;border-bottom:1px solid var(--s1);font-size:10px;font-weight:600;color:var(--fg3);text-transform:uppercase;letter-spacing:.05em;background:var(--bg);position:relative}
+table.g tbody tr{height:29px}
+table.g tbody td{border-bottom:1px solid var(--s3);height:29px}
+.fz{background:var(--bg);position:relative;z-index:2;padding:0 8px !important;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.fz.pl{padding-left:12px !important}
+td.trk{position:relative;background:transparent;background-image:repeating-linear-gradient(to right,var(--s3) 0 1px,transparent 1px 94.6px)}
+th.trk{background-image:repeating-linear-gradient(to right,var(--s3) 0 1px,transparent 1px 94.6px)}
+.dayh{position:absolute;top:0;height:34px;display:flex;flex-direction:column;justify-content:center;padding-left:8px}
+.dayh em{font-style:normal;font-size:10px;color:var(--fg3);letter-spacing:.06em}
+.dayh b{font-size:11.5px;font-weight:600;color:var(--fg2);letter-spacing:0;text-transform:none}
+.dayh.we b,.dayh.we em{color:#9aa3af}
+.bar{position:absolute;top:6px;height:17px;border-radius:3px;display:block}
+.bar--road{background:var(--road)}
+.bar--rail{background:var(--rail)}
+.bar--load{background:var(--load)}
+.bar em{font-style:normal;position:absolute;left:6px;top:0;line-height:17px;font-size:10px;font-weight:600;color:#fff;letter-spacing:.03em;white-space:nowrap}
+.bar.bad{outline:1.5px solid var(--err);outline-offset:1px}
+.bar.gh{background:transparent;border:1.5px dashed var(--s1);height:16px;top:9px}
+.dw{position:absolute;top:14px;height:2px;border-top:1.5px dotted #a8b0bb}
+.dwl{position:absolute;top:0;font-size:9.5px;color:var(--fg3);white-space:nowrap;line-height:12px}
+.vlbl{position:absolute;top:8px;font-size:10.5px;color:var(--fg2);white-space:nowrap;line-height:16px;overflow:hidden;text-overflow:ellipsis}
+.stat{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--fg2)}
+.stat .dot{width:6px;height:6px;border-radius:50%;flex:0 0 6px}
+.d-loading{background:var(--brand)}.d-committed{background:var(--ok)}.d-planned{background:#9aa3af}
+.d-held{background:var(--err)}.d-atrisk{background:var(--warn)}.d-unscheduled{background:#c6ccd4}
+
+/* ---- heat strip ---- */
+.heat{width:100%;border-collapse:collapse;table-layout:fixed}
+.heat th,.heat td{padding:0;height:22px;font-size:10.5px;text-align:center;color:var(--fg2)}
+.heat thead th{height:20px;font-size:9.5px;font-weight:600;color:var(--fg3);letter-spacing:.05em;border-bottom:1px solid var(--s2)}
+.heat th.lb{text-align:left;padding-left:12px;width:190px}
+.heat td.lb{text-align:left;padding-left:12px;font-size:11px;color:var(--fg1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.heat td.lb b{font-weight:600}
+.heat td.lb span{color:var(--fg3)}
+.heat td.cp{width:72px;text-align:right;padding-right:12px;font-size:10.5px;color:var(--fg3)}
+.hc{display:block;height:16px;margin:0 1px;border-radius:2px;line-height:16px;font-size:9.5px;color:var(--fg2)}
+.h0{background:#eef0f3}.h1{background:#dfe4ea}.h2{background:#c3cbd5}.h3{background:#a3adba;color:#fff}
+.h4{background:#f0d29b}.h5{background:var(--err);color:#fff;font-weight:700}
+
+/* ---- exception list ---- */
+.exl{list-style:none;height:100%}
+.ex{display:flex;gap:9px;padding:7px 12px 6px;border-bottom:1px solid var(--s3)}
+.ex .bd{width:3px;border-radius:2px;flex:0 0 3px}
+.ex--e .bd{background:var(--err)}.ex--w .bd{background:var(--warn)}
+.ex .tx{min-width:0;flex:1}
+.ex .t1{font-size:11px;font-weight:600;color:var(--fg1);display:flex;gap:6px;align-items:baseline}
+.ex .t1 span{font-weight:400;color:var(--fg3);font-size:10.5px}
+.ex .t2{font-size:10.5px;color:var(--fg2);margin-top:1px;line-height:1.32}
+
+/* ---- cost grid ---- */
+.cgw{display:flex;flex-direction:column;height:100%}
+.cgb{flex:1;min-height:0;overflow:hidden}
+table.cg{width:100%;border-collapse:collapse;table-layout:fixed}
+table.cg th,table.cg td{padding:0 10px;text-align:right;font-size:11px;height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.cg th.l,table.cg td.l{text-align:left}
+table.cg thead tr.g1 th{height:18px;font-size:9.5px;font-weight:700;color:var(--fg3);letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--s3);background:var(--subtle)}
+table.cg thead tr.g2 th{height:24px;font-size:10px;font-weight:600;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--s1)}
+table.cg tbody td{border-bottom:1px solid var(--s3);color:var(--fg1)}
+tr.pl td{font-weight:600;background:var(--bg)}
+tr.lg td{background:var(--subtle);color:var(--fg2);font-weight:400}
+tr.lg td.l{padding-left:26px;position:relative}
+tr.lg td.l:before{content:"";position:absolute;left:15px;top:0;bottom:14px;width:1px;background:var(--s1)}
+tr.lg td.l:after{content:"";position:absolute;left:15px;top:12px;width:6px;height:1px;background:var(--s1)}
+table.cg tfoot td{height:30px;font-weight:700;font-size:12px;border-top:1px solid var(--s1);background:var(--raised)}
+.dim td{color:var(--fg3)}
+.sc{box-shadow:inset 3px 0 0 var(--brand)}
+
+/* ---- occupancy chart ---- */
+.occ{position:relative;height:100%;padding:8px 12px 0}
+/* ---- re-priced lane list ---- */
+.ln{display:flex;align-items:center;gap:8px;padding:0 12px;height:20px;font-size:10.5px;border-bottom:1px solid var(--s3);color:var(--fg2)}
+.ln .a{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg1)}
+.ln .b{width:96px;text-align:right;white-space:nowrap}
+.ln .c{width:64px;text-align:right;font-weight:600}
+.lnh{display:flex;align-items:center;gap:6px;padding:0 12px;height:22px;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3);background:var(--subtle);border-top:1px solid var(--s2);border-bottom:1px solid var(--s3)}
+.occl{position:absolute;left:12px;right:12px;border-top:1px dashed var(--err);z-index:2}
+.occlt{position:absolute;font-size:9.5px;font-weight:700;color:var(--err);background:var(--bg);padding:0 4px;z-index:3}
+
+/* ---- key/value panel ---- */
+.kv{list-style:none}
+.kv li{display:flex;align-items:baseline;gap:8px;padding:0 12px;height:25px;border-bottom:1px solid var(--s3);font-size:11.5px}
+.kv li .k{color:var(--fg2);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv li .v{font-weight:600;white-space:nowrap}
+.kv li.tt{background:var(--raised);font-weight:700;border-bottom:none}
+.kv li.tt .k{color:var(--fg1);font-weight:700}
+
+/* ---- version rows ---- */
+.vr{display:flex;gap:9px;padding:8px 12px 7px;border-bottom:1px solid var(--s3)}
+.vr .id{font-weight:600;font-size:11.5px;width:88px;flex:0 0 88px}
+.vr .bd2{flex:1;min-width:0}
+.vr .l1{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg2)}
+.vr .l2{font-size:11px;color:var(--fg3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vr .nums{text-align:right;font-size:11px;color:var(--fg2);white-space:nowrap}
+.vr .nums b{display:block;font-size:12px;color:var(--fg1)}
+</style></head>
+<body>
+
+<header class="app">
+  <div class="wm"><i class="mk"></i><b>TRAMOS</b></div>
+  <nav class="tabs">
+    <div class="tab">Schedule board</div>
+    <div class="tab">Cost &amp; storage</div>
+    <div class="tab on">Routing</div>
+    <div class="tab">Terminals</div>
+    <div class="tab">Rate cards</div>
+    <div class="tab">Nominations</div>
+  </nav>
+  <div class="sp"></div>
+  <div class="rt">
+    <div class="qf"><i class="g"></i>Search plans, sites, vessels</div>
+    <div class="envp">PROD</div>
+    <div class="av">KV</div>
+  </div>
+</header>
+
+<div class="cmd">
+  <div class="vsel">Routing &middot; 06&ndash;15 Feb<i class="cv"></i></div>
+  <div class="dv"></div>
+  <div class="btn"><i class="gl">&#8635;</i>Re-run optimiser</div>
+  <div class="btn btn--p" aria-disabled="true"><i class="gl">&#10003;</i>Apply recommended</div>
+  <div class="btn btn--o">Compare routes</div>
+  <div class="btn btn--o">Release capacity</div>
+  <div class="btn">Export<i class="gl">&#9662;</i></div>
+  <div class="btn"><i class="gl">&#8943;</i></div>
+  <div class="sp"></div>
+  <div class="chip chip--on">2 orders open<i class="x">&times;</i></div>
+  <div class="chip">Optimiser 09:02:11</div>
+  <div class="chip chip--st">3 routes infeasible</div>
+  <div class="chip">Synced <span data-check="synced">09:14:52</span></div>
+</div>
+<div class="sum"><div class="g "><span class="lb">Zones</span><b data-check="sum-zones">5</b></div><div class="g "><span class="lb">Lanes</span><b data-check="sum-lanes">14</b></div><div class="g "><span class="lb">Rail</span><b data-check="sum-rail">8,568,900 t·km</b></div><div class="g "><span class="lb">Road</span><b data-check="sum-road">3,397,600 t·km</b></div><div class="g "><span class="lb">Rail sets</span><b data-check="sum-rail-sets">19</b></div><div class="g "><span class="lb">Road trips</span><b data-check="sum-road-trips">709</b></div><div class="g e"><span class="lb">Infeasible</span><b data-check="sum-infeasible">3</b></div><div class="g sp"></div><div class="g "><span class="lb">Optimiser</span><b data-check="sum-optimiser">09:02:11</b></div></div>
+<main class="main">
+<div class="hero">
+  <section class="card" style="flex:0 0 268px">
+    <div class="card__h"><h2>Network topology</h2>
+      <span class="chip chip--on" style="height:20px;font-size:10.5px">Horizon 06&ndash;16 Feb<i class="x">&times;</i></span>
+      <span class="tag tag--n" data-check="graphLanes">10 of 14 lanes in view</span>
+      <div class="sp"></div>
+      <span class="lgd"><i style="background:#3f5266"></i>Receival zone</span><span class="lgd"><i style="background:#96586a"></i>Siding</span><span class="lgd"><i style="background:#6f6a33"></i>Consolidation yard</span><span class="lgd"><i style="background:#b07a12"></i>Port terminal</span>
+      <span class="lgd"><i class="ln"></i>road</span><span class="lgd"><i class="ln dash"></i>rail</span>
+      <span class="zm"><b>&minus;</b><span data-check="zoom">135%</span><b>+</b><em>Fit</em></span></div>
+    <div class="card__b"><div class="topo" style="padding:20px 14px 0"><svg width="1380" height="196" viewBox="0 -18 1380 214">
+    <defs><clipPath id="topovp"><rect x="0" y="0" width="1380" height="196"/></clipPath></defs>
+    <text x="14" y="-6" font-size="9.5" font-weight="700" letter-spacing="1" fill="#7d8592">ORIGIN</text><text x="404" y="-6" font-size="9.5" font-weight="700" letter-spacing="1" fill="#7d8592">LEG 1</text><text x="794" y="-6" font-size="9.5" font-weight="700" letter-spacing="1" fill="#7d8592">LEG 2</text><text x="1170" y="-6" font-size="9.5" font-weight="700" letter-spacing="1" fill="#7d8592">LEG 3</text><g clip-path="url(#topovp)"><path data-edge="Eastern Wheatbelt@0|Merredin siding@1" data-mode="road" data-t="11880" data-legs="3"
+      d="M 224 19 H 278 V 65 H 404" fill="none" stroke="#8892a0" stroke-width="7.7"
+      stroke-linejoin="round" opacity=".8"/><path data-edge="Merredin siding@1|Kwinana@2" data-mode="rail" data-t="9360" data-legs="2"
+      d="M 614 65 H 689.6 V 12.67 H 794" fill="none" stroke="#8892a0" stroke-width="6.32"
+      stroke-linejoin="round" opacity=".8" stroke-dasharray="5 4"/><path data-edge="Eastern Wheatbelt@0|Kwinana@1" data-mode="rail" data-t="11700" data-legs="3"
+      d="M 224 19 H 321.2 V 12.67 H 404" fill="none" stroke="#8892a0" stroke-width="7.6"
+      stroke-linejoin="round" opacity=".8" stroke-dasharray="5 4"/><path data-edge="Northern Wheatbelt@0|Avon siding@1" data-mode="road" data-t="5760" data-legs="1"
+      d="M 224 65 H 278 V 157 H 404" fill="none" stroke="#8892a0" stroke-width="4.35"
+      stroke-linejoin="round" opacity=".8"/><path data-edge="Avon siding@1|Kwinana@2" data-mode="rail" data-t="5760" data-legs="1"
+      d="M 614 157 H 689.6 V 25.33 H 794" fill="none" stroke="#8892a0" stroke-width="4.35"
+      stroke-linejoin="round" opacity=".8" stroke-dasharray="5 4"/><path data-edge="Northern Wheatbelt@0|Kwinana@1" data-mode="rail" data-t="6120" data-legs="2"
+      d="M 224 65 H 321.2 V 25.33 H 404" fill="none" stroke="#8892a0" stroke-width="4.55"
+      stroke-linejoin="round" opacity=".8" stroke-dasharray="5 4"/><path data-edge="Great Southern@0|Albany@1" data-mode="road" data-t="7240" data-legs="4"
+      d="M 224 157 H 278 V 111 H 404" fill="none" stroke="#8892a0" stroke-width="5.16"
+      stroke-linejoin="round" opacity=".8"/><path data-edge="Mid West@0|Geraldton@1" data-mode="rail" data-t="4320" data-legs="1"
+      d="M 224 111 H 299.6 V 249 H 404" fill="none" stroke="#8892a0" stroke-width="3.56"
+      stroke-linejoin="round" opacity=".8" stroke-dasharray="5 4"/><path data-edge="Mid West@0|Mullewa siding@1" data-mode="road" data-t="4680" data-legs="2"
+      d="M 224 111 H 321.2 V 203 H 404" fill="none" stroke="#8892a0" stroke-width="3.76"
+      stroke-linejoin="round" opacity=".8"/><path data-edge="Mullewa siding@1|Geraldton@2" data-mode="rail" data-t="2760" data-legs="1"
+      d="M 614 203 H 668 V 65 H 794" fill="none" stroke="#8892a0" stroke-width="2.71"
+      stroke-linejoin="round" opacity=".8" stroke-dasharray="5 4"/><path data-edge="Merredin siding@1|Northam yard@2" data-mode="rail" data-t="2520" data-legs="1"
+      d="M 614 65 H 689.6 V 111 H 794" fill="none" stroke="#8892a0" stroke-width="2.58"
+      stroke-linejoin="round" opacity=".8" stroke-dasharray="5 4"/><path data-edge="Northam yard@2|Kwinana@3" data-mode="rail" data-t="2520" data-legs="1"
+      d="M 1004 111 H 1093.64 V 19 H 1170" fill="none" stroke="#8892a0" stroke-width="2.58"
+      stroke-linejoin="round" opacity=".8" stroke-dasharray="5 4"/><path data-edge="Mullewa siding@1|Mingenew yard@2" data-mode="rail" data-t="1920" data-legs="1"
+      d="M 614 203 H 668 V 157 H 794" fill="none" stroke="#8892a0" stroke-width="2.25"
+      stroke-linejoin="round" opacity=".8" stroke-dasharray="5 4"/><path data-edge="Mingenew yard@2|Geraldton@3" data-mode="rail" data-t="1920" data-legs="1"
+      d="M 1004 157 H 1073.72 V 65 H 1170" fill="none" stroke="#8892a0" stroke-width="2.25"
+      stroke-linejoin="round" opacity=".8" stroke-dasharray="5 4"/><rect x="289.25" y="57" width="103.5" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="341" y="68.5" text-anchor="middle" font-size="9.5" fill="#59616d">11,880 t · 3 road</text><rect x="690" y="4.67" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="739" y="16.17" text-anchor="middle" font-size="9.5" fill="#59616d">9,360 t · 2 rail</text><rect x="294.5" y="4.67" width="103.5" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="346.25" y="16.17" text-anchor="middle" font-size="9.5" fill="#59616d">11,700 t · 3 rail</text><rect x="292" y="149" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="341" y="160.5" text-anchor="middle" font-size="9.5" fill="#59616d">5,760 t · 1 road</text><rect x="690" y="17.33" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="739" y="28.83" text-anchor="middle" font-size="9.5" fill="#59616d">5,760 t · 1 rail</text><rect x="300" y="17.33" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="349" y="28.83" text-anchor="middle" font-size="9.5" fill="#59616d">6,120 t · 2 rail</text><rect x="292" y="103" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="341" y="114.5" text-anchor="middle" font-size="9.5" fill="#59616d">7,240 t · 4 road</text><rect x="300" y="241" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="349" y="252.5" text-anchor="middle" font-size="9.5" fill="#59616d">4,320 t · 1 rail</text><rect x="300" y="195" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="349" y="206.5" text-anchor="middle" font-size="9.5" fill="#59616d">4,680 t · 2 road</text><rect x="682" y="57" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="731" y="68.5" text-anchor="middle" font-size="9.5" fill="#59616d">2,760 t · 1 rail</text><rect x="690" y="103" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="739" y="114.5" text-anchor="middle" font-size="9.5" fill="#59616d">2,520 t · 1 rail</text><rect x="1066" y="11" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="1115" y="22.5" text-anchor="middle" font-size="9.5" fill="#59616d">2,520 t · 1 rail</text><rect x="682" y="149" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="731" y="160.5" text-anchor="middle" font-size="9.5" fill="#59616d">1,920 t · 1 rail</text><rect x="1066" y="57" width="98" height="16" rx="3" fill="#fff" stroke="#e5e8ec"/>
+    <text x="1115" y="68.5" text-anchor="middle" font-size="9.5" fill="#59616d">1,920 t · 1 rail</text><g data-node="Eastern Wheatbelt@0" data-ech="zone" data-leg="0" data-t="23580" data-x="14" data-y="0" data-w="210" data-h="38" data-in="1">
+      <rect x="14" y="0" width="210" height="38" rx="4" fill="#e9eef4" stroke="#d3d8df"/>
+      <rect x="14" y="0" width="4" height="38" rx="2" fill="#3f5266"/>
+      <text x="26" y="15" font-size="11.5" font-weight="600" fill="#1c232c">Eastern Wheatbelt</text>
+      
+      <text x="26" y="29" font-size="9.5" fill="#7d8592">6 orders</text>
+      <text x="213" y="30" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">23,580 t</text></g><g data-node="Merredin siding@1" data-ech="siding" data-leg="1" data-t="11880" data-x="404" data-y="46" data-w="210" data-h="38" data-in="1">
+      <rect x="404" y="46" width="210" height="38" rx="4" fill="#f8ecef" stroke="#d3d8df"/>
+      <rect x="404" y="46" width="4" height="38" rx="2" fill="#96586a"/>
+      <text x="416" y="61" font-size="11.5" font-weight="600" fill="#1c232c">Merredin siding</text>
+      
+      <text x="416" y="75" font-size="9.5" fill="#7d8592">leg 1</text>
+      <text x="603" y="76" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">11,880 t</text></g><g data-node="Kwinana@2" data-ech="port" data-leg="2" data-t="15120" data-x="794" data-y="0" data-w="210" data-h="38" data-in="1">
+      <rect x="794" y="0" width="210" height="38" rx="4" fill="#fdf3e0" stroke="#b3261e"/>
+      <rect x="794" y="0" width="4" height="38" rx="2" fill="#b07a12"/>
+      <text x="806" y="15" font-size="11.5" font-weight="600" fill="#1c232c">Kwinana</text>
+      <rect x="934" y="6" width="58" height="14" rx="3" fill="#fdf0ef" stroke="#eec4c1"/>
+        <text x="963" y="16" text-anchor="middle" font-size="9" font-weight="700" fill="#b3261e">C4 breach</text>
+      <text x="806" y="29" font-size="9.5" fill="#7d8592">leg 2</text>
+      <text x="993" y="30" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">15,120 t</text></g><g data-node="Kwinana@1" data-ech="port" data-leg="1" data-t="17820" data-x="404" data-y="0" data-w="210" data-h="38" data-in="1">
+      <rect x="404" y="0" width="210" height="38" rx="4" fill="#fdf3e0" stroke="#b3261e"/>
+      <rect x="404" y="0" width="4" height="38" rx="2" fill="#b07a12"/>
+      <text x="416" y="15" font-size="11.5" font-weight="600" fill="#1c232c">Kwinana</text>
+      <rect x="544" y="6" width="58" height="14" rx="3" fill="#fdf0ef" stroke="#eec4c1"/>
+        <text x="573" y="16" text-anchor="middle" font-size="9" font-weight="700" fill="#b3261e">C4 breach</text>
+      <text x="416" y="29" font-size="9.5" fill="#7d8592">leg 1</text>
+      <text x="603" y="30" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">17,820 t</text></g><g data-node="Northern Wheatbelt@0" data-ech="zone" data-leg="0" data-t="11880" data-x="14" data-y="46" data-w="210" data-h="38" data-in="1">
+      <rect x="14" y="46" width="210" height="38" rx="4" fill="#e9eef4" stroke="#d3d8df"/>
+      <rect x="14" y="46" width="4" height="38" rx="2" fill="#3f5266"/>
+      <text x="26" y="61" font-size="11.5" font-weight="600" fill="#1c232c">Northern Wheatbelt</text>
+      
+      <text x="26" y="75" font-size="9.5" fill="#7d8592">3 orders</text>
+      <text x="213" y="76" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">11,880 t</text></g><g data-node="Avon siding@1" data-ech="siding" data-leg="1" data-t="5760" data-x="404" data-y="138" data-w="210" data-h="38" data-in="1">
+      <rect x="404" y="138" width="210" height="38" rx="4" fill="#f8ecef" stroke="#d3d8df"/>
+      <rect x="404" y="138" width="4" height="38" rx="2" fill="#96586a"/>
+      <text x="416" y="153" font-size="11.5" font-weight="600" fill="#1c232c">Avon siding</text>
+      
+      <text x="416" y="167" font-size="9.5" fill="#7d8592">leg 1</text>
+      <text x="603" y="168" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">5,760 t</text></g><g data-node="Great Southern@0" data-ech="zone" data-leg="0" data-t="7240" data-x="14" data-y="138" data-w="210" data-h="38" data-in="1">
+      <rect x="14" y="138" width="210" height="38" rx="4" fill="#e9eef4" stroke="#d3d8df"/>
+      <rect x="14" y="138" width="4" height="38" rx="2" fill="#3f5266"/>
+      <text x="26" y="153" font-size="11.5" font-weight="600" fill="#1c232c">Great Southern</text>
+      
+      <text x="26" y="167" font-size="9.5" fill="#7d8592">4 orders</text>
+      <text x="213" y="168" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">7,240 t</text></g><g data-node="Albany@1" data-ech="port" data-leg="1" data-t="7240" data-x="404" data-y="92" data-w="210" data-h="38" data-in="1">
+      <rect x="404" y="92" width="210" height="38" rx="4" fill="#fdf3e0" stroke="#d3d8df"/>
+      <rect x="404" y="92" width="4" height="38" rx="2" fill="#b07a12"/>
+      <text x="416" y="107" font-size="11.5" font-weight="600" fill="#1c232c">Albany</text>
+      
+      <text x="416" y="121" font-size="9.5" fill="#7d8592">leg 1</text>
+      <text x="603" y="122" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">7,240 t</text></g><g data-node="Mid West@0" data-ech="zone" data-leg="0" data-t="9000" data-x="14" data-y="92" data-w="210" data-h="38" data-in="1">
+      <rect x="14" y="92" width="210" height="38" rx="4" fill="#e9eef4" stroke="#d3d8df"/>
+      <rect x="14" y="92" width="4" height="38" rx="2" fill="#3f5266"/>
+      <text x="26" y="107" font-size="11.5" font-weight="600" fill="#1c232c">Mid West</text>
+      
+      <text x="26" y="121" font-size="9.5" fill="#7d8592">3 orders</text>
+      <text x="213" y="122" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">9,000 t</text></g><g data-node="Geraldton@1" data-ech="port" data-leg="1" data-t="4320" data-x="404" data-y="230" data-w="210" data-h="38" data-in="0">
+      <rect x="404" y="230" width="210" height="38" rx="4" fill="#fdf3e0" stroke="#d3d8df"/>
+      <rect x="404" y="230" width="4" height="38" rx="2" fill="#b07a12"/>
+      <text x="416" y="245" font-size="11.5" font-weight="600" fill="#1c232c">Geraldton</text>
+      
+      <text x="416" y="259" font-size="9.5" fill="#7d8592">leg 1</text>
+      <text x="603" y="260" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">4,320 t</text></g><g data-node="Mullewa siding@1" data-ech="siding" data-leg="1" data-t="4680" data-x="404" data-y="184" data-w="210" data-h="38" data-in="0">
+      <rect x="404" y="184" width="210" height="38" rx="4" fill="#f8ecef" stroke="#d3d8df"/>
+      <rect x="404" y="184" width="4" height="38" rx="2" fill="#96586a"/>
+      <text x="416" y="199" font-size="11.5" font-weight="600" fill="#1c232c">Mullewa siding</text>
+      
+      <text x="416" y="213" font-size="9.5" fill="#7d8592">leg 1</text>
+      <text x="603" y="214" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">4,680 t</text></g><g data-node="Geraldton@2" data-ech="port" data-leg="2" data-t="2760" data-x="794" data-y="46" data-w="210" data-h="38" data-in="1">
+      <rect x="794" y="46" width="210" height="38" rx="4" fill="#fdf3e0" stroke="#d3d8df"/>
+      <rect x="794" y="46" width="4" height="38" rx="2" fill="#b07a12"/>
+      <text x="806" y="61" font-size="11.5" font-weight="600" fill="#1c232c">Geraldton</text>
+      
+      <text x="806" y="75" font-size="9.5" fill="#7d8592">leg 2</text>
+      <text x="993" y="76" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">2,760 t</text></g><g data-node="Esperance Zone@0" data-ech="zone" data-leg="0" data-t="2460" data-x="14" data-y="184" data-w="210" data-h="38" data-in="0">
+      <rect x="14" y="184" width="210" height="38" rx="4" fill="#e9eef4" stroke="#d3d8df"/>
+      <rect x="14" y="184" width="4" height="38" rx="2" fill="#3f5266"/>
+      <text x="26" y="199" font-size="11.5" font-weight="600" fill="#1c232c">Esperance Zone</text>
+      
+      <text x="26" y="213" font-size="9.5" fill="#7d8592">1 orders</text>
+      <text x="213" y="214" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">2,460 t</text></g><g data-node="Northam yard@2" data-ech="yard" data-leg="2" data-t="2520" data-x="794" data-y="92" data-w="210" data-h="38" data-in="1">
+      <rect x="794" y="92" width="210" height="38" rx="4" fill="#f2f1e4" stroke="#d3d8df"/>
+      <rect x="794" y="92" width="4" height="38" rx="2" fill="#6f6a33"/>
+      <text x="806" y="107" font-size="11.5" font-weight="600" fill="#1c232c">Northam yard</text>
+      
+      <text x="806" y="121" font-size="9.5" fill="#7d8592">leg 2</text>
+      <text x="993" y="122" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">2,520 t</text></g><g data-node="Kwinana@3" data-ech="port" data-leg="3" data-t="2520" data-x="1170" data-y="0" data-w="210" data-h="38" data-in="1">
+      <rect x="1170" y="0" width="210" height="38" rx="4" fill="#fdf3e0" stroke="#b3261e"/>
+      <rect x="1170" y="0" width="4" height="38" rx="2" fill="#b07a12"/>
+      <text x="1182" y="15" font-size="11.5" font-weight="600" fill="#1c232c">Kwinana</text>
+      <rect x="1310" y="6" width="58" height="14" rx="3" fill="#fdf0ef" stroke="#eec4c1"/>
+        <text x="1339" y="16" text-anchor="middle" font-size="9" font-weight="700" fill="#b3261e">C4 breach</text>
+      <text x="1182" y="29" font-size="9.5" fill="#7d8592">leg 3</text>
+      <text x="1369" y="30" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">2,520 t</text></g><g data-node="Mingenew yard@2" data-ech="yard" data-leg="2" data-t="1920" data-x="794" data-y="138" data-w="210" data-h="38" data-in="1">
+      <rect x="794" y="138" width="210" height="38" rx="4" fill="#f2f1e4" stroke="#d3d8df"/>
+      <rect x="794" y="138" width="4" height="38" rx="2" fill="#6f6a33"/>
+      <text x="806" y="153" font-size="11.5" font-weight="600" fill="#1c232c">Mingenew yard</text>
+      
+      <text x="806" y="167" font-size="9.5" fill="#7d8592">leg 2</text>
+      <text x="993" y="168" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">1,920 t</text></g><g data-node="Geraldton@3" data-ech="port" data-leg="3" data-t="1920" data-x="1170" data-y="46" data-w="210" data-h="38" data-in="1">
+      <rect x="1170" y="46" width="210" height="38" rx="4" fill="#fdf3e0" stroke="#d3d8df"/>
+      <rect x="1170" y="46" width="4" height="38" rx="2" fill="#b07a12"/>
+      <text x="1182" y="61" font-size="11.5" font-weight="600" fill="#1c232c">Geraldton</text>
+      
+      <text x="1182" y="75" font-size="9.5" fill="#7d8592">leg 3</text>
+      <text x="1369" y="76" text-anchor="end" font-size="13" font-weight="600" fill="#1c232c">1,920 t</text></g></g></svg><svg class="mini" width="176" height="62" viewBox="0 0 176 62">
+    <rect x="0" y="0" width="176" height="62" rx="3" fill="#fff" stroke="#d3d8df"/>
+    <rect x="23.11" y="9.09" width="4" height="4" rx="1"
+      fill="#3f5266" fill-opacity="1"
+      data-mini="0:0" data-in="1" data-ech="zone" data-cy="11.09"/><rect x="66.06" y="14.16" width="4" height="4" rx="1"
+      fill="#96586a" fill-opacity="1"
+      data-mini="1:1" data-in="1" data-ech="siding" data-cy="16.16"/><rect x="109.02" y="9.09" width="4" height="4" rx="1"
+      fill="#b07a12" fill-opacity="1"
+      data-mini="2:0" data-in="1" data-ech="port" data-cy="11.09"/><rect x="66.06" y="9.09" width="4" height="4" rx="1"
+      fill="#b07a12" fill-opacity="1"
+      data-mini="1:0" data-in="1" data-ech="port" data-cy="11.09"/><rect x="23.11" y="14.16" width="4" height="4" rx="1"
+      fill="#3f5266" fill-opacity="1"
+      data-mini="0:1" data-in="1" data-ech="zone" data-cy="16.16"/><rect x="66.06" y="24.29" width="4" height="4" rx="1"
+      fill="#96586a" fill-opacity="1"
+      data-mini="1:3" data-in="1" data-ech="siding" data-cy="26.29"/><rect x="23.11" y="24.29" width="4" height="4" rx="1"
+      fill="#3f5266" fill-opacity="1"
+      data-mini="0:3" data-in="1" data-ech="zone" data-cy="26.29"/><rect x="66.06" y="19.23" width="4" height="4" rx="1"
+      fill="#b07a12" fill-opacity="1"
+      data-mini="1:2" data-in="1" data-ech="port" data-cy="21.23"/><rect x="23.11" y="19.23" width="4" height="4" rx="1"
+      fill="#3f5266" fill-opacity="1"
+      data-mini="0:2" data-in="1" data-ech="zone" data-cy="21.23"/><rect x="66.06" y="34.43" width="4" height="4" rx="1"
+      fill="#b07a12" fill-opacity="0.28"
+      data-mini="1:5" data-in="0" data-ech="port" data-cy="36.43"/><rect x="66.06" y="29.36" width="4" height="4" rx="1"
+      fill="#96586a" fill-opacity="0.28"
+      data-mini="1:4" data-in="0" data-ech="siding" data-cy="31.36"/><rect x="109.02" y="14.16" width="4" height="4" rx="1"
+      fill="#b07a12" fill-opacity="1"
+      data-mini="2:1" data-in="1" data-ech="port" data-cy="16.16"/><rect x="23.11" y="29.36" width="4" height="4" rx="1"
+      fill="#3f5266" fill-opacity="0.28"
+      data-mini="0:4" data-in="0" data-ech="zone" data-cy="31.36"/><rect x="109.02" y="19.23" width="4" height="4" rx="1"
+      fill="#6f6a33" fill-opacity="1"
+      data-mini="2:2" data-in="1" data-ech="yard" data-cy="21.23"/><rect x="150.43" y="9.09" width="4" height="4" rx="1"
+      fill="#b07a12" fill-opacity="1"
+      data-mini="3:0" data-in="1" data-ech="port" data-cy="11.09"/><rect x="109.02" y="24.29" width="4" height="4" rx="1"
+      fill="#6f6a33" fill-opacity="1"
+      data-mini="2:3" data-in="1" data-ech="yard" data-cy="26.29"/><rect x="150.43" y="14.16" width="4" height="4" rx="1"
+      fill="#b07a12" fill-opacity="1"
+      data-mini="3:1" data-in="1" data-ech="port" data-cy="16.16"/>
+    <rect data-check="viewport" data-h="21.59" data-full="29.52" data-scale="0.11014492753623188"
+      data-y="9" data-w="152"
+      x="12" y="9" width="152" height="21.59" rx="2"
+      fill="#b26b00" fill-opacity=".06" stroke="#b26b00" stroke-width="1.2"/>
+    <text x="6" y="58" font-size="7.5" font-weight="700" letter-spacing=".9" fill="#a3abb6">NETWORK</text>
+    <text x="170" y="58" text-anchor="end" font-size="7.5" font-weight="700" fill="#a3abb6">14 / 17 NODES</text>
+  </svg></div></div>
+  </section>
+  <section class="card" style="flex:1;min-height:0">
+    <div class="card__h"><h2>Asset utilisation</h2>
+      <span class="tag tag--w" data-check="belowTarget">2 lanes below target</span><div class="sp"></div>
+      <span class="mut" style="font-size:11px">target 95% &middot; rail sets 3,600 t &middot; B-double 42 t</span></div>
+    <div class="card__b">
+      <table class="ut">
+        <colgroup><col style="width:74px"><col style="width:290px"><col style="width:110px"><col style="width:150px"><col style="width:70px"><col style="width:110px"><col style="width:110px"><col style="width:150px"><col></colgroup>
+        <thead><tr><th class="l">Class</th><th class="l">Lane / asset</th><th class="l">Order</th><th class="l">Booking</th><th>Units</th><th>Capacity</th><th>Assigned</th><th>Load factor</th><th class="l">Note</th></tr></thead>
+        <tbody><tr data-row="util" data-class="rail" data-plan="DO-51194" data-cap="3600" data-assigned="3240" data-units="1">
+    <td class="l"><span class="tag tag--n">RAIL</span></td><td class="l">KLB-1 → Kwinana</td><td class="l">DO-51194</td>
+    <td class="l">Dedicated set</td>
+    <td>1</td><td>3,600</td><td>3,240</td><td><span class="mtr"><span class="bar2"><i class="" style="width:90%"></i></span><b>90.0%</b></span></td>
+    <td class="l"><span style="color:var(--warn);font-weight:600">deadfreight 360 t</span></td></tr><tr data-row="util" data-class="rail" data-plan="DO-51261" data-cap="3600" data-assigned="2520" data-units="1">
+    <td class="l"><span class="tag tag--n">RAIL</span></td><td class="l">Northam yard → Kwinana</td><td class="l">DO-51261</td>
+    <td class="l">Per-tonne tariff</td>
+    <td>1</td><td>3,600</td><td>2,520</td><td><span class="mtr"><span class="bar2"><i class="w" style="width:70%"></i></span><b>70.0%</b></span></td>
+    <td class="l">&mdash;</td></tr><tr data-row="util" data-class="road" data-plan="DO-51209" data-cap="5796" data-assigned="5760" data-units="138">
+    <td class="l"><span class="tag tag--n">ROAD</span></td><td class="l">WGN-4 → Avon siding</td><td class="l">DO-51209</td>
+    <td class="l">B-double 42 t</td>
+    <td>138</td><td>5,796</td><td>5,760</td><td><span class="mtr"><span class="bar2"><i class="o" style="width:99.38%"></i></span><b>99.4%</b></span></td>
+    <td class="l"><span class="mut">last trip 6 t</span></td></tr><tr data-row="util" data-class="road" data-plan="DO-51226" data-cap="2352" data-assigned="2340" data-units="56">
+    <td class="l"><span class="tag tag--n">ROAD</span></td><td class="l">CRG-2 → Albany</td><td class="l">DO-51226</td>
+    <td class="l">B-double 42 t</td>
+    <td>56</td><td>2,352</td><td>2,340</td><td><span class="mtr"><span class="bar2"><i class="o" style="width:99.49%"></i></span><b>99.5%</b></span></td>
+    <td class="l"><span class="mut">last trip 30 t</span></td></tr><tr data-row="util" data-class="berth" data-key="Kwinana Berth 4" data-granted="30" data-used="26.9" data-units="4">
+    <td class="l"><span class="tag tag--n">BERTH</span></td><td class="l">Kwinana Berth 4</td><td class="l">4 calls</td>
+    <td class="l">Window granted</td>
+    <td>4</td><td>30.0 h</td><td>26.9 h</td><td><span class="mtr"><span class="bar2"><i class="" style="width:89.67%"></i></span><b>89.7%</b></span></td>
+    <td class="l">&mdash;</td></tr><tr data-row="util" data-class="berth" data-key="Geraldton Berth 3" data-granted="36" data-used="31" data-units="3">
+    <td class="l"><span class="tag tag--n">BERTH</span></td><td class="l">Geraldton Berth 3</td><td class="l">3 calls</td>
+    <td class="l">Window granted</td>
+    <td>3</td><td>36.0 h</td><td>31.0 h</td><td><span class="mtr"><span class="bar2"><i class="" style="width:86.11%"></i></span><b>86.1%</b></span></td>
+    <td class="l">&mdash;</td></tr><tr data-row="util" data-class="berth" data-key="Kwinana Berth 2" data-granted="64" data-used="54.7" data-units="5">
+    <td class="l"><span class="tag tag--n">BERTH</span></td><td class="l">Kwinana Berth 2</td><td class="l">5 calls</td>
+    <td class="l">Window granted</td>
+    <td>5</td><td>64.0 h</td><td>54.7 h</td><td><span class="mtr"><span class="bar2"><i class="" style="width:85.47%"></i></span><b>85.5%</b></span></td>
+    <td class="l">&mdash;</td></tr><tr data-row="util" data-class="berth" data-key="Albany Berth 1" data-granted="32" data-used="17.2" data-units="3">
+    <td class="l"><span class="tag tag--n">BERTH</span></td><td class="l">Albany Berth 1</td><td class="l">3 calls</td>
+    <td class="l">Window granted</td>
+    <td>3</td><td>32.0 h</td><td>17.2 h</td><td><span class="mtr"><span class="bar2"><i class="w" style="width:53.75%"></i></span><b>53.8%</b></span></td>
+    <td class="l"><span class="mut">window over-granted</span></td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<section class="card dock">
+  <div class="dock__t"><div class="dtab on">Route candidates<span class="ct">7</span></div><div class="dtab">Feasibility checks<span class="ct">6</span></div><div class="dtab">Optimiser runs<span class="ct">4</span></div><div class="dtab">Lane capacity</div>
+    <div style="flex:1"></div>
+    <div class="dtab" style="color:var(--fg3)">3 of 7 infeasible &middot; apply blocked while an order is held</div>
+  </div>
+  <div class="dock__b"><table class="ut">
+    <colgroup><col style="width:86px"><col style="width:222px"><col style="width:110px"><col style="width:86px"><col style="width:104px"><col style="width:100px"><col style="width:94px"><col style="width:104px"><col style="width:116px"><col style="width:66px"><col></colgroup>
+    <thead><tr><th class="l">Order</th><th class="l">Candidate route</th><th class="l">Chain</th><th>Dwell</th><th>Freight</th><th>Handling</th><th>Storage</th><th>Accessorial</th><th>Landed A$</th><th>A$/t</th><th class="l">Feasibility</th></tr></thead>
+    <tbody><tr class="cur" data-row="cand" data-do="DO-51212" data-current="1" data-t="3960" data-freight="58410" data-handling="31680" data-storage="2870.45" data-acc="2640" data-landed="95600.45">
+      <td class="l"><b style="font-weight:600">DO-51212</b></td>
+      <td class="l">Rail direct, as planned</td>
+      <td class="l"><span class="tag tag--n">RAIL</span></td>
+      <td>1d 1h 35m</td>
+      <td>58,410.00</td>
+      <td>31,680.00</td>
+      <td>2,870.45</td>
+      <td>2,640.00</td>
+      <td data-f="landed">95,600.45</td>
+      <td data-f="pert">24.14</td>
+      <td class="l fail">Infeasible<span class="mut" style="font-weight:400"> &middot; KWI-C4 peaks 23,820 t on 13 Feb against 22,500 t</span></td></tr><tr data-row="cand" data-do="DO-51212" data-current="0" data-t="3960" data-freight="58410" data-handling="31680" data-storage="1608.2" data-acc="2640" data-landed="94338.2">
+      <td class="l"><b style="font-weight:600">DO-51212</b></td>
+      <td class="l">Rail direct, departure deferred</td>
+      <td class="l"><span class="tag tag--n">RAIL</span></td>
+      <td>14h 20m</td>
+      <td>58,410.00</td>
+      <td>31,680.00</td>
+      <td>1,608.20</td>
+      <td>2,640.00</td>
+      <td data-f="landed">94,338.20</td>
+      <td data-f="pert">23.82</td>
+      <td class="l rec">Recommended<span class="mut" style="font-weight:400"> &middot; Arrives after the DO-51203 loadout; peak falls to 18,960 t</span></td></tr><tr data-row="cand" data-do="DO-51212" data-current="0" data-t="3960" data-freight="112860" data-handling="31680" data-storage="972.4" data-acc="0" data-landed="145512.4">
+      <td class="l"><b style="font-weight:600">DO-51212</b></td>
+      <td class="l">Road direct to Kwinana</td>
+      <td class="l"><span class="tag tag--n">ROAD</span></td>
+      <td>8h 39m</td>
+      <td>112,860.00</td>
+      <td>31,680.00</td>
+      <td>972.40</td>
+      <td>&mdash;</td>
+      <td data-f="landed">145,512.40</td>
+      <td data-f="pert">36.75</td>
+      <td class="l ">Feasible<span class="mut" style="font-weight:400"> &middot; Feasible but road tariff is 93% above the rail lane</span></td></tr><tr data-row="cand" data-do="DO-51212" data-current="0" data-t="3960">
+      <td class="l"><b style="font-weight:600">DO-51212</b></td>
+      <td class="l">Rail to Geraldton, tranship</td>
+      <td class="l"><span class="tag tag--n">RAIL+SEA</span></td>
+      <td>&mdash;</td>
+      <td>&mdash;</td>
+      <td>&mdash;</td>
+      <td>&mdash;</td>
+      <td>&mdash;</td>
+      <td data-f="landed">&mdash;</td>
+      <td data-f="pert">&mdash;</td>
+      <td class="l fail">Infeasible<span class="mut" style="font-weight:400"> &middot; Vessel is berthed at Kwinana</span></td></tr><tr class="cur" data-row="cand" data-do="DO-51243" data-current="1" data-t="2760" data-freight="47610" data-handling="27600" data-storage="1205.58" data-acc="5090" data-landed="81505.58">
+      <td class="l"><b style="font-weight:600">DO-51243</b></td>
+      <td class="l">Road + rail via Mullewa siding</td>
+      <td class="l"><span class="tag tag--n">ROAD+RAIL</span></td>
+      <td>15h 25m</td>
+      <td>47,610.00</td>
+      <td>27,600.00</td>
+      <td>1,205.58</td>
+      <td>5,090.00</td>
+      <td data-f="landed">81,505.58</td>
+      <td data-f="pert">29.53</td>
+      <td class="l fail">Infeasible<span class="mut" style="font-weight:400"> &middot; Rail departs 1h 45m before road outturn</span></td></tr><tr data-row="cand" data-do="DO-51243" data-current="0" data-t="2760" data-freight="53544" data-handling="21114" data-storage="801.55" data-acc="0" data-landed="75459.55">
+      <td class="l"><b style="font-weight:600">DO-51243</b></td>
+      <td class="l">Road direct to Geraldton</td>
+      <td class="l"><span class="tag tag--n">ROAD</span></td>
+      <td>10h 15m</td>
+      <td>53,544.00</td>
+      <td>21,114.00</td>
+      <td>801.55</td>
+      <td>&mdash;</td>
+      <td data-f="landed">75,459.55</td>
+      <td data-f="pert">27.34</td>
+      <td class="l rec">Recommended<span class="mut" style="font-weight:400"> &middot; Single leg, makes the vessel window</span></td></tr><tr data-row="cand" data-do="DO-51243" data-current="0" data-t="2760" data-freight="47610" data-handling="27600" data-storage="2645.77" data-acc="3250" data-landed="81105.77">
+      <td class="l"><b style="font-weight:600">DO-51243</b></td>
+      <td class="l">Rail re-slot, next path</td>
+      <td class="l"><span class="tag tag--n">ROAD+RAIL</span></td>
+      <td>1d 9h 50m</td>
+      <td>47,610.00</td>
+      <td>27,600.00</td>
+      <td>2,645.77</td>
+      <td>3,250.00</td>
+      <td data-f="landed">81,105.77</td>
+      <td data-f="pert">29.39</td>
+      <td class="l ">Feasible<span class="mut" style="font-weight:400"> &middot; Next path misses the vessel window</span></td></tr></tbody>
+  </table></div>
+</section></main>
+
+<footer class="foot">
+  <span>Corridor <b style="font-weight:600;color:var(--fg2)">WA Grain</b></span><i class="d"></i>
+  <span>Rate card <span data-check="footRate">r-2026.02-a</span></span><i class="d"></i>
+  <span>Telematics feed synced <span data-check="footSync">09:12:47</span> &middot; <span style="color:var(--warn)">2 h stale</span></span><i class="d"></i>
+  <span>Optimiser run 09:02:11 &middot; 7 candidates</span>
+  <div style="flex:1"></div>
+  <span>TRAMOS <b style="font-weight:600;color:var(--fg2)">4.8.2</b> &middot; build 20260209.3</span>
+</footer>
+</body></html>

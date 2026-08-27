@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Slipstream — Gates &amp; Policy</title>
+<style>
+  /* ------------------------------------------------------------------
+     Slipstream — gates & policy. Second view of the same product.
+
+     The shell is reused from slipstream-01 VERBATIM: 56px icon rail,
+     60px strategy bar, 80px stat strip, 410px content row, 298px bottom
+     band with a 434px right panel. Type scale, spacing, badge and status
+     vocabulary are identical. Sibling views must agree exactly; only the
+     nav active state and the content differ.
+
+     Do not restate the palette or register here — it is inherited from
+     screen 1 by reference. Two copies of the same values is how sibling
+     views drift apart.
+     ------------------------------------------------------------------ */
+
+  :root {
+    --bs-body-bg:         #212529;
+    --bs-body-color:      #dee2e6;
+    --bs-emphasis-color:  #ffffff;
+    --bs-secondary-color: rgba(222,226,230,.75);
+    --bs-tertiary-color:  rgba(222,226,230,.5);
+    --bs-border-color:    #495057;
+    --bs-secondary-bg:    #343a40;
+    --bs-tertiary-bg:     #2b3035;
+
+    --bs-success-text:   #75b798;
+    --bs-success-bg:     #051b11;
+    --bs-success-border: #0f5132;
+    --bs-warning-text:   #ffda6a;
+    --bs-warning-bg:     #332701;
+    --bs-warning-border: #997404;
+    --bs-danger-text:    #ea868f;
+    --bs-danger-bg:      #2c0b0e;
+    --bs-danger-border:  #842029;
+    --bs-secondary-text: #a7acb1;
+    --bs-secondary-subtle-bg:     #161719;
+    --bs-secondary-subtle-border: #41464b;
+
+    --bs-primary:        #a78bfa;
+    --bs-primary-text:   #c4b5fd;
+    --bs-primary-bg:     #1b1430;
+    --bs-primary-border: #5b21b6;
+    --bs-primary-ink:    #1a1030;
+
+    --d-new: #22b8cf;
+    --d-old: #d6409f;
+
+    --bs-border-radius:    .375rem;
+    --bs-border-radius-sm: .25rem;
+
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+            "Noto Sans", "Liberation Sans", Arial, sans-serif;
+    --mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+            "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 400 13px/1.4 var(--mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--bs-body-color);
+    background: #16181b;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app { width: 1440px; height: 900px; overflow: hidden; background: var(--bs-body-bg); display: flex; }
+
+  /* ---------------- icon rail (identical to screen 1) ---------------- */
+  .rail {
+    width: 56px; flex: 0 0 56px; background: #1a1d21;
+    border-right: 1px solid var(--bs-border-color);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .rail__brand { height: 52px; flex: 0 0 52px; display: flex; align-items: center; justify-content: center; }
+  .brand-mark { width: 22px; height: 20px; position: relative; }
+  .brand-mark i { position: absolute; left: 0; height: 2.5px; border-radius: 2px; background: var(--bs-primary); }
+  .brand-mark i:nth-child(1) { top: 3px;   width: 22px; }
+  .brand-mark i:nth-child(2) { top: 8.5px; width: 14px; opacity: .72; }
+  .brand-mark i:nth-child(3) { top: 14px;  width: 18px; opacity: .45; }
+
+  .rail__env {
+    font: 700 9px/1 var(--sans); letter-spacing: .9px;
+    color: var(--bs-warning-text); background: var(--bs-warning-bg);
+    border: 1px solid var(--bs-warning-border); border-radius: var(--bs-border-radius-sm);
+    padding: 3px 6px; margin-bottom: 9px;
+  }
+  .rail__rule { width: 24px; height: 1px; background: var(--bs-border-color); margin-bottom: 8px; }
+  .rail__nav { display: flex; flex-direction: column; align-items: stretch; width: 100%; gap: 2px; }
+  .railitem { height: 42px; display: flex; align-items: center; justify-content: center; color: var(--bs-tertiary-color); position: relative; }
+  .railitem svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .railitem--on { color: var(--bs-primary-text); background: rgba(167,139,250,.10); }
+  .railitem--on::before {
+    content: ""; position: absolute; left: 0; top: 6px; bottom: 6px;
+    width: 2px; border-radius: 0 2px 2px 0; background: var(--bs-primary);
+  }
+  .railitem .dot { position: absolute; top: 10px; right: 13px; width: 5px; height: 5px; border-radius: 50%; background: var(--bs-danger-text); }
+  .rail__foot { margin-top: auto; padding-bottom: 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .rail__foot .rail__rule { margin-bottom: 0; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%; flex: 0 0 30px;
+    background: var(--bs-primary-bg); border: 1px solid var(--bs-primary-border);
+    color: var(--bs-primary-text); font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------------- shell + strategy bar ---------------- */
+  .shell { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .strategy {
+    height: 60px; flex: 0 0 60px; background: var(--bs-tertiary-bg);
+    border-bottom: 1px solid var(--bs-border-color);
+    display: flex; align-items: center; gap: 14px; padding: 0 16px;
+  }
+  .strategy > * { white-space: nowrap; }
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--bs-tertiary-color); }
+  .breadcrumb b { color: var(--bs-emphasis-color); font-weight: 600; font-size: 13.5px; }
+  .org {
+    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px;
+    border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+    background: var(--bs-body-bg); color: var(--bs-body-color); font-size: 12px;
+  }
+  .org::after {
+    content: ""; width: 7px; height: 7px; border-right: 1.4px solid var(--bs-tertiary-color);
+    border-bottom: 1.4px solid var(--bs-tertiary-color); transform: rotate(45deg) translate(-2px,-2px);
+  }
+  .relchip {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+    background: var(--bs-body-bg); height: 34px; padding: 0 11px;
+  }
+  .relchip .name { color: var(--bs-emphasis-color); font-size: 12.5px; font-weight: 600; }
+  .relchip .arrow { color: var(--bs-tertiary-color); font-size: 11px; }
+  .relchip .prev { color: var(--bs-secondary-color); font-size: 11.5px; }
+  .strat { font-size: 10.5px; color: var(--bs-tertiary-color); line-height: 1.35; }
+  .strat em { font-style: normal; color: var(--bs-secondary-color); }
+  .rel2 {
+    display: flex; flex-direction: column; justify-content: center; gap: 2px;
+    font-size: 10.5px; color: var(--bs-secondary-color);
+    border: 1px dashed var(--bs-secondary-subtle-border);
+    border-radius: var(--bs-border-radius); height: 38px; padding: 0 11px;
+  }
+  .rel2 .top { display: flex; align-items: baseline; gap: 9px; }
+  .rel2 .nm { color: var(--bs-body-color); font-size: 11.5px; }
+  .rel2 .frz { color: var(--bs-warning-text); }
+  .strategy-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+  .btn {
+    height: 31px; display: inline-flex; align-items: center; gap: 6px;
+    padding: 0 12px; border-radius: var(--bs-border-radius);
+    font: 500 12.5px var(--sans); border: 1px solid transparent; white-space: nowrap;
+  }
+  .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+  .btn-primary { background: var(--bs-primary); border-color: var(--bs-primary); color: var(--bs-primary-ink); }
+  .btn-outline-secondary { border-color: var(--bs-border-color); color: var(--bs-secondary-color); }
+  .btn-outline-danger { border-color: var(--bs-danger-border); color: var(--bs-danger-text); }
+  .btn.disabled { opacity: .65; }
+  .btn-icon { width: 31px; padding: 0; justify-content: center; }
+
+  /* ---------------- page + cards ---------------- */
+  .page { flex: 1; min-height: 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    background: var(--bs-tertiary-bg); border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius); display: flex; flex-direction: column; min-height: 0;
+  }
+  .card-header {
+    height: 34px; flex: 0 0 34px; display: flex; align-items: center; gap: 10px;
+    padding: 0 12px; border-bottom: 1px solid var(--bs-border-color);
+  }
+  .card-title { font: 700 10px/1 var(--sans); letter-spacing: .8px; text-transform: uppercase; color: var(--bs-secondary-color); }
+  .card-note { margin-left: auto; font-size: 10.5px; color: var(--bs-tertiary-color); }
+  .card-body { flex: 1; min-height: 0; overflow: hidden; }
+  .card-foot {
+    height: 28px; flex: 0 0 28px; border-top: 1px solid var(--bs-border-color);
+    display: flex; align-items: center; gap: 14px; padding: 0 12px;
+    font-size: 10.5px; color: var(--bs-tertiary-color); white-space: nowrap;
+  }
+
+  /* ---------------- stat strip ---------------- */
+  .stats { flex: 0 0 80px; display: flex; gap: 12px; }
+  .stat {
+    flex: 1; min-width: 0; background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+    padding: 7px 11px 6px; display: flex; flex-direction: column;
+  }
+  .stat__label { font: 700 9.5px/1 var(--sans); letter-spacing: .9px; text-transform: uppercase; color: var(--bs-tertiary-color); }
+  .stat__val {
+    font-size: 24px; line-height: 1.08; margin-top: 4px; color: var(--bs-emphasis-color);
+    letter-spacing: -.6px; display: flex; align-items: baseline; gap: 4px;
+  }
+  .stat__of { font-size: 13px; color: var(--bs-tertiary-color); letter-spacing: 0; }
+  .stat__sub { margin-top: auto; font-size: 9.5px; line-height: 1.3; color: var(--bs-tertiary-color); }
+  .stat__sub em { font-style: normal; color: var(--bs-secondary-color); }
+  .stat--warn .stat__val { color: var(--bs-warning-text); }
+
+  /* ---------------- tables ---------------- */
+  .table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .table th {
+    height: 26px; text-align: left; padding: 0 8px;
+    font: 700 9.5px/1 var(--sans); letter-spacing: .85px; text-transform: uppercase;
+    color: var(--bs-tertiary-color); border-bottom: 1px solid var(--bs-border-color);
+    background: #262b30; white-space: nowrap;
+  }
+  .table th.r, .table td.r { text-align: right; }
+  .table th .caret { color: var(--bs-primary-text); font-size: 8px; margin-left: 3px; }
+  .table td {
+    height: 53px; padding: .25rem .5rem; border-bottom: 1px solid #3a4046;
+    vertical-align: middle; font-size: 12.5px; white-space: nowrap;
+  }
+  .table tr:last-child td { border-bottom: 0; }
+  .table tr.is-draft td { color: var(--bs-tertiary-color); }
+
+  .gname { color: var(--bs-emphasis-color); font-size: 12.5px; line-height: 1.15; }
+  .gdesc { color: var(--bs-tertiary-color); font-size: 9.5px; line-height: 1.15; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+  .mid { color: var(--bs-body-color); font-size: 11px; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; }
+  .msrc { color: var(--bs-tertiary-color); font-size: 9px; line-height: 1.15; margin-top: 2px; }
+  .of { color: var(--bs-tertiary-color); }
+  .stale-t { color: var(--bs-warning-text); }
+  .err-none { color: var(--bs-tertiary-color); }
+
+  .fired { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .firebar { width: 62px; height: 4px; border-radius: 2px; background: #454c57; overflow: hidden; }
+  .firebar i { display: block; height: 100%; background: var(--d-old); }
+
+  .badge {
+    display: inline-flex; align-items: center; padding: .3em .6em; border-radius: 50rem;
+    font: 700 10px/1 var(--sans); letter-spacing: .2px; border: 1px solid transparent;
+  }
+  .badge--success   { background: var(--bs-success-bg); border-color: var(--bs-success-border); color: var(--bs-success-text); }
+  .badge--warning   { background: var(--bs-warning-bg); border-color: var(--bs-warning-border); color: var(--bs-warning-text); }
+  .badge--danger    { background: var(--bs-danger-bg);  border-color: var(--bs-danger-border);  color: var(--bs-danger-text); }
+  .badge--primary   { background: var(--bs-primary-bg); border-color: var(--bs-primary-border); color: var(--bs-primary-text); }
+  .badge--secondary { background: var(--bs-secondary-subtle-bg); border-color: var(--bs-secondary-subtle-border); color: var(--bs-secondary-text); }
+  .badge--sq { border-radius: var(--bs-border-radius-sm); padding: .22em .4em; font-family: var(--mono); font-weight: 400; }
+  .kebab { color: var(--bs-tertiary-color); text-align: center; letter-spacing: 1px; }
+
+  /* ---------------- version list ---------------- */
+  .vtable { width: 100%; border-collapse: collapse; }
+  .vtable td { padding: 0 12px; border-bottom: 1px solid #3a4046; vertical-align: middle; }
+  .vrow__top { display: flex; align-items: center; gap: 8px; }
+  .vrow__v { color: var(--bs-emphasis-color); font-size: 13px; }
+  .vrow__when { margin-left: auto; font-size: 10px; color: var(--bs-tertiary-color); }
+  .vrow__meta { font-size: 10.5px; color: var(--bs-secondary-color); margin-top: 5px; display: flex; gap: 10px; }
+  .vrow__meta b { color: var(--bs-emphasis-color); font-weight: 400; }
+  .vrow__note { font-size: 9.5px; color: var(--bs-danger-text); line-height: 1.3; margin-top: 5px; }
+
+  /* ---------------- audit log ---------------- */
+  .log { height: 100%; overflow: hidden; padding: 4px 0 0; }
+  .log__ln {
+    display: flex; align-items: baseline; gap: 10px; height: 17.5px;
+    padding: 0 12px; font-size: 11.5px; white-space: nowrap; color: var(--bs-secondary-color);
+  }
+  .log__ln .t { color: var(--bs-tertiary-color); flex: 0 0 104px; }
+  .log__ln .k { flex: 0 0 112px; }
+  .log__ln .m { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .log__ln em { font-style: normal; color: var(--bs-emphasis-color); }
+  .k--apply, .k--backtest { color: var(--bs-primary-text); }
+  .k--fire { color: var(--bs-warning-text); }
+  .k--revert, .k--incident { color: var(--bs-danger-text); }
+  .k--edit, .k--review { color: var(--bs-secondary-text); }
+
+  /* ---------------- outcomes panel ---------------- */
+  .out { padding: 10px 12px 0; height: 100%; display: flex; flex-direction: column; }
+  .out__head { display: flex; align-items: baseline; gap: 8px; height: 22px; }
+  .out__n { color: var(--bs-emphasis-color); font-size: 17px; }
+  .out__lbl { font-size: 10.5px; color: var(--bs-tertiary-color); }
+  .stack { height: 10px; border-radius: 2px; overflow: hidden; display: flex; margin-top: 6px; }
+  .stack i { display: block; height: 100%; }
+  .stack__key { display: flex; gap: 12px; font-size: 9px; color: var(--bs-tertiary-color); margin-top: 5px; }
+  .stack__key span { display: flex; align-items: center; gap: 4px; }
+  .stack__key b { width: 7px; height: 7px; border-radius: 1px; }
+
+  .orow { height: 34px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+  .orow__t { display: flex; align-items: baseline; font-size: 10.5px; color: var(--bs-secondary-color); }
+  .orow__t b { margin-left: auto; font-weight: 400; color: var(--bs-emphasis-color); font-size: 12px; }
+  .orow__b { height: 4px; border-radius: 2px; background: var(--bs-secondary-bg); overflow: hidden; }
+  .orow__b i { display: block; height: 100%; }
+
+  .derived {
+    margin-top: auto; border-top: 1px solid var(--bs-border-color);
+    height: 40px; flex: 0 0 40px; display: flex; align-items: center; gap: 18px;
+  }
+  .derived div { font-size: 9.5px; color: var(--bs-tertiary-color); line-height: 1.25; }
+  .derived b { display: block; font-size: 14px; font-weight: 400; color: var(--bs-emphasis-color); }
+  .outfoot { height: 18px; flex: 0 0 18px; font-size: 9px; color: var(--bs-tertiary-color); line-height: 18px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============================= rail ============================= -->
+  <div class="rail">
+    <div class="rail__brand"><span class="brand-mark"><i></i><i></i><i></i></span></div>
+    <div class="rail__env">PRD</div>
+    <div class="rail__rule"></div>
+    <div class="rail__nav">
+      <div class="railitem" title="Releases">
+        <svg viewBox="0 0 20 20"><path d="M10 2.6v9.2"/><path d="M6.6 6 10 2.6 13.4 6"/><path d="M3.6 12.8v4.2h12.8v-4.2"/></svg>
+      </div>
+      <div class="railitem" title="Fleet">
+        <svg viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="5" rx="1.2"/><rect x="3" y="11" width="14" height="5" rx="1.2"/><circle cx="6" cy="6.5" r=".85" stroke="none" fill="currentColor"/><circle cx="6" cy="13.5" r=".85" stroke="none" fill="currentColor"/></svg>
+      </div>
+      <div class="railitem railitem--on" title="Gates">
+        <svg viewBox="0 0 20 20"><path d="M10 2.8 16 5v4.4c0 3.3-2.4 5.9-6 7-3.6-1.1-6-3.7-6-7V5z"/><path d="M7.6 9.9l1.7 1.7 3.3-3.4"/></svg>
+      </div>
+      <div class="railitem" title="Protection">
+        <svg viewBox="0 0 20 20"><rect x="3" y="4.5" width="14" height="11" rx="1.2"/><path d="M3 8.2h14"/><path d="M3 11.8h14"/><path d="M8.5 4.5v3.7"/><path d="M11.5 8.2v3.6"/><path d="M8.5 11.8v3.7"/></svg>
+      </div>
+      <div class="railitem" title="Audit">
+        <svg viewBox="0 0 20 20"><path d="M4 5.6h12"/><path d="M4 10h12"/><path d="M4 14.4h7.5"/></svg>
+        <span class="dot"></span>
+      </div>
+      <div class="railitem" title="Settings">
+        <svg viewBox="0 0 20 20"><path d="M3.4 5.8h2.7"/><path d="M10.1 5.8h6.5"/><path d="M3.4 10h6.2"/><path d="M13.6 10h3"/><path d="M3.4 14.2h3.4"/><path d="M10.8 14.2h5.8"/><circle cx="8.1" cy="5.8" r="1.7"/><circle cx="11.6" cy="10" r="1.7"/><circle cx="8.8" cy="14.2" r="1.7"/></svg>
+      </div>
+    </div>
+    <div class="rail__foot">
+      <div class="rail__rule"></div>
+      <div class="avatar">MT</div>
+    </div>
+  </div>
+
+  <div class="shell">
+
+    <!-- ======================= strategy bar ======================= -->
+    <div class="strategy">
+      <div class="breadcrumb">
+        <span class="org">platform-infra</span>
+        <span>/</span> Gates <span>/</span> <b>edge-gateway</b>
+      </div>
+      <div class="relchip">
+        <span class="name" data-check="release">edge-gateway v2.31.0</span>
+        <span class="arrow">&larr;</span>
+        <span class="prev">v2.30.4</span>
+      </div>
+      <div class="strat">policy <em>p-14</em> &middot; live since 04 Aug<br>6 gates defined &middot; 5 enforced</div>
+      <div class="rel2">
+        <div class="top">
+          <span class="nm">telemetry-relay v1.14.2</span>
+          <span>71/104 &middot; 68.3%</span>
+        </div>
+        <span class="frz">paused &middot; change freeze to 16:00</span>
+      </div>
+      <div class="strategy-right">
+        <div class="btn btn-primary disabled">Publish p-15</div>
+        <div class="btn btn-outline-secondary">Simulate</div>
+        <div class="btn btn-outline-secondary btn-icon">&#8942;</div>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <!-- ======================= stat strip ======================= -->
+      <div class="stats">
+        <div class="stat">
+          <div class="stat__label">Enforced gates</div>
+          <div class="stat__val"><span data-check="gates-enforced">5</span><span class="stat__of">/ <span data-check="gates-defined">6</span></span></div>
+          <div class="stat__sub">1 draft, awaiting a second approval<br>policy p-14 &middot; edge-gateway / prod</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat__label">Gate precision</div>
+          <div class="stat__val"><span data-check="precision">81.1%</span></div>
+          <div class="stat__sub">30 of 37 halt actions confirmed<br>7 found no regression on review</div>
+        </div>
+
+        <div class="stat stat--warn">
+          <div class="stat__label">Regression catch</div>
+          <div class="stat__val"><span data-check="recall">85.7%</span></div>
+          <div class="stat__sub">30 of <em data-check="regressions">35</em> regressions caught<br>5 reached production undetected</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat__label">Rollouts &middot; 90 d</div>
+          <div class="stat__val"><span data-check="out-attempted">208</span></div>
+          <div class="stat__sub"><em data-check="out-clean">171</em> completed clean<br><span data-check="out-halted">25</span> halted &middot; <span data-check="out-rolledback">12</span> rolled back</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat__label">Last backtest</div>
+          <div class="stat__val">5 d</div>
+          <div class="stat__sub">ran 14 Aug 08:19 against p-14<br>re-runs weekly &middot; next 21 Aug</div>
+        </div>
+      </div>
+
+      <!-- ===================== policy + versions ===================== -->
+      <div class="band" style="flex:0 0 410px; display:flex; gap:12px; min-height:0">
+
+        <div class="card" style="flex:1; min-width:0">
+          <div class="card-header">
+            <span class="card-title">Gate policy</span>
+            <span class="badge badge--secondary badge--sq">edge-gateway / prod</span>
+            <span class="card-note">evaluated per region, per canary step</span>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <colgroup>
+                <col style="width:200px"><col style="width:170px"><col style="width:60px">
+                <col style="width:78px"><col style="width:68px"><col style="width:96px">
+                <col style="width:110px"><col style="width:88px"><col style="width:34px">
+              </colgroup>
+              <thead><tr>
+                <th>Gate</th>
+                <th>Metric</th>
+                <th class="r">Window</th>
+                <th class="r">Limit</th>
+                <th>Action</th>
+                <th class="r">Fired 90 d<span class="caret">&#9660;</span></th>
+                <th>Last fired</th>
+                <th>State</th>
+                <th></th>
+              </tr></thead>
+              <tbody>
+
+              <tr data-row="policy" data-gate="http-5xx" data-limit="0.300" data-action="halt" data-fired="19" data-state="active">
+                <td><div class="gname">HTTP 5xx rate</div><div class="gdesc">share of 5xx at the edge</div></td>
+                <td><div class="mid">envoy_http_5xx_ratio</div><div class="msrc">envoy &middot; 30s scrape</div></td>
+                <td class="r">5m</td>
+                <td class="r">0.300%</td>
+                <td><span class="badge badge--danger">Halt</span></td>
+                <td class="r"><div class="fired">19<div class="firebar"><i style="width:100%"></i></div></div></td>
+                <td><div class="mid">19 Aug 14:14</div><div class="msrc">ap-southeast-1</div></td>
+                <td><span class="badge badge--success">Active</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr data-row="policy" data-gate="budget-burn" data-limit="4.0" data-action="halt" data-fired="11" data-state="active">
+                <td><div class="gname">Error-budget burn</div><div class="gdesc">1 h burn against the SLO</div></td>
+                <td><div class="mid">slo_burn_1h</div><div class="msrc">slo-engine &middot; 1m scrape</div></td>
+                <td class="r">1h</td>
+                <td class="r">4.0&times;</td>
+                <td><span class="badge badge--danger">Halt</span></td>
+                <td class="r"><div class="fired">11<div class="firebar"><i style="width:57.9%"></i></div></div></td>
+                <td><div class="mid">16 Aug 22:41</div><div class="msrc">checkout-api</div></td>
+                <td><span class="badge badge--success">Active</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr data-row="policy" data-gate="p99-latency" data-limit="600" data-action="halt" data-fired="7" data-state="active">
+                <td><div class="gname">p99 latency</div><div class="gdesc">99th percentile latency at the edge</div></td>
+                <td><div class="mid">envoy_p99_ms</div><div class="msrc">envoy &middot; 30s scrape</div></td>
+                <td class="r">5m</td>
+                <td class="r">600 ms</td>
+                <td><span class="badge badge--danger">Halt</span></td>
+                <td class="r"><div class="fired">7<div class="firebar"><i style="width:36.8%"></i></div></div></td>
+                <td><div class="mid">11 Aug 09:26</div><div class="msrc">sa-east-1</div></td>
+                <td><span class="badge badge--success">Active</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr data-row="policy" data-gate="cpu-saturation" data-limit="85.0" data-action="warn" data-fired="4" data-state="active">
+                <td><div class="gname">CPU saturation</div><div class="gdesc">CPU against request</div></td>
+                <td><div class="mid">container_cpu_util</div><div class="msrc">kubelet &middot; 15s scrape</div></td>
+                <td class="r">10m</td>
+                <td class="r">85.0%</td>
+                <td><span class="badge badge--warning">Warn</span></td>
+                <td class="r"><div class="fired">4<div class="firebar"><i style="width:21.1%"></i></div></div></td>
+                <td><div class="mid">12 Aug 04:18</div><div class="msrc">eu-west-1</div></td>
+                <td><span class="badge badge--success">Active</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr data-row="policy" data-gate="restart-count" data-limit="2" data-action="warn" data-fired="2" data-state="active">
+                <td><div class="gname">Container restarts</div><div class="gdesc">restarts in the canary pool</div></td>
+                <td><div class="mid">kube_restart_count</div><div class="msrc">kube-state &middot; 30s scrape</div></td>
+                <td class="r">15m</td>
+                <td class="r">2</td>
+                <td><span class="badge badge--warning">Warn</span></td>
+                <td class="r"><div class="fired">2<div class="firebar"><i style="width:10.5%"></i></div></div></td>
+                <td><div class="mid stale-t">19 Aug 14:21</div><div class="msrc">ap-southeast-1</div></td>
+                <td><span class="badge badge--success">Active</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr class="is-draft" data-row="policy" data-gate="mem-rss" data-limit="" data-action="halt" data-fired="0" data-state="draft">
+                <td><div class="gname" style="color:var(--bs-secondary-color)">Memory RSS growth</div><div class="gdesc">RSS drift over the soak</div></td>
+                <td><div class="mid" style="color:var(--bs-tertiary-color)">container_mem_rss</div><div class="msrc">kubelet &middot; 15s scrape</div></td>
+                <td class="r">30m</td>
+                <td class="r err-none">&mdash;</td>
+                <td><span class="badge badge--secondary">Halt</span></td>
+                <td class="r"><div class="fired">0<div class="firebar"></div></div></td>
+                <td class="err-none">&mdash;</td>
+                <td><span class="badge badge--secondary">Draft</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              </tbody>
+            </table>
+          </div>
+          <div class="card-foot">
+            <span><span data-check="total-firings">43</span> firings in 90 d</span>
+            <span><span data-check="halt-firings">37</span> halt-action</span>
+            <span class="stale-t"><span data-check="warn-firings">6</span> warn-only, no action taken</span>
+            <span style="margin-left:auto">p-15 draft adds 1 gate &middot; 1 of 2 approvals</span>
+          </div>
+        </div>
+
+        <div class="card" style="flex:0 0 434px">
+          <div class="card-header">
+            <span class="card-title">Policy versions</span>
+            <span class="badge badge--secondary badge--sq">4 of 11</span>
+            <span class="card-note">90 d backtest</span>
+          </div>
+          <div class="card-body">
+            <table class="vtable">
+              <tbody>
+
+              <tr data-row="version" data-version="p-14" data-limit="0.300" data-actions="37" data-confirmed="30" data-precision="81.1" data-state="live">
+                <td style="height:78px">
+                  <div class="vrow__top">
+                    <span class="vrow__v">p-14</span>
+                    <span class="badge badge--success">Live</span>
+                    <span class="vrow__when">applied 04 Aug 09:12 &middot; r.okonkwo</span>
+                  </div>
+                  <div class="vrow__meta"><span>5xx <b>0.300%</b></span><span>37 actions</span><span>precision <b>81.1%</b></span></div>
+                </td>
+              </tr>
+
+              <tr data-row="version" data-version="p-13" data-limit="0.150" data-actions="61" data-confirmed="27" data-precision="44.3" data-state="rolled-back">
+                <td style="height:96px">
+                  <div class="vrow__top">
+                    <span class="vrow__v">p-13</span>
+                    <span class="badge badge--danger">Rolled back</span>
+                    <span class="vrow__when">applied 21 Jul 16:38 &middot; r.okonkwo</span>
+                  </div>
+                  <div class="vrow__meta"><span>5xx <b>0.150%</b></span><span>61 actions</span><span>precision <b>44.3%</b></span></div>
+                  <div class="vrow__note">too tight &mdash; halted 14 healthy rollouts in 48 h (INC-2841). Reverted to p-12 on 24 Jul 08:05.</div>
+                </td>
+              </tr>
+
+              <tr data-row="version" data-version="p-12" data-limit="0.500" data-actions="18" data-confirmed="16" data-precision="88.9" data-state="superseded">
+                <td style="height:78px">
+                  <div class="vrow__top">
+                    <span class="vrow__v">p-12</span>
+                    <span class="badge badge--secondary">Superseded</span>
+                    <span class="vrow__when">applied 09 Jun 11:47 &middot; d.marchetti</span>
+                  </div>
+                  <div class="vrow__meta"><span>5xx <b>0.500%</b></span><span>18 actions</span><span>precision <b>88.9%</b></span></div>
+                </td>
+              </tr>
+
+              <tr data-row="version" data-version="p-11" data-limit="0.500" data-actions="" data-confirmed="" data-precision="" data-state="superseded">
+                <td style="height:94px">
+                  <div class="vrow__top">
+                    <span class="vrow__v" style="color:var(--bs-secondary-color)">p-11</span>
+                    <span class="badge badge--secondary">Superseded</span>
+                    <span class="vrow__when">applied 18 May 14:03 &middot; d.marchetti</span>
+                  </div>
+                  <div class="vrow__meta"><span>5xx <b>0.500%</b></span><span class="err-none">&mdash; actions</span><span class="err-none">precision &mdash;</span></div>
+                  <div class="vrow__note" style="color:var(--bs-tertiary-color)">outside the 90 d backtest window &mdash; no comparable figures</div>
+                </td>
+              </tr>
+
+              </tbody>
+            </table>
+          </div>
+          <div class="card-foot">
+            <span>7 older versions collapsed</span>
+            <span>retention 18 months</span>
+            <span style="margin-left:auto">p-15 draft not yet applied</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ======================== bottom band ======================== -->
+      <div class="band" style="flex:1; display:flex; gap:12px; min-height:0">
+
+        <div class="card" style="flex:1; min-width:0">
+          <div class="card-header">
+            <span class="card-title">Policy audit</span>
+            <span class="badge badge--secondary badge--sq">edge-gateway / prod</span>
+            <span class="card-note">gate firings and policy changes &middot; 90 d</span>
+          </div>
+          <div class="card-body">
+            <div class="log">
+              <div class="log__ln" data-log="gate:fire"><span class="t">19 Aug 14:21:38</span><span class="k k--fire">gate:fire</span><span class="m"><em>restart_count</em> ap-southeast-1 2/15m at limit 2 &mdash; warn, no action</span></div>
+              <div class="log__ln" data-log="gate:fire"><span class="t">19 Aug 14:14:08</span><span class="k k--fire">gate:fire</span><span class="m"><em>http_5xx</em> ap-southeast-1 0.417% &gt; 0.300% &mdash; halt</span></div>
+              <div class="log__ln" data-log="gate:fire"><span class="t">19 Aug 14:05:46</span><span class="k k--fire">gate:fire</span><span class="m"><em>http_5xx</em> ap-northeast-1 1.874% &gt; 0.300% &mdash; rollback</span></div>
+              <div class="log__ln" data-log="policy:review"><span class="t">18 Aug 17:32:09</span><span class="k k--review">policy:review</span><span class="m">p-15 draft &mdash; adds container_mem_rss, 1 of 2 approvals given</span></div>
+              <div class="log__ln" data-log="gate:fire"><span class="t">16 Aug 22:41:55</span><span class="k k--fire">gate:fire</span><span class="m"><em>slo_burn_1h</em> checkout-api 4.6&times; &gt; 4.0&times; &mdash; halt</span></div>
+              <div class="log__ln" data-log="backtest:run"><span class="t">14 Aug 08:19:27</span><span class="k k--backtest">backtest:run</span><span class="m">p-14 over 90 d &mdash; 37 actions, precision 0.811, recall 0.857</span></div>
+              <div class="log__ln" data-log="gate:fire"><span class="t">12 Aug 04:18:33</span><span class="k k--fire">gate:fire</span><span class="m"><em>container_cpu_util</em> eu-west-1 88.2% &gt; 85.0% &mdash; warn, no action</span></div>
+              <div class="log__ln" data-log="gate:fire"><span class="t">11 Aug 09:26:41</span><span class="k k--fire">gate:fire</span><span class="m"><em>envoy_p99_ms</em> sa-east-1 641 ms &gt; 600 ms &mdash; halt</span></div>
+              <div class="log__ln" data-log="policy:edit"><span class="t">07 Aug 13:55:02</span><span class="k k--edit">policy:edit</span><span class="m">p-14 restart_count window 10m &rarr; 15m by r.okonkwo</span></div>
+              <div class="log__ln" data-log="policy:apply"><span class="t">04 Aug 09:12:18</span><span class="k k--apply">policy:apply</span><span class="m">p-14 live &mdash; 5xx limit 0.150% &rarr; 0.300%, 5 gates enforced</span></div>
+              <div class="log__ln" data-log="policy:revert"><span class="t">24 Jul 08:05:44</span><span class="k k--revert">policy:revert</span><span class="m">p-13 rolled back to p-12 &mdash; 61 actions, precision 0.443</span></div>
+              <div class="log__ln" data-log="incident"><span class="t">23 Jul 19:47:12</span><span class="k k--incident">incident</span><span class="m">INC-2841 &mdash; 14 healthy rollouts halted by p-13 in 48 h</span></div>
+              <div class="log__ln" data-log="policy:apply"><span class="t">21 Jul 16:38:50</span><span class="k k--apply">policy:apply</span><span class="m">p-13 live &mdash; 5xx limit 0.500% &rarr; 0.150%</span></div>
+              <div class="log__ln" data-log="policy:apply"><span class="t">09 Jun 11:47:26</span><span class="k k--apply">policy:apply</span><span class="m">p-12 live &mdash; container restart gate added, warn-only</span></div>
+              <div class="log__ln" data-log="policy:apply"><span class="t">18 May 14:03:09</span><span class="k k--apply">policy:apply</span><span class="m">p-11 live &mdash; initial gate set, 4 gates enforced</span></div>
+              <div class="log__ln" data-log="policy:create"><span class="t">18 May 13:58:02</span><span class="k k--apply">policy:create</span><span class="m">edge-gateway / prod &mdash; gate policy initialised by d.marchetti</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="flex:0 0 434px">
+          <div class="card-header">
+            <span class="card-title">Outcomes</span>
+            <span class="badge badge--secondary badge--sq">90 d</span>
+            <span class="card-note">reviewed, not inferred</span>
+          </div>
+          <div class="card-body">
+            <div class="out">
+              <div class="out__head">
+                <span class="out__n">208</span>
+                <span class="out__lbl">rollouts reaching at least one canary step</span>
+              </div>
+              <div class="stack">
+                <i style="width:82.21%;background:#2d6c78"></i>
+                <i style="width:12.02%;background:#997404"></i>
+                <i style="width:5.77%;background:#842029"></i>
+              </div>
+              <div class="stack__key">
+                <span><b style="background:#2d6c78"></b>171 completed</span>
+                <span><b style="background:#997404"></b>25 halted</span>
+                <span><b style="background:#842029"></b>12 rolled back</span>
+              </div>
+
+              <div style="margin-top:8px">
+                <div class="orow">
+                  <div class="orow__t">Gate acted, regression confirmed<b data-check="out-confirmed">30</b></div>
+                  <div class="orow__b"><i style="width:18.1%;background:var(--bs-success-text)"></i></div>
+                </div>
+                <div class="orow">
+                  <div class="orow__t">Gate acted, no regression found<b data-check="out-false">7</b></div>
+                  <div class="orow__b"><i style="width:4.2%;background:var(--bs-warning-text)"></i></div>
+                </div>
+                <div class="orow">
+                  <div class="orow__t">Shipped, incident within 24 h<b data-check="out-missed">5</b></div>
+                  <div class="orow__b"><i style="width:3.0%;background:var(--bs-danger-text)"></i></div>
+                </div>
+                <div class="orow">
+                  <div class="orow__t">Shipped, no incident<b data-check="out-shipped-clean">166</b></div>
+                  <div class="orow__b"><i style="width:100%;background:#556270"></i></div>
+                </div>
+              </div>
+
+              <div class="derived">
+                <div>gate precision<b>81.1%</b></div>
+                <div>regression catch<b>85.7%</b></div>
+                <div style="margin-left:auto;text-align:right">F&#8321; not shown &mdash; it is<br>derivable from the two</div>
+              </div>
+              <div class="outfoot">6 warn-only firings excluded &mdash; they take no action, so they cannot be right or wrong</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

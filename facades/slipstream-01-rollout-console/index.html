@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Slipstream — Rollout Console</title>
+<style>
+  /* ------------------------------------------------------------------
+     Slipstream — rollout console. Static only; nothing here functions.
+     Built to be screenshotted at exactly 1440x900 @2x.
+
+     Register: Bootstrap 5.3 dark (2021-23). The tokens below are Bootstrap's
+     own dark-mode values, with $primary overridden to violet. Deliberately
+     NOT Material/Ant (that register belongs to Bellwether) and NOT in the
+     Rumble Harbor design language.
+
+     Chrome: 56px icon-only rail (collapsed; would expand to labels on hover),
+     org as the breadcrumb root, environment pinned in the rail, profile at
+     the rail foot. One horizontal bar only.
+
+     Vertical budget, 900px:
+       strategy 60 + page(14 + 80 stats + 12 + 410 regions + 12 + 298 band + 14)
+     ------------------------------------------------------------------ */
+
+  :root {
+    /* Bootstrap 5.3 dark-mode tokens, verbatim */
+    --bs-body-bg:         #212529;
+    --bs-body-color:      #dee2e6;
+    --bs-emphasis-color:  #ffffff;
+    --bs-secondary-color: rgba(222,226,230,.75);
+    --bs-tertiary-color:  rgba(222,226,230,.5);
+    --bs-border-color:    #495057;
+    --bs-secondary-bg:    #343a40;
+    --bs-tertiary-bg:     #2b3035;
+
+    --bs-success-text:   #75b798;
+    --bs-success-bg:     #051b11;
+    --bs-success-border: #0f5132;
+    --bs-warning-text:   #ffda6a;
+    --bs-warning-bg:     #332701;
+    --bs-warning-border: #997404;
+    --bs-danger-text:    #ea868f;
+    --bs-danger-bg:      #2c0b0e;
+    --bs-danger-border:  #842029;
+    --bs-secondary-text: #a7acb1;
+    --bs-secondary-subtle-bg:     #161719;
+    --bs-secondary-subtle-border: #41464b;
+
+    /* $primary override — violet */
+    --bs-primary:        #a78bfa;
+    --bs-primary-text:   #c4b5fd;
+    --bs-primary-bg:     #1b1430;
+    --bs-primary-border: #5b21b6;
+    --bs-primary-ink:    #1a1030;
+
+    /* data ramp: magenta -> cyan. No indigo or blue-violet in any large area. */
+    --d-new: #22b8cf;
+    --d-old: #d6409f;
+
+    --bs-border-radius:    .375rem;
+    --bs-border-radius-sm: .25rem;
+
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+            "Noto Sans", "Liberation Sans", Arial, sans-serif;
+    --mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+            "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    /* monospace-forward: data, IDs, timestamps and numerics are all mono.
+       Sans is reserved for prose and labels. Bellwether is the reverse. */
+    font: 400 13px/1.4 var(--mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--bs-body-color);
+    background: #16181b;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    width: 1440px; height: 900px; overflow: hidden;
+    background: var(--bs-body-bg); display: flex;
+  }
+
+  /* ---------------- icon rail ---------------- */
+  .rail {
+    width: 56px; flex: 0 0 56px; background: #1a1d21;
+    border-right: 1px solid var(--bs-border-color);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .rail__brand {
+    height: 52px; flex: 0 0 52px; display: flex; align-items: center; justify-content: center;
+  }
+  .brand-mark { width: 22px; height: 20px; position: relative; }
+  .brand-mark i {
+    position: absolute; left: 0; height: 2.5px; border-radius: 2px; background: var(--bs-primary);
+  }
+  .brand-mark i:nth-child(1) { top: 3px;   width: 22px; }
+  .brand-mark i:nth-child(2) { top: 8.5px; width: 14px; opacity: .72; }
+  .brand-mark i:nth-child(3) { top: 14px;  width: 18px; opacity: .45; }
+
+  .rail__env {
+    font: 700 9px/1 var(--sans); letter-spacing: .9px;
+    color: var(--bs-warning-text); background: var(--bs-warning-bg);
+    border: 1px solid var(--bs-warning-border); border-radius: var(--bs-border-radius-sm);
+    padding: 3px 6px; margin-bottom: 9px;
+  }
+  .rail__rule { width: 24px; height: 1px; background: var(--bs-border-color); margin-bottom: 8px; }
+
+  .rail__nav { display: flex; flex-direction: column; align-items: stretch; width: 100%; gap: 2px; }
+  .railitem {
+    height: 42px; display: flex; align-items: center; justify-content: center;
+    color: var(--bs-tertiary-color); position: relative;
+  }
+  .railitem svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .railitem--on { color: var(--bs-primary-text); background: rgba(167,139,250,.10); }
+  .railitem--on::before {
+    content: ""; position: absolute; left: 0; top: 6px; bottom: 6px;
+    width: 2px; border-radius: 0 2px 2px 0; background: var(--bs-primary);
+  }
+  .railitem .dot {
+    position: absolute; top: 10px; right: 13px; width: 5px; height: 5px;
+    border-radius: 50%; background: var(--bs-danger-text);
+  }
+  .rail__foot { margin-top: auto; padding-bottom: 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .rail__foot .rail__rule { margin-bottom: 0; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%; flex: 0 0 30px;
+    background: var(--bs-primary-bg); border: 1px solid var(--bs-primary-border);
+    color: var(--bs-primary-text); font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------------- shell ---------------- */
+  .shell { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+  /* ---------------- strategy bar ---------------- */
+  .strategy {
+    height: 60px; flex: 0 0 60px; background: var(--bs-tertiary-bg);
+    border-bottom: 1px solid var(--bs-border-color);
+    display: flex; align-items: center; gap: 14px; padding: 0 16px;
+  }
+  .strategy > * { white-space: nowrap; }
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--bs-tertiary-color); }
+  .breadcrumb b { color: var(--bs-emphasis-color); font-weight: 600; font-size: 13.5px; }
+  .org {
+    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px;
+    border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+    background: var(--bs-body-bg); color: var(--bs-body-color); font-size: 12px;
+  }
+  .org::after {
+    content: ""; width: 7px; height: 7px; border-right: 1.4px solid var(--bs-tertiary-color);
+    border-bottom: 1.4px solid var(--bs-tertiary-color); transform: rotate(45deg) translate(-2px,-2px);
+  }
+
+  .relchip {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+    background: var(--bs-body-bg); height: 34px; padding: 0 11px;
+  }
+  .relchip .name { color: var(--bs-emphasis-color); font-size: 12.5px; font-weight: 600; }
+  .relchip .arrow { color: var(--bs-tertiary-color); font-size: 11px; }
+  .relchip .prev { color: var(--bs-secondary-color); font-size: 11.5px; }
+
+  .strat { font-size: 10.5px; color: var(--bs-tertiary-color); line-height: 1.35; }
+  .strat em { font-style: normal; color: var(--bs-secondary-color); }
+
+  .rel2 {
+    display: flex; flex-direction: column; justify-content: center; gap: 2px;
+    font-size: 10.5px; color: var(--bs-secondary-color);
+    border: 1px dashed var(--bs-secondary-subtle-border);
+    border-radius: var(--bs-border-radius); height: 38px; padding: 0 11px;
+  }
+  .rel2 .top { display: flex; align-items: baseline; gap: 9px; }
+  .rel2 .nm { color: var(--bs-body-color); font-size: 11.5px; }
+  .rel2 .frz { color: var(--bs-warning-text); }
+
+  .strategy-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+  .btn {
+    height: 31px; display: inline-flex; align-items: center; gap: 6px;
+    padding: 0 12px; border-radius: var(--bs-border-radius);
+    font: 500 12.5px var(--sans); border: 1px solid transparent; white-space: nowrap;
+  }
+  .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+  .btn-primary { background: var(--bs-primary); border-color: var(--bs-primary); color: var(--bs-primary-ink); }
+  .btn-outline-secondary { border-color: var(--bs-border-color); color: var(--bs-secondary-color); }
+  .btn-outline-danger { border-color: var(--bs-danger-border); color: var(--bs-danger-text); }
+  .btn.disabled { opacity: .65; }   /* Bootstrap's exact disabled opacity */
+  .btn-icon { width: 31px; padding: 0; justify-content: center; }
+
+  /* ---------------- page ---------------- */
+  .page { flex: 1; min-height: 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    background: var(--bs-tertiary-bg); border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius); display: flex; flex-direction: column; min-height: 0;
+  }
+  .card-header {
+    height: 34px; flex: 0 0 34px; display: flex; align-items: center; gap: 10px;
+    padding: 0 12px; border-bottom: 1px solid var(--bs-border-color);
+  }
+  .card-title {
+    font: 700 10px/1 var(--sans); letter-spacing: .8px; text-transform: uppercase;
+    color: var(--bs-secondary-color);
+  }
+  .card-note { margin-left: auto; font-size: 10.5px; color: var(--bs-tertiary-color); }
+  .card-body { flex: 1; min-height: 0; overflow: hidden; }
+
+  /* ---------------- stat strip ---------------- */
+  .stats { flex: 0 0 80px; display: flex; gap: 12px; }
+  .stat {
+    flex: 1; min-width: 0; background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+    padding: 7px 11px 6px; display: flex; flex-direction: column;
+  }
+  .stat__label {
+    font: 700 9.5px/1 var(--sans); letter-spacing: .9px; text-transform: uppercase;
+    color: var(--bs-tertiary-color);
+  }
+  .stat__val {
+    font-size: 24px; line-height: 1.08; margin-top: 4px; color: var(--bs-emphasis-color);
+    letter-spacing: -.6px; display: flex; align-items: baseline; gap: 4px;
+  }
+  .stat__of { font-size: 13px; color: var(--bs-tertiary-color); letter-spacing: 0; }
+  .stat__sub { margin-top: auto; font-size: 9.5px; line-height: 1.3; color: var(--bs-tertiary-color); }
+  .stat__sub em { font-style: normal; color: var(--bs-secondary-color); }
+  .stat--warn .stat__val { color: var(--bs-warning-text); }
+  .track { height: 3px; border-radius: 2px; background: var(--bs-secondary-bg); margin-top: 5px; overflow: hidden; }
+  .track i { display: block; height: 100%; background: var(--d-new); }
+
+  /* ---------------- region table ---------------- */
+  .table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .table th {
+    height: 26px; text-align: left; padding: 0 8px;
+    font: 700 9.5px/1 var(--sans); letter-spacing: .85px; text-transform: uppercase;
+    color: var(--bs-tertiary-color); border-bottom: 1px solid var(--bs-border-color);
+    background: #262b30; white-space: nowrap;
+  }
+  .table th.r, .table td.r { text-align: right; }
+  .table th .caret { color: var(--bs-primary-text); font-size: 8px; margin-left: 3px; }
+  .table td {
+    height: 40px; padding: .25rem .5rem; border-bottom: 1px solid #3a4046;
+    vertical-align: middle; font-size: 12.5px; white-space: nowrap;
+  }
+  .table tr:last-child td { border-bottom: 0; }
+  .table tr.is-selected td { background: rgba(167,139,250,.09); }
+  .table tr.is-selected td:first-child { box-shadow: inset 2px 0 0 var(--bs-primary); }
+  .table tr.is-muted td { color: var(--bs-tertiary-color); }
+
+  .wave { color: var(--bs-tertiary-color); font-size: 11px; }
+  .rg { color: var(--bs-emphasis-color); font-size: 12.5px; line-height: 1.15; }
+  .cl {
+    color: var(--bs-tertiary-color); font-size: 10px; line-height: 1.15; margin-top: 1px;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .prov { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--bs-secondary-color); }
+  .prov i { width: 7px; height: 7px; border-radius: 1px; flex: 0 0 7px; }
+
+  .progress { height: 8px; border-radius: 4px; background: var(--bs-secondary-bg); overflow: hidden; position: relative; }
+  .progress-bar { height: 100%; background: var(--d-new); }
+  .progress-bar--ghost { background: var(--d-old); opacity: .4; }
+  .progress-bar--striped {
+    background-image: linear-gradient(45deg, rgba(255,255,255,.17) 25%, transparent 25%,
+      transparent 50%, rgba(255,255,255,.17) 50%, rgba(255,255,255,.17) 75%,
+      transparent 75%, transparent);
+    background-size: 8px 8px;
+  }
+  .progress b { position: absolute; top: 0; width: 1px; height: 100%; background: var(--bs-tertiary-bg); opacity: .85; }
+
+  .of { color: var(--bs-tertiary-color); }
+  .err-bad  { color: var(--bs-danger-text); }
+  .err-none { color: var(--bs-tertiary-color); }
+  .stale-t  { color: var(--bs-warning-text); }
+
+  .badge {
+    display: inline-flex; align-items: center; padding: .3em .6em; border-radius: 50rem;
+    font: 700 10px/1 var(--sans); letter-spacing: .2px; border: 1px solid transparent;
+  }
+  .badge--success   { background: var(--bs-success-bg); border-color: var(--bs-success-border); color: var(--bs-success-text); }
+  .badge--warning   { background: var(--bs-warning-bg); border-color: var(--bs-warning-border); color: var(--bs-warning-text); }
+  .badge--danger    { background: var(--bs-danger-bg);  border-color: var(--bs-danger-border);  color: var(--bs-danger-text); }
+  .badge--primary   { background: var(--bs-primary-bg); border-color: var(--bs-primary-border); color: var(--bs-primary-text); }
+  .badge--secondary { background: var(--bs-secondary-subtle-bg); border-color: var(--bs-secondary-subtle-border); color: var(--bs-secondary-text); }
+  .badge--sq { border-radius: var(--bs-border-radius-sm); padding: .22em .4em; font-family: var(--mono); font-weight: 400; }
+
+  .last { font-size: 11.5px; color: var(--bs-secondary-color); line-height: 1.15; }
+  .last small { display: block; font-size: 9.5px; color: var(--bs-tertiary-color); margin-top: 1px; }
+  .kebab { color: var(--bs-tertiary-color); text-align: center; letter-spacing: 1px; }
+
+  .card-foot {
+    height: 28px; flex: 0 0 28px; border-top: 1px solid var(--bs-border-color);
+    display: flex; align-items: center; gap: 14px; padding: 0 12px;
+    font-size: 10.5px; color: var(--bs-tertiary-color); white-space: nowrap;
+  }
+  .form-switch { display: flex; align-items: center; gap: 6px; }
+  .form-switch .sw {
+    width: 26px; height: 14px; border-radius: 8px; background: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color); position: relative;
+  }
+  .form-switch .sw::after {
+    content: ""; position: absolute; top: 1.5px; left: 2px;
+    width: 9px; height: 9px; border-radius: 50%; background: var(--bs-tertiary-color);
+  }
+
+  /* ---------------- bottom band ---------------- */
+  .band { flex: 1; min-height: 0; display: flex; gap: 12px; }
+  .band .card:first-child { flex: 1; min-width: 0; }
+  .band .card:last-child { flex: 0 0 434px; }
+
+  .log { height: 100%; overflow: hidden; padding: 4px 0 0; }
+  .log__ln {
+    display: flex; align-items: baseline; gap: 10px; height: 17.5px;
+    padding: 0 12px; font-size: 11.5px; white-space: nowrap; color: var(--bs-secondary-color);
+  }
+  .log__ln .t { color: var(--bs-tertiary-color); flex: 0 0 54px; }
+  .log__ln .k { flex: 0 0 128px; }
+  .log__ln .m { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .log__ln em { font-style: normal; color: var(--bs-emphasis-color); }
+  .k--promote, .k--pass { color: var(--bs-success-text); }
+  .k--step, .k--create, .k--deploy { color: var(--bs-primary-text); }
+  .k--fail, .k--rollback { color: var(--bs-danger-text); }
+  .k--warn, .k--metrics, .k--sched { color: var(--bs-warning-text); }
+
+  /* ---------------- gate panel ---------------- */
+  .gpanel { padding: 8px 12px 0; height: 100%; display: flex; flex-direction: column; }
+  .gpanel__top { display: flex; align-items: center; gap: 8px; height: 22px; }
+  .gpanel__rg { color: var(--bs-emphasis-color); font-size: 14px; }
+  .gpanel__why { height: 40px; display: flex; align-items: center; gap: 10px; font-size: 10.5px; color: var(--bs-warning-text); }
+  .gpanel__why svg { flex: 0 0 150px; }
+
+  .gtable { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .gtable th {
+    height: 12px; text-align: left; font: 700 9px/1 var(--sans); letter-spacing: .8px;
+    text-transform: uppercase; color: var(--bs-tertiary-color);
+    padding: 0 0 3px; border-bottom: 1px solid var(--bs-border-color);
+  }
+  .gtable th.r, .gtable td.r { text-align: right; }
+  .gtable th:nth-child(3), .gtable td:nth-child(3) { padding-right: 10px; }
+  .gtable td { height: 29px; padding: 0; font-size: 11.5px; border-bottom: 1px solid #343a40; }
+  .gtable tr:last-child td { border-bottom: 0; }
+  .gtable .gn { display: block; color: var(--bs-body-color); font-size: 11.5px; line-height: 1.1; }
+  .gtable .gs { display: block; font-size: 8.5px; line-height: 1.1; color: var(--bs-tertiary-color); margin-top: 2px; }
+  .gpanel__foot {
+    margin-top: auto; height: 34px; flex: 0 0 34px; border-top: 1px solid var(--bs-border-color);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .gpanel__note { font-size: 9px; color: var(--bs-tertiary-color); line-height: 1.25; margin-left: auto; text-align: right; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============================= rail ============================= -->
+  <!-- Collapsed icon rail. Labels appear beside the icons on hover;
+       nothing here is interactive in a static facade. -->
+  <div class="rail">
+    <div class="rail__brand"><span class="brand-mark"><i></i><i></i><i></i></span></div>
+    <div class="rail__env">PRD</div>
+    <div class="rail__rule"></div>
+    <div class="rail__nav">
+      <div class="railitem railitem--on" title="Releases">
+        <svg viewBox="0 0 20 20"><path d="M10 2.6v9.2"/><path d="M6.6 6 10 2.6 13.4 6"/><path d="M3.6 12.8v4.2h12.8v-4.2"/></svg>
+      </div>
+      <div class="railitem" title="Fleet">
+        <svg viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="5" rx="1.2"/><rect x="3" y="11" width="14" height="5" rx="1.2"/><circle cx="6" cy="6.5" r=".85" stroke="none" fill="currentColor"/><circle cx="6" cy="13.5" r=".85" stroke="none" fill="currentColor"/></svg>
+      </div>
+      <div class="railitem" title="Gates">
+        <svg viewBox="0 0 20 20"><path d="M10 2.8 16 5v4.4c0 3.3-2.4 5.9-6 7-3.6-1.1-6-3.7-6-7V5z"/><path d="M7.6 9.9l1.7 1.7 3.3-3.4"/></svg>
+      </div>
+      <div class="railitem" title="Protection">
+        <svg viewBox="0 0 20 20"><rect x="3" y="4.5" width="14" height="11" rx="1.2"/><path d="M3 8.2h14"/><path d="M3 11.8h14"/><path d="M8.5 4.5v3.7"/><path d="M11.5 8.2v3.6"/><path d="M8.5 11.8v3.7"/></svg>
+      </div>
+      <div class="railitem" title="Audit">
+        <svg viewBox="0 0 20 20"><path d="M4 5.6h12"/><path d="M4 10h12"/><path d="M4 14.4h7.5"/></svg>
+        <span class="dot"></span>
+      </div>
+      <div class="railitem" title="Settings">
+        <svg viewBox="0 0 20 20"><path d="M3.4 5.8h2.7"/><path d="M10.1 5.8h6.5"/><path d="M3.4 10h6.2"/><path d="M13.6 10h3"/><path d="M3.4 14.2h3.4"/><path d="M10.8 14.2h5.8"/><circle cx="8.1" cy="5.8" r="1.7"/><circle cx="11.6" cy="10" r="1.7"/><circle cx="8.8" cy="14.2" r="1.7"/></svg>
+      </div>
+    </div>
+    <div class="rail__foot">
+      <div class="rail__rule"></div>
+      <div class="avatar">MT</div>
+    </div>
+  </div>
+
+  <div class="shell">
+
+    <!-- ======================= strategy bar ======================= -->
+    <div class="strategy">
+      <div class="breadcrumb">
+        <span class="org">platform-infra</span>
+        <span>/</span> Releases <span>/</span> <b>edge-gateway</b>
+      </div>
+      <div class="relchip">
+        <span class="name" data-check="release">edge-gateway v2.31.0</span>
+        <span class="arrow">&larr;</span>
+        <span class="prev">v2.30.4</span>
+      </div>
+      <div class="strat">canary <em>5/10/25/50/75/100</em> &middot; soak 5m<br>4 waves &middot; auto-rollback armed</div>
+      <div class="rel2">
+        <div class="top">
+          <span class="nm">telemetry-relay v1.14.2</span>
+          <span><span data-check="rel2-new">71</span>/<span data-check="rel2-total">104</span> &middot; <span data-check="rel2-pct">68.3%</span></span>
+        </div>
+        <span class="frz">paused &middot; change freeze to 16:00</span>
+      </div>
+      <div class="strategy-right">
+        <div class="btn btn-primary disabled">Promote all</div>
+        <div class="btn btn-outline-danger">Halt rollout</div>
+        <div class="btn btn-outline-secondary btn-icon">&#8942;</div>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <!-- ======================= stat strip ======================= -->
+      <div class="stats">
+        <div class="stat">
+          <div class="stat__label">Rollout</div>
+          <div class="stat__val"><span data-check="rollout-pct">54.8%</span></div>
+          <div class="track"><i style="width:54.8%"></i></div>
+          <div class="stat__sub"><em data-check="new-instances">204</em> / <span data-check="total-instances">372</span> instances on v2.31.0</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat__label">Regions promoted</div>
+          <div class="stat__val"><span data-check="regions-promoted">2</span><span class="stat__of">/ <span data-check="regions-total">8</span></span></div>
+          <div class="stat__sub" data-check="status-breakdown">2 promoted &middot; 2 promoting &middot; 1 holding &middot; 1 rolled-back &middot; 2 queued</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat__label">Error rate &middot; v2.31.0</div>
+          <div class="stat__val"><span data-check="err-rate">0.076%</span></div>
+          <div class="stat__sub">instance-weighted over <em data-check="err-weight">192</em> of 204<br><span data-check="err-excluded">12</span> stale, excluded &middot; halt limit <span data-check="gate-limit-5xx">0.300%</span></div>
+        </div>
+
+        <div class="stat stat--warn">
+          <div class="stat__label">Gates passing</div>
+          <div class="stat__val"><span data-check="gates-passing">3</span><span class="stat__of">/ <span data-check="gates-total">5</span></span></div>
+          <div class="stat__sub">ap-southeast-1 &middot; <em>1 fail</em>, 1 warn<br>blocking wave 3</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat__label">Elapsed</div>
+          <div class="stat__val"><span data-check="elapsed">35m 12s</span></div>
+          <div class="stat__sub">started <span data-check="started">13:46:57</span> &middot; wave 3 of 4<br>no ETA while a gate is red</div>
+        </div>
+      </div>
+
+      <!-- ====================== region table ====================== -->
+      <div class="card" style="flex:0 0 410px">
+        <div class="card-header">
+          <span class="card-title">Regions</span>
+          <span class="badge badge--secondary badge--sq">8 targets</span>
+          <span class="card-note">refreshed <span data-check="clock">14:22:09</span> &middot; every 15s</span>
+        </div>
+        <div class="card-body">
+          <table class="table">
+            <colgroup>
+              <col style="width:56px"><col style="width:210px"><col style="width:84px">
+              <col style="width:264px"><col style="width:66px"><col style="width:92px">
+              <col style="width:130px"><col style="width:66px"><col style="width:136px">
+              <col style="width:184px"><col style="width:36px">
+            </colgroup>
+            <thead><tr>
+              <th>Wave<span class="caret">&#9650;</span></th>
+              <th>Region</th>
+              <th>Provider</th>
+              <th>Canary progress</th>
+              <th class="r">Step</th>
+              <th class="r">Instances</th>
+              <th class="r">Err rate</th>
+              <th class="r">Gates</th>
+              <th>Status</th>
+              <th>Last event</th>
+              <th></th>
+            </tr></thead>
+            <tbody>
+
+            <tr data-row="region" data-region="us-east-1" data-total="84" data-new="84" data-pct="100" data-err="0.041" data-status="promoted" data-stale="false" data-peak="">
+              <td class="wave">1</td>
+              <td><div class="rg">us-east-1</div><div class="cl">slipstream-prod-use1-a7f2</div></td>
+              <td><div class="prov"><i style="background:#ff9900"></i>AWS</div></td>
+              <td><div class="progress"><div class="progress-bar" style="width:100%"></div><b style="left:5%"></b><b style="left:10%"></b><b style="left:25%"></b><b style="left:50%"></b><b style="left:75%"></b></div></td>
+              <td class="r">100%</td>
+              <td class="r">84<span class="of">/84</span></td>
+              <td class="r">0.041%</td>
+              <td class="r" style="color:var(--bs-success-text)">5/5</td>
+              <td><span class="badge badge--success">Promoted</span></td>
+              <td class="last">14:03:11<small>canary:promote</small></td>
+              <td class="kebab">&#8942;</td>
+            </tr>
+
+            <tr data-row="region" data-region="us-west-2" data-total="62" data-new="62" data-pct="100" data-err="0.062" data-status="promoted" data-stale="false" data-peak="">
+              <td class="wave">1</td>
+              <td><div class="rg">us-west-2</div><div class="cl">slipstream-prod-usw2-31bc</div></td>
+              <td><div class="prov"><i style="background:#ff9900"></i>AWS</div></td>
+              <td><div class="progress"><div class="progress-bar" style="width:100%"></div><b style="left:5%"></b><b style="left:10%"></b><b style="left:25%"></b><b style="left:50%"></b><b style="left:75%"></b></div></td>
+              <td class="r">100%</td>
+              <td class="r">62<span class="of">/62</span></td>
+              <td class="r">0.062%</td>
+              <td class="r" style="color:var(--bs-success-text)">5/5</td>
+              <td><span class="badge badge--success">Promoted</span></td>
+              <td class="last">14:11:46<small>canary:promote</small></td>
+              <td class="kebab">&#8942;</td>
+            </tr>
+
+            <tr data-row="region" data-region="eu-west-1" data-total="71" data-new="36" data-pct="50" data-err="0.088" data-status="promoting" data-stale="false" data-peak="">
+              <td class="wave">2</td>
+              <td><div class="rg">eu-west-1</div><div class="cl">slipstream-prod-euw1-9d04</div></td>
+              <td><div class="prov"><i style="background:#ff9900"></i>AWS</div></td>
+              <td><div class="progress"><div class="progress-bar progress-bar--striped" style="width:50%"></div><b style="left:5%"></b><b style="left:10%"></b><b style="left:25%"></b><b style="left:50%"></b><b style="left:75%"></b></div></td>
+              <td class="r">50%</td>
+              <td class="r">36<span class="of">/71</span></td>
+              <td class="r">0.088%</td>
+              <td class="r" style="color:var(--bs-success-text)">5/5</td>
+              <td><span class="badge badge--primary">Promoting</span></td>
+              <td class="last">14:19:52<small>canary:step 25 &rarr; 50</small></td>
+              <td class="kebab">&#8942;</td>
+            </tr>
+
+            <tr data-row="region" data-region="eu-central-1" data-total="48" data-new="12" data-pct="25" data-err="0.112" data-status="promoting" data-stale="true" data-peak="">
+              <td class="wave">2</td>
+              <td><div class="rg">eu-central-1</div><div class="cl">slipstream-prod-euc1-c5e8</div></td>
+              <td><div class="prov"><i style="background:#4285f4"></i>GCP</div></td>
+              <td><div class="progress"><div class="progress-bar progress-bar--striped" style="width:25%;opacity:.45"></div><b style="left:5%"></b><b style="left:10%"></b><b style="left:25%"></b><b style="left:50%"></b><b style="left:75%"></b></div></td>
+              <td class="r">25%</td>
+              <td class="r">12<span class="of">/48</span></td>
+              <td class="r stale-t"><span class="badge badge--warning badge--sq">stale 30m</span> 0.112%</td>
+              <td class="r err-none">&mdash;</td>
+              <td><span class="badge badge--primary">Promoting</span></td>
+              <td class="last stale-t">13:51:44<small>metrics:scrape timeout</small></td>
+              <td class="kebab">&#8942;</td>
+            </tr>
+
+            <tr class="is-selected" data-row="region" data-region="ap-southeast-1" data-total="39" data-new="10" data-pct="25" data-err="0.417" data-status="holding" data-stale="false" data-peak="">
+              <td class="wave">3</td>
+              <td><div class="rg">ap-southeast-1</div><div class="cl">slipstream-prod-apse1-4b19-mig-pool</div></td>
+              <td><div class="prov"><i style="background:#4285f4"></i>GCP</div></td>
+              <td><div class="progress"><div class="progress-bar" style="width:25%"></div><b style="left:5%"></b><b style="left:10%"></b><b style="left:25%"></b><b style="left:50%"></b><b style="left:75%"></b></div></td>
+              <td class="r">25%</td>
+              <td class="r">10<span class="of">/39</span></td>
+              <td class="r err-bad">0.417%</td>
+              <td class="r" style="color:var(--bs-danger-text)">3/5</td>
+              <td><span class="badge badge--warning">Holding</span></td>
+              <td class="last">14:14:08<small>gate:fail http_5xx</small></td>
+              <td class="kebab">&#8942;</td>
+            </tr>
+
+            <tr data-row="region" data-region="ap-northeast-1" data-total="33" data-new="0" data-pct="0" data-err="" data-status="rolled-back" data-stale="false" data-peak="1.874">
+              <td class="wave">3</td>
+              <td><div class="rg">ap-northeast-1</div><div class="cl">slipstream-prod-apne1-e77a</div></td>
+              <td><div class="prov"><i style="background:#0089d6"></i>Azure</div></td>
+              <td><div class="progress"><div class="progress-bar progress-bar--ghost" style="width:10%"></div><b style="left:5%"></b><b style="left:10%"></b><b style="left:25%"></b><b style="left:50%"></b><b style="left:75%"></b></div></td>
+              <td class="r">0%</td>
+              <td class="r">0<span class="of">/33</span></td>
+              <td class="r err-bad"><span class="badge badge--danger badge--sq">peak</span> 1.874%</td>
+              <td class="r" style="color:var(--bs-danger-text)">4/5</td>
+              <td><span class="badge badge--danger">Rolled back</span></td>
+              <td class="last">14:08:27<small>rollback:complete</small></td>
+              <td class="kebab">&#8942;</td>
+            </tr>
+
+            <tr class="is-muted" data-row="region" data-region="sa-east-1" data-total="21" data-new="0" data-pct="0" data-err="" data-status="queued" data-stale="false" data-peak="">
+              <td class="wave">4</td>
+              <td><div class="rg" style="color:var(--bs-secondary-color)">sa-east-1</div><div class="cl">slipstream-prod-sae1-2f60</div></td>
+              <td><div class="prov"><i style="background:#0089d6"></i>Azure</div></td>
+              <td><div class="progress"><b style="left:5%"></b><b style="left:10%"></b><b style="left:25%"></b><b style="left:50%"></b><b style="left:75%"></b></div></td>
+              <td class="r">0%</td>
+              <td class="r">0<span class="of">/21</span></td>
+              <td class="r err-none">&mdash;</td>
+              <td class="r err-none">&mdash;</td>
+              <td><span class="badge badge--secondary">Queued</span></td>
+              <td class="last">&mdash;<small>awaiting wave 3</small></td>
+              <td class="kebab">&#8942;</td>
+            </tr>
+
+            <tr class="is-muted" data-row="region" data-region="af-south-1" data-total="14" data-new="0" data-pct="0" data-err="" data-status="queued" data-stale="false" data-peak="">
+              <td class="wave">4</td>
+              <td><div class="rg" style="color:var(--bs-secondary-color)">af-south-1</div><div class="cl">slipstream-prod-afs1-88d3</div></td>
+              <td><div class="prov"><i style="background:#ff9900"></i>AWS</div></td>
+              <td><div class="progress"><b style="left:5%"></b><b style="left:10%"></b><b style="left:25%"></b><b style="left:50%"></b><b style="left:75%"></b></div></td>
+              <td class="r">0%</td>
+              <td class="r">0<span class="of">/14</span></td>
+              <td class="r err-none">&mdash;</td>
+              <td class="r err-none">&mdash;</td>
+              <td><span class="badge badge--secondary">Queued</span></td>
+              <td class="last">&mdash;<small>awaiting wave 3</small></td>
+              <td class="kebab">&#8942;</td>
+            </tr>
+
+            </tbody>
+          </table>
+        </div>
+        <div class="card-foot">
+          <span>8 of 8 regions &middot; grouped by wave</span>
+          <span class="form-switch"><span class="sw"></span>Auto-promote on gate pass</span>
+          <span class="stale-t">disabled while a gate is failing</span>
+          <span style="margin-left:auto">soak window 5m &middot; next step blocked</span>
+        </div>
+      </div>
+
+      <!-- ======================= bottom band ======================= -->
+      <div class="band">
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Event log</span>
+            <span class="badge badge--secondary badge--sq">edge-gateway / v2.31.0</span>
+            <span class="card-note">all severities &middot; live tail</span>
+          </div>
+          <div class="card-body">
+            <div class="log">
+              <div class="log__ln" data-log="scheduler"><span class="t">14:22:09</span><span class="k k--sched">scheduler</span><span class="m">next step blocked &mdash; 1 region holding, auto-promote paused</span></div>
+              <div class="log__ln" data-log="gate:warn"><span class="t">14:21:38</span><span class="k k--warn">gate:warn</span><span class="m"><em>ap-southeast-1</em> restart_count 2/15m at limit 2</span></div>
+              <div class="log__ln" data-log="canary:step"><span class="t">14:19:52</span><span class="k k--step">canary:step</span><span class="m"><em>eu-west-1</em> 25% &rarr; 50% (36/71) soak 5m</span></div>
+              <div class="log__ln" data-log="metrics"><span class="t">14:18:20</span><span class="k k--metrics">metrics</span><span class="m"><em>eu-central-1</em> scrape timeout &mdash; collector slipstream-prod-euc1-c5e8 unreachable</span></div>
+              <div class="log__ln" data-log="gate:fail"><span class="t">14:14:08</span><span class="k k--fail">gate:fail</span><span class="m"><em>ap-southeast-1</em> http_5xx 0.417% &gt; limit 0.300% &mdash; hold</span></div>
+              <div class="log__ln" data-log="canary:step"><span class="t">14:13:02</span><span class="k k--step">canary:step</span><span class="m"><em>ap-southeast-1</em> 10% &rarr; 25% (10/39) soak 5m</span></div>
+              <div class="log__ln" data-log="canary:promote"><span class="t">14:11:46</span><span class="k k--promote">canary:promote</span><span class="m"><em>us-west-2</em> 50% &rarr; 100% (62/62)</span></div>
+              <div class="log__ln" data-log="gate:pass"><span class="t">14:09:55</span><span class="k k--pass">gate:pass</span><span class="m"><em>us-west-2</em> 5/5 gates, soak clean</span></div>
+              <div class="log__ln" data-log="rollback:complete"><span class="t">14:08:27</span><span class="k k--rollback">rollback:complete</span><span class="m"><em>ap-northeast-1</em> 33/33 on v2.30.4 (2m 41s)</span></div>
+              <div class="log__ln" data-log="rollback:start"><span class="t">14:05:46</span><span class="k k--rollback">rollback:start</span><span class="m"><em>ap-northeast-1</em> http_5xx 1.874% &gt; limit 0.300% &mdash; auto-rollback</span></div>
+              <div class="log__ln" data-log="canary:step"><span class="t">14:04:33</span><span class="k k--step">canary:step</span><span class="m"><em>ap-northeast-1</em> 5% &rarr; 10% (3/33) soak 5m</span></div>
+              <div class="log__ln" data-log="canary:promote"><span class="t">14:03:11</span><span class="k k--promote">canary:promote</span><span class="m"><em>us-east-1</em> 50% &rarr; 100% (84/84)</span></div>
+              <div class="log__ln" data-log="canary:step"><span class="t">14:01:07</span><span class="k k--step">canary:step</span><span class="m"><em>us-east-1</em> 25% &rarr; 50% (42/84) soak 5m</span></div>
+              <div class="log__ln" data-log="canary:step"><span class="t">13:58:24</span><span class="k k--step">canary:step</span><span class="m"><em>eu-central-1</em> 10% &rarr; 25% (12/48) soak 5m</span></div>
+              <div class="log__ln" data-log="gate:pass"><span class="t">13:55:19</span><span class="k k--pass">gate:pass</span><span class="m"><em>us-east-1</em> 5/5 gates, soak clean</span></div>
+              <div class="log__ln" data-log="canary:step"><span class="t">13:52:41</span><span class="k k--step">canary:step</span><span class="m"><em>eu-west-1</em> 10% &rarr; 25% (18/71) soak 5m</span></div>
+              <div class="log__ln" data-log="deploy:start"><span class="t">13:49:03</span><span class="k k--deploy">deploy:start</span><span class="m">edge-gateway v2.31.0 &mdash; 8 regions, 372 instances, 4 waves</span></div>
+              <div class="log__ln" data-log="release:create"><span class="t">13:46:57</span><span class="k k--create">release:create</span><span class="m">edge-gateway v2.31.0 &larr; v2.30.4 by m.tolentino</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Gate evaluation</span>
+            <span class="badge badge--danger badge--sq">blocking</span>
+            <span class="card-note">policy <span data-check="policy-version">p-14</span></span>
+          </div>
+          <div class="card-body">
+            <div class="gpanel">
+              <div class="gpanel__top">
+                <span class="gpanel__rg" data-check="gate-panel-region">ap-southeast-1</span>
+                <span class="badge badge--warning">Holding</span>
+                <span class="card-note">10/39 &middot; step 25% &middot; soak 5m</span>
+              </div>
+              <div class="gpanel__why">
+                <span>http_5xx breached limit at 14:14:08</span>
+                <svg width="150" height="36" viewBox="0 0 150 36">
+                  <polygon fill="#22b8cf" fill-opacity=".13"
+                    points="0,28.75 12.5,28.18 25,28.37 37.5,27.34 50,26.38 62.5,24.85 75,22.10 87.5,19.86 100,16.85 112.5,15.01 125,12.18 137.5,9.10 150,7.31 150,36 0,36"/>
+                  <line x1="0" y1="14.8" x2="150" y2="14.8" stroke="#842029" stroke-width="1" stroke-dasharray="3 3"/>
+                  <polyline fill="none" stroke="#22b8cf" stroke-width="1.6" stroke-linejoin="round"
+                    points="0,28.75 12.5,28.18 25,28.37 37.5,27.34 50,26.38 62.5,24.85 75,22.10 87.5,19.86 100,16.85 112.5,15.01 125,12.18 137.5,9.10 150,7.31"/>
+                  <circle cx="150" cy="7.31" r="2.6" fill="#ea868f"/>
+                </svg>
+              </div>
+
+              <table class="gtable">
+                <colgroup><col style="width:auto"><col style="width:78px"><col style="width:64px"><col style="width:52px"></colgroup>
+                <thead><tr><th>Gate</th><th class="r">Observed</th><th class="r">Limit</th><th class="r">Verdict</th></tr></thead>
+                <tbody>
+                  <tr data-row="gate" data-gate="http-5xx" data-observed="0.417" data-limit="0.300" data-action="halt" data-verdict="fail">
+                    <td><span class="gn">HTTP 5xx rate</span><span class="gs">envoy_http_5xx_ratio &middot; 5m &middot; halt</span></td>
+                    <td class="r err-bad">0.417%</td><td class="r">0.300%</td>
+                    <td class="r"><span class="badge badge--danger">Fail</span></td>
+                  </tr>
+                  <tr data-row="gate" data-gate="p99-latency" data-observed="412" data-limit="600" data-action="halt" data-verdict="pass">
+                    <td><span class="gn">p99 latency</span><span class="gs">envoy_p99_ms &middot; 5m &middot; halt</span></td>
+                    <td class="r">412 ms</td><td class="r">600 ms</td>
+                    <td class="r"><span class="badge badge--success">Pass</span></td>
+                  </tr>
+                  <tr data-row="gate" data-gate="budget-burn" data-observed="2.8" data-limit="4.0" data-action="halt" data-verdict="pass">
+                    <td><span class="gn">Error-budget burn</span><span class="gs">slo_burn_1h &middot; 1h &middot; halt</span></td>
+                    <td class="r">2.8&times;</td><td class="r">4.0&times;</td>
+                    <td class="r"><span class="badge badge--success">Pass</span></td>
+                  </tr>
+                  <tr data-row="gate" data-gate="cpu-saturation" data-observed="61.4" data-limit="85.0" data-action="warn" data-verdict="pass">
+                    <td><span class="gn">CPU saturation</span><span class="gs">container_cpu_util &middot; 10m &middot; warn</span></td>
+                    <td class="r">61.4%</td><td class="r">85.0%</td>
+                    <td class="r"><span class="badge badge--success">Pass</span></td>
+                  </tr>
+                  <tr data-row="gate" data-gate="restart-count" data-observed="2" data-limit="2" data-action="warn" data-verdict="warn">
+                    <td><span class="gn">Container restarts</span><span class="gs">kube_restart_count &middot; 15m &middot; warn</span></td>
+                    <td class="r stale-t">2 / 15m</td><td class="r">2</td>
+                    <td class="r"><span class="badge badge--warning">Warn</span></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="gpanel__foot">
+                <div class="btn btn-sm btn-primary disabled">Resume region</div>
+                <div class="btn btn-sm btn-outline-secondary">Skip region</div>
+                <div class="gpanel__note">resume needs a<br>two-person override</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

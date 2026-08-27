@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Slipstream — Edge Protection</title>
+<style>
+  /* ------------------------------------------------------------------
+     Slipstream — edge protection. Third view of the same product.
+
+     Shell reused from slipstream-01 VERBATIM: 56px icon rail (six items,
+     Protection active), 60px strategy bar, 80px stat strip, 410px content
+     row, 298px band with a 434px right panel. Type scale, spacing, badge
+     and status vocabulary identical.
+
+     Palette and register are inherited from screen 1 by reference — do not
+     restate them here.
+
+     Screen's job: show that edge protection is tuned policy with measured
+     false positives, not a checkbox. Same intellectual move as screen 2
+     makes for gates, applied to security.
+     ------------------------------------------------------------------ */
+
+  :root {
+    --bs-body-bg:         #212529;
+    --bs-body-color:      #dee2e6;
+    --bs-emphasis-color:  #ffffff;
+    --bs-secondary-color: rgba(222,226,230,.75);
+    --bs-tertiary-color:  rgba(222,226,230,.5);
+    --bs-border-color:    #495057;
+    --bs-secondary-bg:    #343a40;
+    --bs-tertiary-bg:     #2b3035;
+
+    --bs-success-text:   #75b798;
+    --bs-success-bg:     #051b11;
+    --bs-success-border: #0f5132;
+    --bs-warning-text:   #ffda6a;
+    --bs-warning-bg:     #332701;
+    --bs-warning-border: #997404;
+    --bs-danger-text:    #ea868f;
+    --bs-danger-bg:      #2c0b0e;
+    --bs-danger-border:  #842029;
+    --bs-secondary-text: #a7acb1;
+    --bs-secondary-subtle-bg:     #161719;
+    --bs-secondary-subtle-border: #41464b;
+
+    --bs-primary:        #a78bfa;
+    --bs-primary-text:   #c4b5fd;
+    --bs-primary-bg:     #1b1430;
+    --bs-primary-border: #5b21b6;
+    --bs-primary-ink:    #1a1030;
+
+    --d-new: #22b8cf;
+    --d-old: #d6409f;
+
+    --bs-border-radius:    .375rem;
+    --bs-border-radius-sm: .25rem;
+
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+            "Noto Sans", "Liberation Sans", Arial, sans-serif;
+    --mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+            "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 400 13px/1.4 var(--mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--bs-body-color);
+    background: #16181b;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app { width: 1440px; height: 900px; overflow: hidden; background: var(--bs-body-bg); display: flex; }
+
+  /* ---------------- icon rail (identical to screens 1 and 2) ---------------- */
+  .rail {
+    width: 56px; flex: 0 0 56px; background: #1a1d21;
+    border-right: 1px solid var(--bs-border-color);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .rail__brand { height: 52px; flex: 0 0 52px; display: flex; align-items: center; justify-content: center; }
+  .brand-mark { width: 22px; height: 20px; position: relative; }
+  .brand-mark i { position: absolute; left: 0; height: 2.5px; border-radius: 2px; background: var(--bs-primary); }
+  .brand-mark i:nth-child(1) { top: 3px;   width: 22px; }
+  .brand-mark i:nth-child(2) { top: 8.5px; width: 14px; opacity: .72; }
+  .brand-mark i:nth-child(3) { top: 14px;  width: 18px; opacity: .45; }
+
+  .rail__env {
+    font: 700 9px/1 var(--sans); letter-spacing: .9px;
+    color: var(--bs-warning-text); background: var(--bs-warning-bg);
+    border: 1px solid var(--bs-warning-border); border-radius: var(--bs-border-radius-sm);
+    padding: 3px 6px; margin-bottom: 9px;
+  }
+  .rail__rule { width: 24px; height: 1px; background: var(--bs-border-color); margin-bottom: 8px; }
+  .rail__nav { display: flex; flex-direction: column; align-items: stretch; width: 100%; gap: 2px; }
+  .railitem { height: 42px; display: flex; align-items: center; justify-content: center; color: var(--bs-tertiary-color); position: relative; }
+  .railitem svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .railitem--on { color: var(--bs-primary-text); background: rgba(167,139,250,.10); }
+  .railitem--on::before {
+    content: ""; position: absolute; left: 0; top: 6px; bottom: 6px;
+    width: 2px; border-radius: 0 2px 2px 0; background: var(--bs-primary);
+  }
+  .railitem .dot { position: absolute; top: 10px; right: 13px; width: 5px; height: 5px; border-radius: 50%; background: var(--bs-danger-text); }
+  .rail__foot { margin-top: auto; padding-bottom: 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .rail__foot .rail__rule { margin-bottom: 0; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%; flex: 0 0 30px;
+    background: var(--bs-primary-bg); border: 1px solid var(--bs-primary-border);
+    color: var(--bs-primary-text); font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------------- shell + strategy bar ---------------- */
+  .shell { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .strategy {
+    height: 60px; flex: 0 0 60px; background: var(--bs-tertiary-bg);
+    border-bottom: 1px solid var(--bs-border-color);
+    display: flex; align-items: center; gap: 14px; padding: 0 16px;
+  }
+  .strategy > * { white-space: nowrap; }
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--bs-tertiary-color); }
+  .breadcrumb b { color: var(--bs-emphasis-color); font-weight: 600; font-size: 13.5px; }
+  .org {
+    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px;
+    border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+    background: var(--bs-body-bg); color: var(--bs-body-color); font-size: 12px;
+  }
+  .org::after {
+    content: ""; width: 7px; height: 7px; border-right: 1.4px solid var(--bs-tertiary-color);
+    border-bottom: 1.4px solid var(--bs-tertiary-color); transform: rotate(45deg) translate(-2px,-2px);
+  }
+  .relchip {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+    background: var(--bs-body-bg); height: 34px; padding: 0 11px;
+  }
+  .relchip .name { color: var(--bs-emphasis-color); font-size: 12.5px; font-weight: 600; }
+  .relchip .arrow { color: var(--bs-tertiary-color); font-size: 11px; }
+  .relchip .prev { color: var(--bs-secondary-color); font-size: 11.5px; }
+  .strat { font-size: 10.5px; color: var(--bs-tertiary-color); line-height: 1.35; }
+  .strat em { font-style: normal; color: var(--bs-secondary-color); }
+  .rel2 {
+    display: flex; flex-direction: column; justify-content: center; gap: 2px;
+    font-size: 10.5px; color: var(--bs-secondary-color);
+    border: 1px dashed var(--bs-secondary-subtle-border);
+    border-radius: var(--bs-border-radius); height: 38px; padding: 0 11px;
+  }
+  .rel2 .top { display: flex; align-items: baseline; gap: 9px; }
+  .rel2 .nm { color: var(--bs-body-color); font-size: 11.5px; }
+  .rel2 .frz { color: var(--bs-warning-text); }
+  .strategy-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+  .btn {
+    height: 31px; display: inline-flex; align-items: center; gap: 6px;
+    padding: 0 12px; border-radius: var(--bs-border-radius);
+    font: 500 12.5px var(--sans); border: 1px solid transparent; white-space: nowrap;
+  }
+  .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+  .btn-primary { background: var(--bs-primary); border-color: var(--bs-primary); color: var(--bs-primary-ink); }
+  .btn-outline-secondary { border-color: var(--bs-border-color); color: var(--bs-secondary-color); }
+  .btn-outline-danger { border-color: var(--bs-danger-border); color: var(--bs-danger-text); }
+  .btn.disabled { opacity: .65; }
+  .btn-icon { width: 31px; padding: 0; justify-content: center; }
+
+  /* ---------------- page + cards ---------------- */
+  .page { flex: 1; min-height: 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    background: var(--bs-tertiary-bg); border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius); display: flex; flex-direction: column; min-height: 0;
+  }
+  .card-header {
+    height: 34px; flex: 0 0 34px; display: flex; align-items: center; gap: 10px;
+    padding: 0 12px; border-bottom: 1px solid var(--bs-border-color);
+  }
+  .card-title { font: 700 10px/1 var(--sans); letter-spacing: .8px; text-transform: uppercase; color: var(--bs-secondary-color); white-space: nowrap; }
+  .card-note { margin-left: auto; font-size: 10.5px; color: var(--bs-tertiary-color); white-space: nowrap; }
+  .card-body { flex: 1; min-height: 0; overflow: hidden; }
+  .card-foot {
+    height: 28px; flex: 0 0 28px; border-top: 1px solid var(--bs-border-color);
+    display: flex; align-items: center; gap: 14px; padding: 0 12px;
+    font-size: 10.5px; color: var(--bs-tertiary-color); white-space: nowrap;
+  }
+
+  /* ---------------- stat strip ---------------- */
+  .stats { flex: 0 0 80px; display: flex; gap: 12px; }
+  .stat {
+    flex: 1; min-width: 0; background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color); border-radius: var(--bs-border-radius);
+    padding: 7px 11px 6px; display: flex; flex-direction: column;
+  }
+  .stat__label { font: 700 9.5px/1 var(--sans); letter-spacing: .9px; text-transform: uppercase; color: var(--bs-tertiary-color); }
+  .stat__val {
+    font-size: 24px; line-height: 1.08; margin-top: 4px; color: var(--bs-emphasis-color);
+    letter-spacing: -.6px; display: flex; align-items: baseline; gap: 4px;
+  }
+  .stat__of { font-size: 13px; color: var(--bs-tertiary-color); letter-spacing: 0; }
+  .stat__sub { margin-top: auto; font-size: 9.5px; line-height: 1.3; color: var(--bs-tertiary-color); }
+  .stat__sub em { font-style: normal; color: var(--bs-secondary-color); }
+  .stat--warn .stat__val { color: var(--bs-warning-text); }
+
+  /* ---------------- rule group table ---------------- */
+  .table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .table th {
+    height: 26px; text-align: left; padding: 0 8px;
+    font: 700 9.5px/1 var(--sans); letter-spacing: .85px; text-transform: uppercase;
+    color: var(--bs-tertiary-color); border-bottom: 1px solid var(--bs-border-color);
+    background: #262b30; white-space: nowrap;
+  }
+  .table th.r, .table td.r { text-align: right; }
+  .table th .caret { color: var(--bs-primary-text); font-size: 8px; margin-left: 3px; }
+  .table td {
+    height: 46px; padding: .25rem .5rem; border-bottom: 1px solid #3a4046;
+    vertical-align: middle; font-size: 12.5px; white-space: nowrap;
+  }
+  .table tr:last-child td { border-bottom: 0; }
+  .table tr.is-selected td { background: rgba(167,139,250,.09); }
+  .table tr.is-selected td:first-child { box-shadow: inset 2px 0 0 var(--bs-primary); }
+
+  .gname { color: var(--bs-emphasis-color); font-size: 12.5px; line-height: 1.15; }
+  .gdesc { color: var(--bs-tertiary-color); font-size: 9.5px; line-height: 1.15; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+  .of { color: var(--bs-tertiary-color); }
+  .err-none { color: var(--bs-tertiary-color); }
+  .stale-t { color: var(--bs-warning-text); }
+  .bad-t { color: var(--bs-danger-text); }
+  .kebab { color: var(--bs-tertiary-color); text-align: center; letter-spacing: 1px; }
+
+  .ratebar { width: 62px; height: 4px; border-radius: 2px; background: #454c57; overflow: hidden; margin-left: auto; margin-top: 4px; }
+  .ratebar i { display: block; height: 100%; background: var(--d-old); }
+
+  .badge {
+    display: inline-flex; align-items: center; padding: .3em .6em; border-radius: 50rem;
+    font: 700 10px/1 var(--sans); letter-spacing: .2px; border: 1px solid transparent;
+  }
+  .badge--success   { background: var(--bs-success-bg); border-color: var(--bs-success-border); color: var(--bs-success-text); }
+  .badge--warning   { background: var(--bs-warning-bg); border-color: var(--bs-warning-border); color: var(--bs-warning-text); }
+  .badge--danger    { background: var(--bs-danger-bg);  border-color: var(--bs-danger-border);  color: var(--bs-danger-text); }
+  .badge--primary   { background: var(--bs-primary-bg); border-color: var(--bs-primary-border); color: var(--bs-primary-text); }
+  .badge--secondary { background: var(--bs-secondary-subtle-bg); border-color: var(--bs-secondary-subtle-border); color: var(--bs-secondary-text); }
+  .badge--sq { border-radius: var(--bs-border-radius-sm); padding: .22em .4em; font-family: var(--mono); font-weight: 400; }
+
+  /* ---------------- group detail panel ---------------- */
+  .gp { padding: 8px 12px 0; height: 100%; display: flex; flex-direction: column; }
+  .gp__top { display: flex; align-items: center; gap: 8px; height: 22px; }
+  .gp__name { color: var(--bs-emphasis-color); font-size: 14px; }
+  .gp__why { height: 30px; display: flex; align-items: center; font-size: 10.5px; color: var(--bs-warning-text); line-height: 1.3; }
+
+  .hlabel {
+    height: 14px; display: flex; align-items: center; justify-content: space-between;
+    font: 700 9px/1 var(--sans); letter-spacing: .8px; text-transform: uppercase; color: var(--bs-tertiary-color);
+  }
+  .hchart { height: 54px; display: flex; align-items: flex-end; gap: 2px; margin-bottom: 6px; }
+  .hchart i { flex: 1; background: var(--d-old); opacity: .55; border-radius: 1px 1px 0 0; }
+  .hchart i.pk { opacity: 1; background: var(--bs-warning-text); }
+
+  .ctable { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .ctable th {
+    height: 14px; text-align: left; font: 700 9px/1 var(--sans); letter-spacing: .8px;
+    text-transform: uppercase; color: var(--bs-tertiary-color);
+    padding: 0 0 3px; border-bottom: 1px solid var(--bs-border-color);
+  }
+  .ctable th.r, .ctable td.r { text-align: right; }
+  .ctable td { height: 49px; padding: 0; font-size: 11.5px; border-bottom: 1px solid #343a40; }
+  .ctable tr:last-child td { border-bottom: 0; }
+  .ctable .cn { display: block; color: var(--bs-body-color); font-size: 11.5px; line-height: 1.15; }
+  .ctable .cs { display: block; font-size: 8.5px; line-height: 1.15; color: var(--bs-tertiary-color); margin-top: 2px; }
+  .gp__foot {
+    margin-top: auto; height: 34px; flex: 0 0 34px; border-top: 1px solid var(--bs-border-color);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .gp__note { font-size: 9px; color: var(--bs-tertiary-color); line-height: 1.25; margin-left: auto; text-align: right; }
+
+  /* ---------------- block log ---------------- */
+  .log { height: 100%; overflow: hidden; padding: 4px 0 0; }
+  .log__ln {
+    display: flex; align-items: baseline; gap: 10px; height: 17.5px;
+    padding: 0 12px; font-size: 11.5px; white-space: nowrap; color: var(--bs-secondary-color);
+  }
+  .log__ln .t { color: var(--bs-tertiary-color); flex: 0 0 54px; }
+  .log__ln .k { flex: 0 0 76px; }
+  .log__ln .r { flex: 0 0 92px; color: var(--bs-tertiary-color); }
+  .log__ln .m { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .log__ln em { font-style: normal; color: var(--bs-emphasis-color); }
+  .k--block { color: var(--bs-danger-text); }
+  .k--challenge { color: var(--bs-primary-text); }
+  .k--monitor { color: var(--bs-warning-text); }
+  .k--allow { color: var(--bs-secondary-text); }
+
+  /* ---------------- regional enforcement ---------------- */
+  .rtable { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .rtable th {
+    height: 22px; text-align: left; white-space: nowrap; font: 700 9px/1 var(--sans); letter-spacing: .8px;
+    text-transform: uppercase; color: var(--bs-tertiary-color);
+    padding: 0 12px 4px; border-bottom: 1px solid var(--bs-border-color);
+  }
+  .rtable th.r, .rtable td.r { text-align: right; }
+  .rtable td { height: 28px; padding: 0 12px; font-size: 11.5px; border-bottom: 1px solid #343a40; }
+  .rtable tr:last-child td { border-bottom: 0; }
+  .rtable .rgn { color: var(--bs-body-color); }
+  .rfoot { padding: 0 12px; font-size: 9px; color: var(--bs-tertiary-color); line-height: 16px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============================= rail ============================= -->
+  <div class="rail">
+    <div class="rail__brand"><span class="brand-mark"><i></i><i></i><i></i></span></div>
+    <div class="rail__env">PRD</div>
+    <div class="rail__rule"></div>
+    <div class="rail__nav">
+      <div class="railitem" title="Releases">
+        <svg viewBox="0 0 20 20"><path d="M10 2.6v9.2"/><path d="M6.6 6 10 2.6 13.4 6"/><path d="M3.6 12.8v4.2h12.8v-4.2"/></svg>
+      </div>
+      <div class="railitem" title="Fleet">
+        <svg viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="5" rx="1.2"/><rect x="3" y="11" width="14" height="5" rx="1.2"/><circle cx="6" cy="6.5" r=".85" stroke="none" fill="currentColor"/><circle cx="6" cy="13.5" r=".85" stroke="none" fill="currentColor"/></svg>
+      </div>
+      <div class="railitem" title="Gates">
+        <svg viewBox="0 0 20 20"><path d="M10 2.8 16 5v4.4c0 3.3-2.4 5.9-6 7-3.6-1.1-6-3.7-6-7V5z"/><path d="M7.6 9.9l1.7 1.7 3.3-3.4"/></svg>
+      </div>
+      <div class="railitem railitem--on" title="Protection">
+        <svg viewBox="0 0 20 20"><rect x="3" y="4.5" width="14" height="11" rx="1.2"/><path d="M3 8.2h14"/><path d="M3 11.8h14"/><path d="M8.5 4.5v3.7"/><path d="M11.5 8.2v3.6"/><path d="M8.5 11.8v3.7"/></svg>
+      </div>
+      <div class="railitem" title="Audit">
+        <svg viewBox="0 0 20 20"><path d="M4 5.6h12"/><path d="M4 10h12"/><path d="M4 14.4h7.5"/></svg>
+        <span class="dot"></span>
+      </div>
+      <div class="railitem" title="Settings">
+        <svg viewBox="0 0 20 20"><path d="M3.4 5.8h2.7"/><path d="M10.1 5.8h6.5"/><path d="M3.4 10h6.2"/><path d="M13.6 10h3"/><path d="M3.4 14.2h3.4"/><path d="M10.8 14.2h5.8"/><circle cx="8.1" cy="5.8" r="1.7"/><circle cx="11.6" cy="10" r="1.7"/><circle cx="8.8" cy="14.2" r="1.7"/></svg>
+      </div>
+    </div>
+    <div class="rail__foot">
+      <div class="rail__rule"></div>
+      <div class="avatar">MT</div>
+    </div>
+  </div>
+
+  <div class="shell">
+
+    <!-- ======================= strategy bar ======================= -->
+    <div class="strategy">
+      <div class="breadcrumb">
+        <span class="org">platform-infra</span>
+        <span>/</span> Protection <span>/</span> <b>edge-gateway</b>
+      </div>
+      <div class="relchip">
+        <span class="name" data-check="ruleset">r-2026.08.3</span>
+        <span class="arrow">&larr;</span>
+        <span class="prev">r-2026.08.1</span>
+      </div>
+      <div class="strat"><em>206 rules</em> &middot; 7 groups<br>6 enforcing &middot; 1 in monitor</div>
+      <div class="rel2">
+        <div class="top">
+          <span class="nm">38.4M req / 24 h</span>
+          <span>214,883 blocked &middot; 0.559%</span>
+        </div>
+        <span class="frz">1 group in monitor &middot; af-south-1 off</span>
+      </div>
+      <div class="strategy-right">
+        <div class="btn btn-primary disabled">Publish r-2026.08.4</div>
+        <div class="btn btn-outline-secondary">Simulate</div>
+        <div class="btn btn-outline-secondary btn-icon">&#8942;</div>
+      </div>
+    </div>
+
+    <div class="page">
+
+      <!-- ======================= stat strip ======================= -->
+      <div class="stats">
+        <div class="stat">
+          <div class="stat__label">Requests &middot; 24 h</div>
+          <div class="stat__val">38.4M</div>
+          <div class="stat__sub"><em data-check="requests">38,412,674</em> across 8 regions<br>edge-gateway &middot; all methods</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat__label">Blocked &middot; 24 h</div>
+          <div class="stat__val"><span data-check="blocked">214,883</span></div>
+          <div class="stat__sub"><em data-check="block-pct">0.559%</em> of requests<br>from <span data-check="hits">282,537</span> rule hits</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat__label">Rules enforcing</div>
+          <div class="stat__val"><span data-check="rules-enforcing">145</span><span class="stat__of">/ <span data-check="rules-total">206</span></span></div>
+          <div class="stat__sub">6 of 7 groups enforcing<br>61 rules held in monitor</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat__label">False positives &middot; 7 d</div>
+          <div class="stat__val"><span data-check="fp-total">312</span></div>
+          <div class="stat__sub">appealed and upheld<br>41 rules tuned since 22 Jul</div>
+        </div>
+
+        <div class="stat stat--warn">
+          <div class="stat__label">Protection coverage</div>
+          <div class="stat__val"><span data-check="regions-enforcing">7</span><span class="stat__of">/ <span data-check="regions-count">8</span></span></div>
+          <div class="stat__sub"><em data-check="nodes-enforcing">358</em> of <span data-check="nodes-total">372</span> nodes enforcing<br>af-south-1 edge build pending</div>
+        </div>
+      </div>
+
+      <!-- ================== rule groups + group detail ================== -->
+      <div style="flex:0 0 410px; display:flex; gap:12px; min-height:0">
+
+        <div class="card" style="flex:1; min-width:0">
+          <div class="card-header">
+            <span class="card-title">Rule groups</span>
+            <span class="badge badge--secondary badge--sq">r-2026.08.3</span>
+            <span class="card-note">hits and blocks over the last 24 h</span>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <colgroup>
+                <col style="width:200px"><col style="width:62px"><col style="width:106px">
+                <col style="width:106px"><col style="width:94px"><col style="width:72px">
+                <col style="width:118px"><col style="width:106px"><col style="width:40px">
+              </colgroup>
+              <thead><tr>
+                <th>Group</th>
+                <th class="r">Rules</th>
+                <th class="r">Hits 24 h<span class="caret">&#9660;</span></th>
+                <th class="r">Blocked 24 h</th>
+                <th class="r">Block rate</th>
+                <th class="r">FP 7 d</th>
+                <th>Last tuned</th>
+                <th>Mode</th>
+                <th></th>
+              </tr></thead>
+              <tbody>
+
+              <tr data-row="group" data-group="bot" data-rules="24" data-hits="96412" data-blocked="41663" data-fp="186" data-mode="challenge">
+                <td><div class="gname">Bot &amp; scraper</div><div class="gdesc">signature, ASN and behavioural</div></td>
+                <td class="r">24</td>
+                <td class="r">96,412</td>
+                <td class="r">41,663</td>
+                <td class="r">43.2%<div class="ratebar"><i style="width:43.2%"></i></div></td>
+                <td class="r stale-t">186</td>
+                <td>17 Aug 11:04</td>
+                <td><span class="badge badge--primary">Challenge</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr data-row="group" data-group="dos" data-rules="19" data-hits="72563" data-blocked="72563" data-fp="35" data-mode="enforce">
+                <td><div class="gname">Protocol &amp; DoS</div><div class="gdesc">malformed frames and floods</div></td>
+                <td class="r">19</td>
+                <td class="r">72,563</td>
+                <td class="r">72,563</td>
+                <td class="r">100%<div class="ratebar"><i style="width:100%"></i></div></td>
+                <td class="r">35</td>
+                <td>22 Jul 15:41</td>
+                <td><span class="badge badge--success">Enforce</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr data-row="group" data-group="rate" data-rules="8" data-hits="71240" data-blocked="71240" data-fp="47" data-mode="enforce">
+                <td><div class="gname">Rate limiting</div><div class="gdesc">per-IP, per-token and per-route</div></td>
+                <td class="r">8</td>
+                <td class="r">71,240</td>
+                <td class="r">71,240</td>
+                <td class="r">100%<div class="ratebar"><i style="width:100%"></i></div></td>
+                <td class="r">47</td>
+                <td>11 Aug 08:22</td>
+                <td><span class="badge badge--success">Enforce</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr data-row="group" data-group="sqli" data-rules="42" data-hits="18204" data-blocked="18204" data-fp="21" data-mode="enforce">
+                <td><div class="gname">SQL injection</div><div class="gdesc">union, boolean-blind and time-based</div></td>
+                <td class="r">42</td>
+                <td class="r">18,204</td>
+                <td class="r">18,204</td>
+                <td class="r">100%<div class="ratebar"><i style="width:100%"></i></div></td>
+                <td class="r">21</td>
+                <td>02 Aug 16:57</td>
+                <td><span class="badge badge--success">Enforce</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr class="is-selected" data-row="group" data-group="schema" data-rules="61" data-hits="12905" data-blocked="0" data-fp="" data-mode="monitor">
+                <td><div class="gname">API schema validation</div><div class="gdesc">OpenAPI contract enforcement</div></td>
+                <td class="r">61</td>
+                <td class="r">12,905</td>
+                <td class="r stale-t">0</td>
+                <td class="r stale-t">0%<div class="ratebar"></div></td>
+                <td class="r err-none">&mdash;</td>
+                <td class="err-none">&mdash;</td>
+                <td><span class="badge badge--warning">Monitor</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr data-row="group" data-group="xss" data-rules="37" data-hits="9871" data-blocked="9871" data-fp="14" data-mode="enforce">
+                <td><div class="gname">Cross-site scripting</div><div class="gdesc">reflected, stored and DOM-based</div></td>
+                <td class="r">37</td>
+                <td class="r">9,871</td>
+                <td class="r">9,871</td>
+                <td class="r">100%<div class="ratebar"><i style="width:100%"></i></div></td>
+                <td class="r">14</td>
+                <td>28 Jul 09:13</td>
+                <td><span class="badge badge--success">Enforce</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              <tr data-row="group" data-group="pii" data-rules="15" data-hits="1342" data-blocked="1342" data-fp="9" data-mode="enforce">
+                <td><div class="gname">Data leak &amp; PII</div><div class="gdesc">card and credential egress</div></td>
+                <td class="r">15</td>
+                <td class="r">1,342</td>
+                <td class="r">1,342</td>
+                <td class="r">100%<div class="ratebar"><i style="width:100%"></i></div></td>
+                <td class="r">9</td>
+                <td>05 Aug 13:38</td>
+                <td><span class="badge badge--success">Enforce</span></td>
+                <td class="kebab">&#8942;</td>
+              </tr>
+
+              </tbody>
+            </table>
+          </div>
+          <div class="card-foot">
+            <span>206 rules &middot; 7 groups</span>
+            <span>282,537 hits &middot; 214,883 blocked</span>
+            <span class="stale-t">61 rules in monitor, blocking nothing</span>
+            <span style="margin-left:auto">ruleset r-2026.08.3 &middot; applied 14 Aug 10:26</span>
+          </div>
+        </div>
+
+        <div class="card" style="flex:0 0 434px">
+          <div class="card-header">
+            <span class="card-title">Group detail</span>
+            <span class="badge badge--warning badge--sq">not enforcing</span>
+            <span class="card-note">61 rules</span>
+          </div>
+          <div class="card-body">
+            <div class="gp">
+              <div class="gp__top">
+                <span class="gp__name" data-check="panel-group">API schema validation</span>
+                <span class="badge badge--warning">Monitor</span>
+                <span class="card-note">since 21 Jun</span>
+              </div>
+              <div class="gp__why">12,905 contract violations in 24 h, none blocked &mdash;<br>enforcing would break 2 known consumers</div>
+
+              <div class="hlabel"><span>Would-block, hourly</span><span style="letter-spacing:0;text-transform:none;font-weight:400">peak <span data-check="hour-peak">1,131</span> at 22:00</span></div>
+              <div class="hchart">
+                <i data-h="312" style="height:27.6%"></i><i data-h="268" style="height:23.7%"></i><i data-h="241" style="height:21.3%"></i>
+                <i data-h="219" style="height:19.4%"></i><i data-h="236" style="height:20.9%"></i><i data-h="287" style="height:25.4%"></i>
+                <i data-h="364" style="height:32.2%"></i><i data-h="452" style="height:40.0%"></i><i data-h="588" style="height:52.0%"></i>
+                <i data-h="703" style="height:62.2%"></i><i data-h="771" style="height:68.2%"></i><i data-h="812" style="height:71.8%"></i>
+                <i data-h="784" style="height:69.3%"></i><i data-h="806" style="height:71.3%"></i><i data-h="758" style="height:67.0%"></i>
+                <i data-h="729" style="height:64.5%"></i><i data-h="681" style="height:60.2%"></i><i data-h="604" style="height:53.4%"></i>
+                <i data-h="542" style="height:47.9%"></i><i data-h="487" style="height:43.1%"></i><i data-h="441" style="height:39.0%"></i>
+                <i data-h="398" style="height:35.2%"></i><i class="pk" data-h="1131" style="height:100%"></i><i data-h="291" style="height:25.7%"></i>
+              </div>
+
+              <table class="ctable">
+                <colgroup><col style="width:auto"><col style="width:74px"><col style="width:80px"></colgroup>
+                <thead><tr><th>Consumer</th><th class="r">Violations</th><th class="r">If enforced</th></tr></thead>
+                <tbody>
+                  <tr data-row="consumer" data-consumer="partner-billing-sync" data-hits="7412" data-block="yes">
+                    <td><span class="cn">partner-billing-sync</span><span class="cs">nightly batch &middot; contract to 31 Mar</span></td>
+                    <td class="r">7,412</td>
+                    <td class="r"><span class="badge badge--danger">Blocked</span></td>
+                  </tr>
+                  <tr data-row="consumer" data-consumer="mobile-ios" data-hits="3180" data-block="yes">
+                    <td><span class="cn">mobile-ios 4.2.x</span><span class="cs">legacy build &middot; EOL 30 Sep</span></td>
+                    <td class="r">3,180</td>
+                    <td class="r"><span class="badge badge--danger">Blocked</span></td>
+                  </tr>
+                  <tr data-row="consumer" data-consumer="internal-batch" data-hits="1904" data-block="no">
+                    <td><span class="cn">internal-batch</span><span class="cs">allowlisted &middot; exempt from schema rules</span></td>
+                    <td class="r">1,904</td>
+                    <td class="r"><span class="badge badge--success">Allowed</span></td>
+                  </tr>
+                  <tr data-row="consumer" data-consumer="other" data-hits="409" data-block="yes">
+                    <td><span class="cn">37 other consumers</span><span class="cs">none above 60 violations each</span></td>
+                    <td class="r">409</td>
+                    <td class="r"><span class="badge badge--danger">Blocked</span></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="gp__foot">
+                <div class="btn btn-sm btn-primary disabled">Enforce group</div>
+                <div class="btn btn-sm btn-outline-secondary">Add exception</div>
+                <div class="gp__note">blocked by 2 consumers<br>owner d.marchetti</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================ block log + regional enforcement ================ -->
+      <div style="flex:1; display:flex; gap:12px; min-height:0">
+
+        <div class="card" style="flex:1; min-width:0">
+          <div class="card-header">
+            <span class="card-title">Block log</span>
+            <span class="badge badge--secondary badge--sq">edge-gateway / prod</span>
+            <span class="card-note">all actions &middot; live tail &middot; source IPs redacted to /24</span>
+          </div>
+          <div class="card-body">
+            <div class="log">
+              <div class="log__ln" data-log="block"><span class="t">14:22:04</span><span class="k k--block">block</span><span class="r">sqli-0117</span><span class="m"><em>203.0.113.47</em> POST /api/v2/orders &mdash; union select in sort param &middot; eu-west-1</span></div>
+              <div class="log__ln" data-log="challenge"><span class="t">14:21:58</span><span class="k k--challenge">challenge</span><span class="r">bot-0032</span><span class="m"><em>198.51.100.209</em> GET /catalog/search &mdash; datacentre ASN, no JS &middot; us-east-1</span></div>
+              <div class="log__ln" data-log="monitor"><span class="t">14:21:51</span><span class="k k--monitor">monitor</span><span class="r">schema-0244</span><span class="m"><em>192.0.2.18</em> POST /api/v2/invoices &mdash; would block, partner-billing-sync &middot; us-west-2</span></div>
+              <div class="log__ln" data-log="block"><span class="t">14:21:44</span><span class="k k--block">block</span><span class="r">rate-0003</span><span class="m"><em>203.0.113.112</em> GET /api/v2/pricing &mdash; 847 req/min over 300 &middot; ap-southeast-1</span></div>
+              <div class="log__ln" data-log="block"><span class="t">14:21:29</span><span class="k k--block">block</span><span class="r">xss-0061</span><span class="m"><em>198.51.100.34</em> POST /account/profile &mdash; script tag in display_name &middot; us-west-2</span></div>
+              <div class="log__ln" data-log="block"><span class="t">14:21:12</span><span class="k k--block">block</span><span class="r">dos-0009</span><span class="m"><em>203.0.113.201</em> GET / &mdash; slowloris, 1,204 half-open &middot; eu-central-1</span></div>
+              <div class="log__ln" data-log="challenge"><span class="t">14:20:58</span><span class="k k--challenge">challenge</span><span class="r">bot-0018</span><span class="m"><em>192.0.2.140</em> GET /catalog/item/8821 &mdash; headless signature &middot; us-east-1</span></div>
+              <div class="log__ln" data-log="block"><span class="t">14:20:41</span><span class="k k--block">block</span><span class="r">pii-0007</span><span class="m"><em>198.51.100.88</em> POST /support/ticket &mdash; card number in body &middot; eu-west-1</span></div>
+              <div class="log__ln" data-log="allow"><span class="t">14:20:33</span><span class="k k--allow">allow</span><span class="r">&mdash;</span><span class="m"><em>203.0.113.19</em> GET /health &mdash; af-south-1, protection not enforcing</span></div>
+              <div class="log__ln" data-log="block"><span class="t">14:20:17</span><span class="k k--block">block</span><span class="r">sqli-0102</span><span class="m"><em>192.0.2.77</em> GET /search &mdash; boolean-blind probe in q &middot; us-east-1</span></div>
+              <div class="log__ln" data-log="block"><span class="t">14:20:02</span><span class="k k--block">block</span><span class="r">rate-0003</span><span class="m"><em>198.51.100.163</em> POST /api/v2/auth &mdash; 412 req/min over 300 &middot; ap-northeast-1</span></div>
+              <div class="log__ln" data-log="monitor"><span class="t">14:19:48</span><span class="k k--monitor">monitor</span><span class="r">schema-0189</span><span class="m"><em>192.0.2.18</em> PUT /api/v2/invoices/8817 &mdash; would block, partner-billing-sync &middot; us-west-2</span></div>
+              <div class="log__ln" data-log="block"><span class="t">14:19:31</span><span class="k k--block">block</span><span class="r">xss-0044</span><span class="m"><em>203.0.113.66</em> GET /catalog &mdash; reflected param in ref &middot; sa-east-1</span></div>
+              <div class="log__ln" data-log="challenge"><span class="t">14:19:14</span><span class="k k--challenge">challenge</span><span class="r">bot-0032</span><span class="m"><em>198.51.100.240</em> GET /catalog/search &mdash; datacentre ASN, no JS &middot; us-west-2</span></div>
+              <div class="log__ln" data-log="block"><span class="t">14:19:02</span><span class="k k--block">block</span><span class="r">dos-0011</span><span class="m"><em>192.0.2.9</em> POST /api/v2/orders &mdash; payload 8.4 MB over 2 MB &middot; eu-west-1</span></div>
+              <div class="log__ln" data-log="block"><span class="t">14:18:47</span><span class="k k--block">block</span><span class="r">sqli-0117</span><span class="m"><em>203.0.113.47</em> POST /api/v2/orders &mdash; union select in sort param &middot; eu-west-1</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="flex:0 0 434px">
+          <div class="card-header">
+            <span class="card-title">Regional enforcement</span>
+            <span class="badge badge--danger badge--sq">1 gap</span>
+            <span class="card-note">same estate as Releases</span>
+          </div>
+          <div class="card-body">
+            <table class="rtable">
+              <colgroup><col style="width:auto"><col style="width:56px"><col style="width:96px"><col style="width:96px"></colgroup>
+              <thead><tr><th>Region</th><th class="r">Nodes</th><th class="r">Blocked 24 h</th><th class="r">Mode</th></tr></thead>
+              <tbody>
+                <tr data-row="regionp" data-region="us-east-1" data-nodes="84" data-blocked="61204" data-mode="enforce">
+                  <td class="rgn">us-east-1</td><td class="r">84</td><td class="r">61,204</td>
+                  <td class="r"><span class="badge badge--success">Enforce</span></td>
+                </tr>
+                <tr data-row="regionp" data-region="us-west-2" data-nodes="62" data-blocked="44881" data-mode="enforce">
+                  <td class="rgn">us-west-2</td><td class="r">62</td><td class="r">44,881</td>
+                  <td class="r"><span class="badge badge--success">Enforce</span></td>
+                </tr>
+                <tr data-row="regionp" data-region="eu-west-1" data-nodes="71" data-blocked="39662" data-mode="enforce">
+                  <td class="rgn">eu-west-1</td><td class="r">71</td><td class="r">39,662</td>
+                  <td class="r"><span class="badge badge--success">Enforce</span></td>
+                </tr>
+                <tr data-row="regionp" data-region="eu-central-1" data-nodes="48" data-blocked="27415" data-mode="enforce">
+                  <td class="rgn">eu-central-1</td><td class="r">48</td><td class="r">27,415</td>
+                  <td class="r"><span class="badge badge--success">Enforce</span></td>
+                </tr>
+                <tr data-row="regionp" data-region="ap-southeast-1" data-nodes="39" data-blocked="21003" data-mode="enforce">
+                  <td class="rgn">ap-southeast-1</td><td class="r">39</td><td class="r">21,003</td>
+                  <td class="r"><span class="badge badge--success">Enforce</span></td>
+                </tr>
+                <tr data-row="regionp" data-region="ap-northeast-1" data-nodes="33" data-blocked="14902" data-mode="enforce">
+                  <td class="rgn">ap-northeast-1</td><td class="r">33</td><td class="r">14,902</td>
+                  <td class="r"><span class="badge badge--success">Enforce</span></td>
+                </tr>
+                <tr data-row="regionp" data-region="sa-east-1" data-nodes="21" data-blocked="5816" data-mode="enforce">
+                  <td class="rgn">sa-east-1</td><td class="r">21</td><td class="r">5,816</td>
+                  <td class="r"><span class="badge badge--success">Enforce</span></td>
+                </tr>
+                <tr data-row="regionp" data-region="af-south-1" data-nodes="14" data-blocked="0" data-mode="off">
+                  <td class="rgn stale-t">af-south-1</td><td class="r stale-t">14</td><td class="r stale-t">0</td>
+                  <td class="r"><span class="badge badge--danger">Off</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="rfoot">372 nodes &middot; 358 enforcing &middot; af-south-1 awaiting the wave-4 edge build</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Millrace — Operations Portal</title>
+<style>
+  /* ------------------------------------------------------------------
+     Millrace — operations portal + item traceability.
+     Static only; nothing here functions. Screenshotted at 1440x900 @2x.
+
+     Register (user-specified, work 3): custom jQuery / ASP.NET, 2013-2016,
+     no component library, built by a client chasing Apple of that moment.
+     That reads as iOS 7/8 + Yosemite flat: hairline rules instead of
+     borders, no shadows, no gradients, Helvetica Neue with real weight
+     contrast, thin-stroke line icons, chevron disclosure, grouped
+     sections, teal used as an iOS-7 tint colour rather than a brand block.
+
+     Deliberately NOT Material/Ant (Bellwether) and NOT Bootstrap dark
+     (Slipstream), and not in the Rumble Harbor design language.
+     No left rail — reserved constraint for this work.
+
+     Vertical budget, 900px:
+       header 52 + main 820 + footer 28
+       main.left  = tiles(flex) + recently-scanned 202
+       main.side  = 420px accordion; last section absorbs the overflow
+     ------------------------------------------------------------------ */
+
+  :root {
+    --ink:      #22262a;
+    --ink-2:    #6d7278;
+    --ink-3:    #9aa0a6;
+    --ink-4:    #b6bbc0;
+    --hair:     #d7dade;
+    --hair-2:   #e7e9ec;
+    --bg:       #ffffff;
+    --bg-2:     #f7f7f8;
+    --bg-3:     #eff0f2;
+
+    /* petrol teal, two steps: darker for text, brighter for tint */
+    --tint:     #16a3aa;
+    --tint-dk:  #0f6b70;
+    --tint-bg:  #e7f5f6;
+
+    --ok:       #2fa360;
+    --ok-bg:    #e8f6ee;
+    --warn:     #c97a06;
+    --warn-bg:  #fdf3e2;
+    --bad:      #cf3b30;
+    --bad-bg:   #fceceb;
+
+    --r:        5px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; }
+  body {
+    font: 400 12px/1.42 "Helvetica Neue", -apple-system, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  .icn { display: block; }
+  .app { display: flex; flex-direction: column; height: 900px; }
+
+  /* ---------- header ---------- */
+  .hdr {
+    flex: 0 0 52px; display: flex; align-items: center; gap: 0;
+    padding: 0 18px 0 22px; border-bottom: 1px solid var(--hair);
+    background: var(--bg-2);
+  }
+  .wm { font-size: 15px; font-weight: 300; letter-spacing: .215em; color: var(--tint-dk); }
+  .hdr__div { width: 1px; height: 24px; background: var(--hair); margin: 0 16px; }
+  .site { display: flex; align-items: baseline; gap: 5px; font-size: 12.5px; color: var(--ink); }
+  .site em { font-style: normal; color: var(--ink-3); }
+  .cv { color: var(--ink-4); font-size: 9px; }
+  .crumb { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2); }
+  .crumb b { font-weight: 500; color: var(--ink); }
+  .crumb span { color: var(--ink-4); }
+  .spacer { flex: 1; }
+
+  .scan {
+    display: flex; align-items: center; gap: 8px;
+    width: 292px; height: 30px; padding: 0 11px 0 10px;
+    border: 1px solid var(--tint); border-radius: 15px; background: #fff;
+    box-shadow: 0 0 0 3px rgba(22,163,170,.14);
+  }
+  .scan__v { font-size: 13px; letter-spacing: .01em; }
+  .scan__t { margin-left: auto; font-size: 10px; color: var(--ink-3); }
+  .hdr__lnk { font-size: 12.5px; color: var(--tint-dk); margin-left: 20px; }
+  .hdr__lnk.is-off { color: var(--ink-4); }
+  .av {
+    width: 27px; height: 27px; border-radius: 50%; margin-left: 18px;
+    background: var(--bg-3); border: 1px solid var(--hair);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10.5px; font-weight: 500; color: var(--ink-2); letter-spacing: .03em;
+  }
+
+  /* ---------- main ---------- */
+  .main { flex: 1; display: flex; min-height: 0; }
+  .left { flex: 1; display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--hair); }
+  .side { flex: 0 0 420px; display: flex; flex-direction: column; min-height: 0; background: var(--bg-2); }
+
+  /* ---------- tile grid ---------- */
+  .tiles { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 13px 22px 11px; gap: 10px; }
+  .grp { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .grp__h { display: flex; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .grp__h span { font-size: 9.5px; font-weight: 500; letter-spacing: .115em; color: var(--ink-3); text-transform: uppercase; white-space: nowrap; }
+  .grp__h i { flex: 1; height: 1px; background: var(--hair-2); }
+  .grp__r { flex: 1; display: flex; gap: 14px; min-height: 0; }
+
+  .tile {
+    flex: 1; min-width: 0; position: relative;
+    border: 1px solid var(--hair); border-radius: var(--r); background: #fff;
+    padding: 13px 14px 11px; display: flex; flex-direction: column;
+  }
+  .tile .icn { stroke: var(--tint-dk); stroke-width: 1.25; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .tile__l { margin-top: auto; font-size: 13px; font-weight: 400; color: var(--ink); }
+  .tile__s { font-size: 10.5px; color: var(--ink-3); margin-top: 2px; }
+  .tile__b {
+    position: absolute; top: 11px; right: 12px;
+    min-width: 21px; height: 18px; padding: 0 6px; border-radius: 9px;
+    background: var(--tint); color: #fff; font-size: 10.5px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center; letter-spacing: .01em;
+  }
+  .tile__b.is-warn { background: var(--warn); }
+  .tile.is-off { background: var(--bg-2); border-style: dashed; }
+  .tile.is-off .icn { stroke: var(--ink-4); }
+  .tile.is-off .tile__l { color: var(--ink-3); }
+  .tile.is-off .tile__s { color: var(--warn); }
+
+  /* ---------- recently scanned ---------- */
+  .rec { flex: 0 0 202px; border-top: 1px solid var(--hair); display: flex; flex-direction: column; min-height: 0; }
+  .rec__h { flex: 0 0 29px; display: flex; align-items: center; gap: 10px; padding: 0 22px; background: var(--bg-2); border-bottom: 1px solid var(--hair-2); }
+  .rec__h b { font-size: 9.5px; font-weight: 500; letter-spacing: .115em; color: var(--ink-3); text-transform: uppercase; }
+  .chip-f { display: inline-flex; align-items: center; gap: 5px; height: 17px; padding: 0 6px 0 7px; border-radius: 9px; background: var(--tint-bg); color: var(--tint-dk); font-size: 10px; }
+  .chip-f i { font-style: normal; color: var(--ink-4); font-size: 11px; }
+  .rec__t { flex: 1; min-height: 0; overflow: hidden; }
+  table.rec__tb { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .rec__tb th { font-size: 9.5px; font-weight: 500; letter-spacing: .07em; color: var(--ink-3); text-transform: uppercase; text-align: left; padding: 5px 8px 4px; border-bottom: 1px solid var(--hair-2); }
+  .rec__tb th:first-child, .rec__tb td:first-child { padding-left: 22px; }
+  .rec__tb th:last-child, .rec__tb td:last-child { padding-right: 22px; text-align: right; }
+  .rec__tb td { height: 29px; padding: 0 8px; font-size: 12px; border-bottom: 1px solid var(--hair-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rec__tb tr.is-cur td { background: var(--tint-bg); }
+  .rec__tb tr.is-cur td:first-child { box-shadow: inset 2px 0 0 var(--tint); font-weight: 500; }
+  .vd { font-size: 9.5px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
+  .vd--ok { color: var(--ok); }
+  .vd--bad { color: var(--bad); }
+  .vd--hold { color: var(--warn); }
+  .mu { color: var(--ink-4); }
+
+  /* ---------- accordion ---------- */
+  .idn { flex: 0 0 auto; padding: 9px 16px 8px; border-bottom: 1px solid var(--hair); background: #fff; }
+  .idn__t { display: flex; align-items: flex-start; gap: 10px; }
+  .idn__m { font-size: 19px; font-weight: 300; letter-spacing: .01em; line-height: 1.15; }
+  .idn__s { font-size: 12px; color: var(--ink-2); margin-top: 1px; letter-spacing: .02em; }
+  .idn__c { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .chip { display: inline-flex; align-items: center; height: 17px; padding: 0 7px; border-radius: 3px; font-size: 10px; font-weight: 500; letter-spacing: .02em; }
+  .chip--ok { background: var(--ok-bg); color: var(--ok); }
+  .chip--warn { background: var(--warn-bg); color: var(--warn); }
+  .chip--bad { background: var(--bad-bg); color: var(--bad); }
+  .idn__meta { margin-top: 8px; font-size: 10.5px; color: var(--ink-3); letter-spacing: .01em;
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .sec { border-bottom: 1px solid var(--hair); display: flex; flex-direction: column; min-height: 0; }
+  .sec__h { flex: 0 0 32px; display: flex; align-items: center; gap: 8px; padding: 0 16px; cursor: default; }
+  .sec__h b { font-size: 11px; font-weight: 500; letter-spacing: .085em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
+  .sec__h em { font-style: normal; font-size: 10.5px; color: var(--ink-3); margin-left: auto; text-align: right;
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; }
+  .dis { width: 7px; height: 7px; border-right: 1.3px solid var(--ink-4); border-bottom: 1.3px solid var(--ink-4); transform: rotate(45deg); margin-right: 1px; }
+  .dis--open { transform: rotate(-135deg); position: relative; top: 2px; }
+  .sec__b { background: #fff; border-top: 1px solid var(--hair-2); min-height: 0; overflow: hidden; }
+
+  /* route */
+  .seg { display: flex; align-items: center; gap: 8px; height: 17px; padding: 0 16px; background: var(--bg-3); }
+  .seg b { font-size: 9px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+  .seg span { font-size: 9.5px; color: var(--ink-3); }
+  table.rt { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .rt td { height: 20px; padding: 0 4px; font-size: 11.5px; border-bottom: 1px solid var(--hair-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rt td:first-child { padding-left: 16px; }
+  .rt td:last-child { padding-right: 14px; text-align: right; }
+  .rt .c-st { color: var(--ink); }
+  .rt .c-st u { text-decoration: none; color: var(--ink-3); }
+  .rt .c-t { width: 56px; color: var(--ink-2); font-size: 11px; }
+  .rt .c-d { width: 72px; text-align: right; color: var(--ink); font-size: 11px; }
+  .rt .c-o { width: 32px; text-align: right; color: var(--ink-3); font-size: 10.5px; }
+  .rt .c-v { width: 52px; }
+  .rt tr.is-bad td { background: var(--bad-bg); }
+  .dot-w { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--warn); margin-left: 4px; position: relative; top: -1px; }
+
+  /* time in process */
+  .tip { padding: 8px 16px 8px; }
+  .bar { display: flex; height: 13px; border-radius: 2px; overflow: hidden; background: var(--bg-3); }
+  .bar__seg { height: 13px; }
+  .bar__seg[data-seg="smt"]        { background: #0f6b70; }
+  .bar__seg[data-seg="conformal"]  { background: #17868c; }
+  .bar__seg[data-seg="assembly"]   { background: #23a4ab; }
+  .bar__seg[data-seg="test"]       { background: #4cbfc4; }
+  .bar__seg[data-seg="pack"]       { background: #8ad7d9; }
+  .bar__seg[data-seg="queue"]      { background: #dfe2e5; }
+  .lgd { display: flex; flex-wrap: wrap; gap: 2px 8px; margin-top: 7px; }
+  .lgd div { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--ink-2); width: 122px; white-space: nowrap; }
+  .lgd i { width: 7px; height: 7px; border-radius: 1px; flex: 0 0 7px; }
+  .lgd b { font-weight: 400; color: var(--ink); margin-left: auto; }
+  .fig { display: flex; margin-top: 6px; border-top: 1px solid var(--hair-2); padding-top: 6px; }
+  .fig div { flex: 1; }
+  .fig span { display: block; font-size: 9.5px; letter-spacing: .085em; text-transform: uppercase; color: var(--ink-3); }
+  .fig b { font-size: 13.5px; font-weight: 300; letter-spacing: .01em; }
+  .fig u { text-decoration: none; font-size: 10px; color: var(--ink-3); margin-left: 5px; }
+  .tip__n { margin-top: 6px; font-size: 10.5px; color: var(--ink-2); border-top: 1px solid var(--hair-2); padding-top: 6px; line-height: 1.4; }
+  .tip__n b { font-weight: 500; }
+
+  /* notes */
+  .nts { padding: 2px 0 0; }
+  .nt { padding: 7px 16px 7px; border-bottom: 1px solid var(--hair-2); }
+  .nt__h { display: flex; align-items: baseline; gap: 7px; }
+  .nt__h b { font-size: 11px; font-weight: 500; }
+  .nt__h span { font-size: 10px; color: var(--ink-3); }
+  .nt__h time { font-size: 10px; color: var(--ink-3); margin-left: auto; }
+  .nt p { font-size: 11.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.34; }
+
+  /* ---------- footer ---------- */
+  .ftr {
+    flex: 0 0 28px; display: flex; align-items: center; gap: 16px;
+    padding: 0 18px 0 22px; border-top: 1px solid var(--hair);
+    background: var(--bg-2); font-size: 10.5px; color: var(--ink-3);
+  }
+  .ftr b { font-weight: 400; color: var(--ink-2); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-wo" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 15.5h6M9 8.5h2"/></symbol>
+  <symbol id="i-st" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M9.5 20h5M12 16v4"/><path d="M6.5 8.5h4M6.5 11.5h7"/></symbol>
+  <symbol id="i-rw" viewBox="0 0 24 24"><path d="M15.2 4.2a4.6 4.6 0 0 0-5.9 5.9l-5.1 5.1a1.7 1.7 0 0 0 0 2.4l2.2 2.2a1.7 1.7 0 0 0 2.4 0l5.1-5.1a4.6 4.6 0 0 0 5.9-5.9l-2.7 2.7-2.6-.7-.7-2.6z"/></symbol>
+  <symbol id="i-nc" viewBox="0 0 24 24"><path d="M12 3.6 21.4 20H2.6z"/><path d="M12 9.6v4.6M12 17.1v.1"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M3.6 17a9 9 0 1 1 16.8 0"/><path d="M12 17 16.4 9.8"/><circle cx="12" cy="17" r="1.2"/></symbol>
+  <symbol id="i-tr" viewBox="0 0 24 24"><path d="M2.5 13h3.2l2-5 3 11 2.6-8 1.8 4h6.4"/></symbol>
+  <symbol id="i-sk" viewBox="0 0 24 24"><rect x="3" y="3.5" width="8" height="7" rx="1"/><rect x="13" y="3.5" width="8" height="7" rx="1"/><rect x="3" y="13.5" width="8" height="7" rx="1"/><rect x="13" y="13.5" width="8" height="7" rx="1"/></symbol>
+  <symbol id="i-gr" viewBox="0 0 24 24"><path d="M3.5 9.5 12 5l8.5 4.5v9L12 23l-8.5-4.5z" transform="translate(0,-2)"/><path d="M12 3v7M9.2 7.6 12 10.4l2.8-2.8"/></symbol>
+  <symbol id="i-bom" viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="5" rx="1"/><rect x="2.5" y="16.5" width="6" height="5" rx="1"/><rect x="15.5" y="16.5" width="6" height="5" rx="1"/><path d="M12 7.5v4.5M5.5 16.5V12h13v4.5"/></symbol>
+  <symbol id="i-sh" viewBox="0 0 24 24"><path d="M1.8 6.5h12v10h-12z"/><path d="M13.8 10h4.2l3.2 3.2v3.3h-7.4z"/><circle cx="6" cy="18.4" r="1.9"/><circle cx="17" cy="18.4" r="1.9"/></symbol>
+  <symbol id="i-pl" viewBox="0 0 24 24"><rect x="4.5" y="4" width="15" height="17" rx="1.5"/><path d="M9 4V2.6h6V4"/><path d="M8 10.5h8M8 14h8M8 17.5h5"/></symbol>
+  <symbol id="i-rma" viewBox="0 0 24 24"><path d="M3.5 12.5 12 8l8.5 4.5v6.8L12 23.8l-8.5-4.5z" transform="translate(0,-3)"/><path d="M12 2.6v6.2M12 2.6 9.4 5.2M12 2.6l2.6 2.6"/></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24"><path d="M3 5v14M6 5v14M8.5 5v14M12 5v14M14 5v14M17 5v14M19 5v14M21.5 5v14"/></symbol>
+</defs></svg>
+
+<div class="app">
+
+  <!-- ======================= header ======================= -->
+  <header class="hdr">
+    <div class="wm">MILLRACE</div>
+    <div class="hdr__div"></div>
+    <div class="site">Vila&nbsp;do&nbsp;Conde <em>· Line&nbsp;3</em> <span class="cv">▼</span></div>
+    <div class="hdr__div"></div>
+    <nav class="crumb"><b>Portal</b></nav>
+    <div class="spacer"></div>
+    <div class="scan">
+      <svg class="icn" width="15" height="15" style="stroke:#16a3aa;stroke-width:1.2;fill:none"><use href="#i-bar"/></svg>
+      <span class="scan__v" data-check="scan-serial">24-0837412</span>
+      <span class="scan__t">scanned 14:12:06</span>
+    </div>
+    <a class="hdr__lnk">Search</a>
+    <a class="hdr__lnk is-off">Help</a>
+    <div class="av">RS</div>
+  </header>
+
+  <!-- ======================= main ======================= -->
+  <div class="main">
+
+    <!-- ---------------- left: tools + recently scanned ---------------- -->
+    <div class="left">
+      <div class="tiles">
+
+        <section class="grp">
+          <div class="grp__h"><span>Manufacturing</span><i></i></div>
+          <div class="grp__r">
+            <a class="tile" data-tile="work-orders">
+              <svg class="icn" width="27" height="27"><use href="#i-wo"/></svg>
+              <span class="tile__b">34</span>
+              <span class="tile__l">Work Orders</span>
+              <span class="tile__s">open on Line 3</span>
+            </a>
+            <a class="tile" data-tile="station-console">
+              <svg class="icn" width="27" height="27"><use href="#i-st"/></svg>
+              <span class="tile__l">Station Console</span>
+              <span class="tile__s">11 stations online</span>
+            </a>
+            <a class="tile" data-tile="rework">
+              <svg class="icn" width="27" height="27"><use href="#i-rw"/></svg>
+              <span class="tile__b">12</span>
+              <span class="tile__l">Rework &amp; Repair</span>
+              <span class="tile__s">in bay · 4 awaiting parts</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="grp">
+          <div class="grp__h"><span>Quality</span><i></i></div>
+          <div class="grp__r">
+            <a class="tile" data-tile="non-conformance">
+              <svg class="icn" width="27" height="27"><use href="#i-nc"/></svg>
+              <span class="tile__b">7</span>
+              <span class="tile__l">Non-conformance</span>
+              <span class="tile__s">2 past 5-day review</span>
+            </a>
+            <a class="tile" data-tile="calibration">
+              <svg class="icn" width="27" height="27"><use href="#i-cal"/></svg>
+              <span class="tile__b is-warn">2 due</span>
+              <span class="tile__l">Calibration Register</span>
+              <span class="tile__s">SEAL-01 due 24 Aug</span>
+            </a>
+            <a class="tile" data-tile="test-results">
+              <svg class="icn" width="27" height="27"><use href="#i-tr"/></svg>
+              <span class="tile__l">Test Results</span>
+              <span class="tile__s">FCT · CAL · ICT archives</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="grp">
+          <div class="grp__h"><span>Inventory</span><i></i></div>
+          <div class="grp__r">
+            <a class="tile" data-tile="stock">
+              <svg class="icn" width="27" height="27"><use href="#i-sk"/></svg>
+              <span class="tile__l">Stock &amp; Bins</span>
+              <span class="tile__s">A · B · C · R bays</span>
+            </a>
+            <a class="tile" data-tile="goods-receipt">
+              <svg class="icn" width="27" height="27"><use href="#i-gr"/></svg>
+              <span class="tile__b">5</span>
+              <span class="tile__l">Goods Receipt</span>
+              <span class="tile__s">unbooked deliveries</span>
+            </a>
+            <a class="tile is-off" data-tile="bom" data-state="disabled">
+              <svg class="icn" width="27" height="27"><use href="#i-bom"/></svg>
+              <span class="tile__l">BoM &amp; Revisions</span>
+              <span class="tile__s" data-check="disabled-tile">read-only · ECO-0447 freeze</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="grp">
+          <div class="grp__h"><span>Shipping</span><i></i></div>
+          <div class="grp__r">
+            <a class="tile" data-tile="shipments">
+              <svg class="icn" width="27" height="27"><use href="#i-sh"/></svg>
+              <span class="tile__b">9</span>
+              <span class="tile__l">Shipments</span>
+              <span class="tile__s">staged, not yet booked</span>
+            </a>
+            <a class="tile" data-tile="packing-lists">
+              <svg class="icn" width="27" height="27"><use href="#i-pl"/></svg>
+              <span class="tile__l">Packing Lists</span>
+              <span class="tile__s">print · reprint · void</span>
+            </a>
+            <a class="tile" data-tile="returns">
+              <svg class="icn" width="27" height="27"><use href="#i-rma"/></svg>
+              <span class="tile__b">3</span>
+              <span class="tile__l">Returns / RMA</span>
+              <span class="tile__s">open · 1 past 30 d</span>
+            </a>
+          </div>
+        </section>
+
+      </div>
+
+      <div class="rec">
+        <div class="rec__h">
+          <b>Recently scanned</b>
+          <span class="chip-f">Line 3 only <i>×</i></span>
+          <span style="margin-left:auto;font-size:10px;color:var(--ink-3)">scanner DS2208 · 5 of 5</span>
+        </div>
+        <div class="rec__t">
+          <table class="rec__tb">
+            <colgroup><col style="width:150px"><col style="width:104px"><col><col style="width:96px"><col style="width:90px"></colgroup>
+            <thead><tr><th>Serial</th><th>Model</th><th>Last station</th><th>Verdict</th><th>Scanned</th></tr></thead>
+            <tbody>
+              <tr class="is-cur" data-row="recent" data-serial="24-0837412" data-verdict="pass" data-at="14:12:06">
+                <td>24-0837412</td><td>MX-410R</td><td>RPR-02 Modem reseat &amp; firmware reflash</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>14:12:06</td>
+              </tr>
+              <tr data-row="recent" data-serial="24-0819907" data-verdict="pass" data-at="14:09:41">
+                <td>24-0819907</td><td>MX-410</td><td>PACK-02 Pack &amp; label</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>14:09:41</td>
+              </tr>
+              <tr data-row="recent" data-serial="24-0837388" data-verdict="fail" data-at="14:04:17">
+                <td>24-0837388</td><td>MX-410R</td><td>FCT-02 Functional test</td>
+                <td><span class="vd vd--bad">Fail</span></td><td>14:04:17</td>
+              </tr>
+              <tr data-row="recent" data-serial="23-0774102" data-verdict="hold" data-at="13:58:52">
+                <td>23-0774102</td><td>MX-220</td><td>SEAL-01 Seal &amp; verify</td>
+                <td><span class="vd vd--hold">Hold</span></td><td>13:58:52</td>
+              </tr>
+              <tr data-row="recent" data-serial="24-0820015" data-verdict="pass" data-at="13:51:30">
+                <td>24-0820015</td><td>MX-410</td><td>SEAL-01 Seal &amp; verify</td>
+                <td><span class="vd vd--ok">Pass</span></td><td>13:51:30</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------------- right: item history accordion ---------------- -->
+    <aside class="side">
+
+      <div class="idn">
+        <div class="idn__t">
+          <div>
+            <div class="idn__m" data-check="item-model">MX-410R</div>
+            <div class="idn__s">Serial 24-0837412 · Lot L-2411-B</div>
+          </div>
+          <div class="idn__c">
+            <span class="chip chip--ok">Repaired</span>
+            <span class="chip chip--warn" data-check="item-eco">ECO-0447 pending</span>
+          </div>
+        </div>
+        <div class="idn__meta">
+          Rev <b data-check="item-rev" style="font-weight:500;color:var(--ink-2)">G</b> ·
+          fw <b data-check="item-fw" style="font-weight:500;color:var(--ink-2)">2.7.14</b> ·
+          single-phase, remote disconnect · 2 orders
+        </div>
+      </div>
+
+      <!-- route -->
+      <section class="sec" style="flex:0 0 auto">
+        <div class="sec__h"><i class="dis dis--open"></i><b>Route</b><em><span data-check="station-count">14</span> stations · 1 fail · retest pass</em></div>
+        <div class="sec__b">
+          <div class="seg"><b>Repair</b><span>WO-77341 · 19 Aug 2026</span></div>
+          <table class="rt">
+            <tr data-row="station" data-seq="14" data-station="RPR-02" data-phase="repair" data-order="WO-77341"
+                data-start="2026-08-19T10:21:16" data-end="2026-08-19T11:47:52" data-op="PMS" data-verdict="pass">
+              <td class="c-st">RPR-02 <u>Modem reseat &amp; firmware reflash</u></td>
+              <td class="c-t">10:21:16</td><td class="c-d">1h 26m 36s</td><td class="c-o">PMS</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+            <tr data-row="station" data-seq="13" data-station="DGN-01" data-phase="repair" data-order="WO-77341"
+                data-start="2026-08-19T09:14:07" data-end="2026-08-19T10:02:33" data-op="PMS" data-verdict="pass">
+              <td class="c-st">DGN-01 <u>Fault diagnosis</u></td>
+              <td class="c-t">09:14:07</td><td class="c-d">48m 26s</td><td class="c-o">PMS</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+          </table>
+          <div class="seg"><b>Return</b><span>RMA-0912 · 11 Aug 2026</span></div>
+          <table class="rt">
+            <tr data-row="station" data-seq="12" data-station="RMA-01" data-phase="return" data-order="RMA-0912"
+                data-start="2026-08-11T10:22:41" data-end="2026-08-11T10:38:05" data-op="JMR" data-verdict="pass">
+              <td class="c-st">RMA-01 <u>Return intake &amp; triage</u></td>
+              <td class="c-t">10:22:41</td><td class="c-d">15m 24s</td><td class="c-o">JMR</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+          </table>
+          <div class="seg"><b>Build</b><span>WO-61208 · 2 Jun 2026 · cycle 12h 14m 41s</span></div>
+          <table class="rt">
+            <tr data-row="station" data-seq="11" data-station="PACK-02" data-phase="pack" data-order="WO-61208"
+                data-start="2026-06-02T18:47:29" data-end="2026-06-02T18:55:53" data-op="LPT" data-verdict="pass">
+              <td class="c-st">PACK-02 <u>Pack &amp; label</u></td>
+              <td class="c-t">18:47:29</td><td class="c-d">8m 24s</td><td class="c-o">LPT</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+            <tr data-row="station" data-seq="10" data-station="SEAL-01" data-phase="test" data-order="WO-61208"
+                data-start="2026-06-02T18:02:44" data-end="2026-06-02T18:25:12" data-op="JMR" data-verdict="pass" data-cal="due">
+              <td class="c-st">SEAL-01 <u>Seal &amp; verify</u><i class="dot-w" title="verification stamp due 24 Aug"></i></td>
+              <td class="c-t">18:02:44</td><td class="c-d">22m 28s</td><td class="c-o">JMR</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+            <tr data-row="station" data-seq="9" data-station="FCT-02" data-phase="test" data-order="WO-61208"
+                data-start="2026-06-02T17:26:33" data-end="2026-06-02T17:41:19" data-op="ANF" data-verdict="pass" data-retest="true">
+              <td class="c-st">FCT-02 <u>Functional test — retest</u></td>
+              <td class="c-t">17:26:33</td><td class="c-d">14m 46s</td><td class="c-o">ANF</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+            <tr data-row="station" data-seq="8" data-station="RWK-01" data-phase="assembly" data-order="WO-61208"
+                data-start="2026-06-02T16:29:41" data-end="2026-06-02T17:12:08" data-op="DCV" data-verdict="pass">
+              <td class="c-st">RWK-01 <u>Rework — Y1 crystal replaced</u></td>
+              <td class="c-t">16:29:41</td><td class="c-d">42m 27s</td><td class="c-o">DCV</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+            <tr class="is-bad" data-row="station" data-seq="7" data-station="FCT-02" data-phase="test" data-order="WO-61208"
+                data-start="2026-06-02T15:44:57" data-end="2026-06-02T16:02:15" data-op="ANF" data-verdict="fail">
+              <td class="c-st">FCT-02 <u>Functional test</u></td>
+              <td class="c-t">15:44:57</td><td class="c-d">17m 18s</td><td class="c-o">ANF</td>
+              <td class="c-v"><span class="vd vd--bad">Fail</span></td>
+            </tr>
+            <tr data-row="station" data-seq="6" data-station="CAL-03" data-phase="test" data-order="WO-61208"
+                data-start="2026-06-02T14:38:20" data-end="2026-06-02T15:21:44" data-op="LPT" data-verdict="pass">
+              <td class="c-st">CAL-03 <u>Metrology calibration</u></td>
+              <td class="c-t">14:38:20</td><td class="c-d">43m 24s</td><td class="c-o">LPT</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+            <tr data-row="station" data-seq="5" data-station="ASM-07" data-phase="assembly" data-order="WO-61208"
+                data-start="2026-06-02T13:39:16" data-end="2026-06-02T14:11:52" data-op="LPT" data-verdict="pass">
+              <td class="c-st">ASM-07 <u>Enclosure assembly</u></td>
+              <td class="c-t">13:39:16</td><td class="c-d">32m 36s</td><td class="c-o">LPT</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+            <tr data-row="station" data-seq="4" data-station="CC-01" data-phase="conformal" data-order="WO-61208"
+                data-start="2026-06-02T08:31:44" data-end="2026-06-02T09:47:03" data-op="JMR" data-verdict="pass">
+              <td class="c-st">CC-01 <u>Conformal coat &amp; cure</u></td>
+              <td class="c-t">08:31:44</td><td class="c-d">1h 15m 19s</td><td class="c-o">JMR</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+            <tr data-row="station" data-seq="3" data-station="ICT-04" data-phase="smt" data-order="WO-61208"
+                data-start="2026-06-02T07:48:22" data-end="2026-06-02T08:02:09" data-op="ANF" data-verdict="pass">
+              <td class="c-st">ICT-04 <u>In-circuit test</u></td>
+              <td class="c-t">07:48:22</td><td class="c-d">13m 47s</td><td class="c-o">ANF</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+            <tr data-row="station" data-seq="2" data-station="AOI-01" data-phase="smt" data-order="WO-61208"
+                data-start="2026-06-02T07:19:05" data-end="2026-06-02T07:24:31" data-op="—" data-verdict="pass">
+              <td class="c-st">AOI-01 <u>Post-reflow inspection</u></td>
+              <td class="c-t">07:19:05</td><td class="c-d">5m 26s</td><td class="c-o mu">—</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+            <tr data-row="station" data-seq="1" data-station="SMT-02" data-phase="smt" data-order="WO-61208"
+                data-start="2026-06-02T06:41:12" data-end="2026-06-02T07:03:48" data-op="—" data-verdict="pass">
+              <td class="c-st">SMT-02 <u>Paste print &amp; placement</u></td>
+              <td class="c-t">06:41:12</td><td class="c-d">22m 36s</td><td class="c-o mu">—</td>
+              <td class="c-v"><span class="vd vd--ok">Pass</span></td>
+            </tr>
+          </table>
+        </div>
+      </section>
+
+      <!-- time in process -->
+      <section class="sec" style="flex:0 0 auto">
+        <div class="sec__h"><i class="dis dis--open"></i><b>Time in process</b><em>build cycle · WO-61208</em></div>
+        <div class="sec__b">
+          <div class="tip">
+            <div class="bar" data-bar-width="388">
+              <span class="bar__seg" data-seg="smt"       data-secs="2509"  style="width:22.08px"></span>
+              <span class="bar__seg" data-seg="conformal" data-secs="4519"  style="width:39.78px"></span>
+              <span class="bar__seg" data-seg="assembly"  data-secs="4503"  style="width:39.64px"></span>
+              <span class="bar__seg" data-seg="test"      data-secs="5876"  style="width:51.72px"></span>
+              <span class="bar__seg" data-seg="pack"      data-secs="504"   style="width:4.44px"></span>
+              <span class="bar__seg" data-seg="queue"     data-secs="26170" style="width:230.34px"></span>
+            </div>
+            <div class="lgd">
+              <div><i style="background:#0f6b70"></i>SMT<b data-check="phase-smt">41m 49s</b></div>
+              <div><i style="background:#17868c"></i>Conformal<b data-check="phase-conformal">1h 15m 19s</b></div>
+              <div><i style="background:#23a4ab"></i>Assembly<b data-check="phase-assembly">1h 15m 03s</b></div>
+              <div><i style="background:#4cbfc4"></i>Test<b data-check="phase-test">1h 37m 56s</b></div>
+              <div><i style="background:#8ad7d9"></i>Pack<b data-check="phase-pack">8m 24s</b></div>
+              <div><i style="background:#dfe2e5"></i>Queue<b data-check="phase-queue">7h 16m 10s</b></div>
+            </div>
+            <div class="fig">
+              <div><span>Work</span><b data-check="work-total">4h 58m 31s</b><u data-check="work-pct">40.6%</u></div>
+              <div><span>Queue</span><b data-check="queue-total">7h 16m 10s</b><u data-check="queue-pct">59.4%</u></div>
+              <div><span>Elapsed</span><b data-check="elapsed-total">12h 14m 41s</b></div>
+            </div>
+            <div class="tip__n">
+              Longest wait <b data-check="longest-wait">3h 52m 13s</b> before ASM-07 (shift change).
+              Repair order WO-77341 work <b data-check="repair-work">2h 15m 02s</b>, parts hold
+              <b data-check="parts-hold">7 d 22 h 36 m</b>.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- shipment & returns -->
+      <section class="sec" style="flex:0 0 auto">
+        <div class="sec__h"><i class="dis"></i><b>Shipment &amp; returns</b>
+          <em data-check="ship-summary">PKG-3928 shipped · RMA-0912 closed · staged in PKG-4471</em></div>
+      </section>
+
+      <!-- notes -->
+      <section class="sec" style="flex:1 1 0;border-bottom:0">
+        <div class="sec__h"><i class="dis dis--open"></i><b>Notes</b><em>3 · technicians and engineers</em></div>
+        <div class="sec__b" style="flex:1;min-height:0">
+          <div class="nts">
+            <div class="nt">
+              <div class="nt__h"><b>P. Meireles</b><span>Field engineering</span><time>19 Aug · 11:26</time></div>
+              <p>Returned under RMA-0912 — no comms after the 2.7.12 push. Modem reseated,
+                 firmware rolled forward to 2.7.14. Not a board fault.</p>
+            </div>
+            <div class="nt">
+              <div class="nt__h"><b>D. Cavaco</b><span>Rework</span><time>2 Jun · 17:04</time></div>
+              <p>Y1 replaced — 32.768 kHz, reel R-8842. Pads clean, no lifted mask. Retest queued
+                 on FCT-02.</p>
+            </div>
+            <div class="nt">
+              <div class="nt__h"><b>A. Nóbrega</b><span>Test</span><time>2 Jun · 16:11</time></div>
+              <p>FCT-02 fail on RTC drift, +41 ppm against ±25 ppm. Flagged for crystal swap rather
+                 than reflow — the panel's paste profile was inside spec and the neighbouring units
+                 on the same carrier all passed.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </aside>
+  </div>
+
+  <!-- ======================= footer ======================= -->
+  <footer class="ftr">
+    <span>Vila do Conde · Line 3</span>
+    <span>MES sync <b>14:11:48</b></span>
+    <span>Scanner <b>DS2208 (COM3)</b></span>
+    <span style="margin-left:auto">Millrace <b>4.6.2</b></span>
+  </footer>
+
+</div>
+</body>
+</html>
