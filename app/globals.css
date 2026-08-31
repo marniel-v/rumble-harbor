@@ -176,6 +176,11 @@ p {
 .work-card__chip,
 .quote-card__meta,
 .quote-card__monogram,
+.slight__hero-label,
+.slight__fact-label,
+.slight__build-label,
+.slight__step-fig,
+.slight__result-delta,
 .field__label,
 .footer__tagline,
 .footer__links {
@@ -189,7 +194,12 @@ p {
    copyright — so they keep their capitals and stay nearly untracked. */
 .form-note,
 .footer__copy,
-.contact__email {
+.contact__email,
+.slight__hero-fig,
+.slight__step-n,
+.slight__table,
+.slight__series,
+.slight__result {
   font-family: var(--font-mono), monospace;
   font-size: var(--label-sm);
   letter-spacing: var(--track-flat);
@@ -199,7 +209,8 @@ p {
    ~30px it needs pulling back in. */
 .hero__title,
 .about__title,
-.contact__title {
+.contact__title,
+.slight__title {
   font-family: var(--font-display), sans-serif;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -214,7 +225,8 @@ p {
 .transmission__word,
 .svc-card__title,
 .work-card__title,
-.quote-card__name {
+.quote-card__name,
+.slight__step-title {
   font-family: var(--font-display), sans-serif;
   font-weight: 500;
   font-size: var(--label-lg);
@@ -233,6 +245,13 @@ p {
 .quote-card__by,
 .quote-card__profile,
 .quote-card__meta,
+.slight__hero-fig,
+.slight__hero-label,
+.slight__fact-label,
+.slight__build-label,
+.slight__step-head,
+.slight__result,
+.slight__series,
 .footer__inner,
 .footer__lockup,
 .footer__links,
@@ -256,7 +275,11 @@ p {
    differ. */
 .svc-card,
 .work-card,
-.quote-card {
+.quote-card,
+.slight__plate,
+.slight__table-wrap,
+.slight__panel,
+.slight__build-item {
   border: 1px solid var(--line);
   border-radius: var(--r-md);
 }
@@ -954,6 +977,569 @@ html[data-pulse="flipped"] .work-card__chip::before {
   color: var(--text-mute);
 }
 
+/* ───────────────────────── Structured light ─────────────────────────
+   The one section carrying real reproduced document figures. Those figures
+   have their own backgrounds baked in — white for the charts and point
+   clouds, teal for the WPF viewer, a lit room for the photographs — so every
+   plate stands on a fixed sheet of --ivory-raised, which is a brand token
+   rather than a theme token and therefore reads the same in both themes. A
+   figure is a piece of paper set into the page; it is not a page surface, so
+   it does not invert with one.
+
+   Plates whose source art is line work on white take --paper, which multiplies
+   them into that sheet: pure white lands exactly on the plate colour and the
+   ink survives, in both themes, with no pixel editing of the originals. */
+.slight__head {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 24px 56px;
+  align-items: start;
+}
+/* Bristone is an extended face, so it eats width fast. Sized so the longest
+   line — "USING STRUCTURED" — clears its column and the manual break is the
+   only break. No text-wrap: balance; it fights the <br> and re-rags. */
+.slight__title {
+  font-size: clamp(28px, 3.6vw, 42px);
+  line-height: 1.08;
+  margin-top: 0;
+}
+.slight__lead p {
+  color: var(--text-dim);
+  font-size: 15.5px;
+  line-height: 1.7;
+  margin: 0 0 16px;
+  max-width: 60ch;
+}
+.slight__lead p:last-child {
+  margin-bottom: 0;
+}
+/* The one line that converts "old university project" into a starting point.
+   Sits under the title rather than in the lead, so it carries its own type —
+   the rule and the signal colour keep it from reading as a subtitle. */
+.slight__throughline {
+  text-align: justify;
+  margin-top: 20px;
+  padding-left: 16px;
+  border-left: 2px solid var(--signal);
+  color: var(--text);
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+/* The readout. The millimetre figure is the largest thing in the section by a
+   wide margin — everything else here exists to make it checkable. */
+/* About's grid, mirrored. There the graphic column leads on the left and the
+   prose runs right under the title; here the label and its plate take the left
+   and the right column carries the number, the claim, and the reading that
+   backs it, with the facts strip closing it. No panel: the claim carries on
+   type and the coral, the same way About's title carries without a surface
+   behind it. */
+.slight__readout {
+  display: grid;
+  grid-template-columns: 0.83fr 1.17fr;
+  gap: 56px;
+  align-items: start;
+  margin-top: 40px;
+}
+/* Placed rather than ordered, so source order can stay number-first for the
+   collapsed layout while the desktop grid still reads plate-then-number. */
+.slight__readout-display {
+  grid-column: 2;
+  grid-row: 1;
+}
+/* Takes the plate's old 34px drop, so the reading reads as a second beat under
+   the number rather than as part of it. */
+.slight__readout-text {
+  margin-top: 34px;
+}
+.slight__readout-plate {
+  grid-column: 1;
+  grid-row: 1;
+}
+/* Opens the left column on its own edge, naming the number across the gutter
+   the way a plate caption names its figure. */
+.slight__hero-label {
+  gap: 7px;
+  color: var(--text-mute);
+}
+.slight__hero-fig {
+  gap: 10px;
+  line-height: 1;
+  color: var(--signal);
+  margin-top: 16px;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+.slight__hero-value {
+  font-size: clamp(34px, 6.2vw, 68px);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+.slight__hero-unit {
+  font-size: clamp(22px, 2.2vw, 32px);
+  color: var(--text-mute);
+  padding-bottom: 0.2em;
+}
+/* The comparison is the part a non-specialist actually keeps, so it sits with
+   the figure rather than across in the prose column — and on the number's own
+   flush-right edge. */
+.slight__hero-say {
+  margin-top: 12px;
+  color: var(--text-mute);
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: right;
+}
+/* No rule of its own — the facts strip below is the single hairline in this
+   column, exactly as the pillar row is in About's. */
+.slight__hero-note {
+  margin-top: 18px;
+}
+.slight__hero-note p {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.68;
+}
+.slight__hero-note p + p {
+  margin-top: 13px;
+}
+.slight__hero-note b {
+  color: var(--text);
+  font-weight: 500;
+}
+/* Follows its label on About's marker-to-title drop. */
+.slight__hero-plate {
+  margin: 18px 0 0;
+  display: flex;
+  flex-direction: column;
+}
+/* Contained, not stretched — past about 300px the markers swim in empty
+   screenshot. */
+.slight__hero-plate .slight__plate {
+  max-height: 300px;
+  align-items: flex-start;
+}
+.slight__hero-plate .slight__plate img {
+  width: auto;
+  max-height: 100%;
+}
+.slight__hero-plate figcaption {
+  margin-top: 10px;
+  color: var(--text-mute);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+/* Small supporting figure — the same sheet the sequence uses, at caption
+   scale and without the fixed aspect, since these stand alone rather than in
+   a run that has to line up. */
+.slight__inline-fig {
+  margin: 22px 0 0;
+}
+.slight__plate--inline {
+  max-width: 340px;
+  padding: 0;
+}
+.slight__inline-fig--wide .slight__plate--inline {
+  max-width: 470px;
+}
+.slight__plate--inline img {
+  width: 100%;
+  max-height: none;
+}
+.slight__inline-fig figcaption {
+  margin-top: 9px;
+  color: var(--text-mute);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+/* About's pillar strip: a hairline, then labelled items spaced by gap rather
+   than boxed by padding, so the first one still lines up with the prose above
+   it. All four on one row, so the strip reads as a single instrument row
+   rather than stray numbers. */
+.slight__facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px 24px;
+  margin-top: 32px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+.slight__fact {
+  display: flex;
+  flex-direction: column-reverse; /* label reads first, figure sits under it */
+  gap: 8px;
+}
+.slight__fact-value {
+  font-family: var(--font-mono), monospace;
+  font-size: 22px;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.slight__fact-label {
+  gap: 7px;
+  color: var(--text-mute);
+}
+
+/* Every block below the readout is separated by a rule, matching the rhythm
+   About sets with its pillar row. */
+.slight__block {
+  margin-top: 52px;
+  padding-top: 34px;
+}
+.slight__body {
+  margin-top: 18px;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.7;
+  max-width: 56ch;
+}
+.slight__foot {
+  margin-top: 14px;
+  color: var(--text-mute);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+/* ── Results table ──
+   Scrolls inside its own box. The page never scrolls sideways for it. */
+.slight__table-wrap {
+  margin-top: 20px;
+  overflow-x: auto;
+  background: var(--surface);
+}
+.slight__table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: var(--label-md);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.slight__table th,
+.slight__table td {
+  padding: 9px 16px;
+  text-align: right;
+  white-space: nowrap;
+}
+.slight__table thead th:first-child,
+.slight__table tbody th,
+.slight__table tfoot th {
+  text-align: left;
+}
+.slight__table thead th {
+  color: var(--text);
+  font-weight: 500;
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 4px;
+}
+.slight__table-units th {
+  color: var(--text-mute);
+  font-weight: 400;
+  border-bottom: 1px solid var(--line-strong);
+  padding-top: 0;
+  padding-bottom: 8px;
+  font-size: var(--label-xs);
+}
+.slight__table tbody tr + tr td,
+.slight__table tbody tr + tr th {
+  border-top: 1px solid var(--line);
+}
+.slight__table tbody th {
+  color: var(--text);
+}
+/* The derived columns are the point of the table, so they carry the weight
+   the measured columns don't. */
+.slight__num-key {
+  color: var(--text);
+  font-weight: 500;
+}
+.slight__table tr.is-best .slight__num-key {
+  color: var(--signal);
+}
+.slight__dagger {
+  color: var(--signal);
+  padding-left: 3px;
+}
+.slight__table tfoot th,
+.slight__table tfoot td {
+  border-top: 1px solid var(--line-strong);
+  color: var(--text);
+}
+.slight__table tfoot td[colspan] {
+  text-align: left;
+  color: var(--text-mute);
+  font-size: var(--label-xs);
+}
+
+/* ── The sequence ──
+   Numbered 01–06 and read in pipeline order. The numbers are what stop this
+   being a gallery: a grid of six captioned images with no index reads as a
+   set, not as a run. */
+/* Six columns so a row can be 3 × 2-wide or 2 × 3-wide. The two comparison
+   stages hold two images each and get the wider cell — which also breaks the
+   even 3 × 2 block that made this read as a gallery instead of a run. */
+.slight__seq {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 26px 20px;
+}
+.slight__step {
+  display: flex;
+  flex-direction: column;
+  grid-column: span 2;
+}
+.slight__step--wide {
+  grid-column: span 3;
+}
+.slight__step-head {
+  gap: 10px;
+  margin-top: 13px;
+}
+/* The index sits on the plate, the way the Work cards carry theirs — it makes
+   the order readable from the images alone, at a glance, without reading. */
+.slight__step-n {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  font-size: var(--label-md);
+  font-weight: 500;
+  color: var(--ivory);
+  background: var(--ink);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--r-md) 0 var(--r-sm) 0;
+  padding: 5px 11px 6px;
+  line-height: 1;
+}
+.slight__step-title {
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+}
+.slight__step-fig {
+  color: var(--text-mute);
+  font-size: var(--label-xs);
+  letter-spacing: var(--track-tight);
+  flex: none;
+}
+/* Uniform frame regardless of the source aspect — these are 2012 screenshots
+   at eight different shapes, and letting each set its own height turns the run
+   into a ragged mosaic. `contain` on a fixed sheet keeps the sequence a line. */
+.slight__plate {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  aspect-ratio: 4 / 3;
+  padding: 8px;
+  overflow: hidden;
+  background: var(--ivory-raised);
+  isolation: isolate;
+}
+/* Plates that stand alone rather than in the run take their own height —
+   forcing 4:3 on a wide chart or a tall screenshot wastes most of the sheet. */
+.slight__plate--free {
+  padding: 10px;
+}
+.slight__plate--free img {
+  width: 100%;
+  max-height: none;
+}
+.slight__plate img {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.slight__plate--paper img {
+  mix-blend-mode: multiply;
+}
+/* The capture footage is a darkened room, so it carries its own near-black
+   background. On the ivory sheet every other plate uses it read as a hole
+   punched in the page, so this one plate becomes the dark room instead. Fixed
+   in both themes, like --ivory-raised above it: the sheet follows the image it
+   holds, not the theme. */
+.slight__plate--lit {
+  background: var(--ink-deep);
+  border-color: var(--line-strong);
+}
+/* The capture clip needs the same fitting the plate already gives its images. */
+.slight__plate video {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+/* The clip is the only moving thing in the section, so it honours the reduced
+   motion preference by swapping to its own poster frame. The blanket
+   `animation: none` above cannot reach video playback. */
+.slight__motion-still {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .slight__motion {
+    display: none;
+  }
+  .slight__motion-still {
+    display: block;
+  }
+}
+.slight__step-caption {
+  margin-top: 9px;
+  color: var(--text-mute);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ── Insight / failure ──
+   The pair the section turns on: one thing solved, one not. Both panels, so
+   the failure sits as an equal claim rather than as an apology. */
+/* A matched pair: each panel states its claim, shows the figure that proves
+   it, and closes with provenance. Both carry a plate, so they run to nearly
+   the same height without either being stretched to fake it. */
+.slight__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.slight__panel {
+  background: var(--surface);
+  padding: 26px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.slight__panel--failure {
+  background: var(--surface);
+}
+.slight__chart {
+  margin: 20px 0 0;
+}
+.slight__chart figcaption {
+  margin-top: 9px;
+  color: var(--text-mute);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+/* Before → after, and the two series, are readouts rather than prose: mono,
+   sized up, with only the outcome taking coral. */
+.slight__result {
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 30px;
+  color: var(--text-mute);
+  letter-spacing: -0.02em;
+}
+.slight__result-a {
+  opacity: 0.55;
+}
+.slight__result-arrow {
+  color: var(--line-strong);
+  font-size: 22px;
+}
+.slight__result-b {
+  color: var(--text);
+  font-weight: 500;
+}
+/* The delta is the sentence, so it is a chip rather than another numeral. */
+.slight__result-delta {
+  color: var(--signal);
+  align-self: center;
+  border: 1px solid var(--signal);
+  border-radius: var(--r-sm);
+  padding: 5px 9px;
+  margin-left: 2px;
+}
+.slight__series {
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 24px;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+/* Coral marks the iterations that came out no better than the 1.33 cm the
+   stage started from — the point being that three of five went backwards. */
+.slight__series-v.is-worse {
+  color: var(--signal);
+}
+.slight__series-unit {
+  font-size: var(--label-md);
+  color: var(--text-mute);
+  align-self: flex-end;
+  padding-bottom: 0.2em;
+}
+
+/* ── Build ── */
+/* The widest claim on the page — motor datasheet to rendered mesh — so it gets
+   the same card grid Services uses rather than four columns of loose prose. */
+.slight__build {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+.slight__build-item {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 22px 24px 24px;
+}
+.slight__build-label {
+  gap: 7px;
+  color: var(--text);
+  font-weight: 500;
+}
+.slight__build-body {
+  color: var(--text-mute);
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+/* The figure holds the top-right cell across two rows, so the four items
+   auto-flow around it in an L instead of leaving it stranded underneath. */
+.slight__build-fig {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  margin: 0;
+}
+.slight__build-fig .slight__plate--inline {
+  /* .slight__plate--inline's own `aspect-ratio: auto` is declared above the
+     base .slight__plate rule and loses on source order, so the plate takes the
+     image's own 851×513 here instead of being boxed into 4:3. */
+  aspect-ratio: auto;
+  max-width: none;
+}
+
+.slight__provenance {
+  margin-top: 44px;
+  padding-top: 26px;
+  color: var(--text-mute);
+  font-size: 12.5px;
+  line-height: 1.7;
+  text-align: justify;
+}
+
 /* ───────────────────────── Responsive ─────────────────────────
    One block per breakpoint. A component that changes at 860px changes here,
    not next to its own rules. */
@@ -1004,6 +1590,45 @@ html[data-pulse="flipped"] .work-card__chip::before {
   .quote-grid {
     grid-template-columns: 1fr;
   }
+  .slight__head,
+  .slight__readout {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  /* One column: placement comes off, so source order takes over and the number
+     leads the way About's title does. */
+  .slight__readout-display,
+  .slight__readout-plate {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  /* Two up rather than three: at this width a third column puts the plates
+     under about 150px, which is below the point where a 2012 screenshot
+     carries anything. The wide stages take the full row. */
+  .slight__seq {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .slight__step,
+  .slight__step--wide {
+    grid-column: span 1;
+  }
+  .slight__step--wide {
+    grid-column: span 2;
+  }
+  .slight__split,
+  .slight__build {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  /* One column, so the L collapses and the figure goes back to the end of the
+     stack at its own width. */
+  .slight__build-fig {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .slight__build-fig .slight__plate--inline {
+    max-width: 470px;
+  }
   .contact__inner {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -1027,6 +1652,30 @@ html[data-pulse="flipped"] .work-card__chip::before {
      the traces come off entirely rather than shrink into mush. */
   .transmission__trace {
     display: none;
+  }
+  /* One plate per row on a phone. A stack keeps every figure legible and the
+     01–05 index keeps it reading as a run; a horizontal scroller would hide
+     most of the stages behind a gesture. */
+  .slight__seq {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+  .slight__step--wide {
+    grid-column: span 1;
+  }
+  .slight__facts {
+    grid-template-columns: 1fr;
+  }
+  .slight__panel,
+  .slight__build-item {
+    padding: 22px 20px 24px;
+  }
+  .slight__step-head {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+  .slight__step-fig {
+    flex-basis: 100%;
   }
 }
 
