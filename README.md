@@ -45,7 +45,7 @@ somewhere else, you're probably overspending it.
     labels, card indices.
 - **Voice** — _Complexity is inevitable. Fragility isn't._ Architecture before
   abstraction. We don't just ship features, we build systems.
-- **Tagline** — _Built to hold._ (alternates: _Complexity, anchored._ / _Software under
+- **Tagline** — _From signal to system_ (alternates: _Complexity, anchored._ / _Software under
   pressure._ / _Systems that hold._)
 
 ## What's inside

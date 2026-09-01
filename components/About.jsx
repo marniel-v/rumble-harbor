@@ -24,7 +24,7 @@ export default function About() {
       <div className="container">
         <PulseText>
           <div className="about__grid">
-            <div>
+            <div className="about__head">
               <SignalMarker label="ABOUT" />
               <h2 className="about__title">
                 Complex Problems

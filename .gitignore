@@ -1,6 +1,5 @@
 node_modules
 graphify-out
-/facades
 .next
 out
 .env*.local

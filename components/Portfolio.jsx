@@ -1,4 +1,10 @@
+import Link from "next/link";
 import SignalMarker from "@/components/SignalMarker";
+import { liveWorks } from "@/components/capabilities/works";
+
+/* Cards whose capability page exists become links to it. The keys below are
+   the same slugs works.js uses, so the two lists cannot drift apart silently. */
+const linked = new Set(liveWorks.map((w) => w.slug));
 
 function MotifAnalytics() {
   return (
@@ -493,8 +499,15 @@ export default function Portfolio() {
         <div className="work-grid">
           {projects.map((p) => {
             const Motif = p.Motif;
+            const to = linked.has(p.key) ? `/capabilities/${p.key}` : null;
+            const Wrap = to ? Link : "article";
+
             return (
-              <article key={p.key} className="work-card">
+              <Wrap
+                key={p.key}
+                className={`work-card${to ? " work-card--link" : ""}`}
+                {...(to ? { href: to } : {})}
+              >
                 <div className="work-card__media">
                   <Motif />
                   <span className="work-card__chip">{p.chip}</span>
@@ -503,7 +516,7 @@ export default function Portfolio() {
                   <h3 className="work-card__title">{p.title}</h3>
                   <p className="work-card__desc">{p.desc}</p>
                 </div>
-              </article>
+              </Wrap>
             );
           })}
         </div>

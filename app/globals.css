@@ -112,6 +112,24 @@
   box-sizing: border-box;
 }
 
+/* PulseText's canvas is deliberately wider than the text it measures and sits
+   at a negative offset, so on a phone — where the container padding is smaller
+   than that offset — it runs past the right edge and the page pans sideways.
+   Clipped here rather than on the wrapper: the overshoot is the point, it just
+   must not widen the page.
+
+   Both elements, deliberately. A lone `overflow-x` on `body` does nothing,
+   because while the root is `visible` the body's value is what propagates to
+   the viewport and the body box itself reverts to `visible` — it clips nothing.
+   Setting the root as well is what stops the propagation and lets the body rule
+   apply to the body box. And `clip` rather than `hidden`, because `hidden`
+   blockifies the other axis to `auto` and turns the body into a scroll
+   container, which moves the page scroll off the window. */
+html,
+body {
+  overflow-x: clip;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -122,7 +140,6 @@ body {
   color: var(--text);
   font-family: var(--font-body), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
 
 main {
@@ -139,6 +156,16 @@ h2,
 h3,
 p {
   margin: 0;
+}
+
+p {
+  text-align: justify;
+  letter-spacing: var(--track-flat);
+  /* Justification without hyphenation opens rivers at any wide measure — the
+     browser can only pad word spaces. Needs lang on <html>, which layout.js
+     sets. -webkit- for Safari before 17. */
+  -webkit-hyphens: auto;
+  hyphens: auto;
 }
 
 :focus-visible {
@@ -417,6 +444,15 @@ p {
 .nav__link:hover {
   color: var(--text);
 }
+/* Where the reader currently is. Beats :hover deliberately — pointing at a
+   link is the weaker claim of the two, and should not overwrite being on it. */
+.nav__link[aria-current],
+.nav__link[aria-current]:hover,
+.nav__mobile-link[aria-current],
+.footer__links a[aria-current],
+.footer__links a[aria-current]:hover {
+  color: var(--signal);
+}
 .nav__toggle {
   display: none;
   background: transparent;
@@ -524,6 +560,7 @@ p {
   line-height: 1.65;
   max-width: 460px;
   margin-top: 20px;
+  text-transform: uppercase;
 }
 .hero__cta {
   display: flex;
@@ -556,7 +593,6 @@ p {
   line-height: 1.7;
   margin: 0 0 18px;
   max-width: 58ch;
-  text-align: justify;
 }
 .about__pillars {
   display: grid;
@@ -680,6 +716,7 @@ html[data-pulse="flipped"] .services__field {
   font-size: 14px;
   line-height: 1.6;
   margin-top: 9px;
+  text-align: left;
 }
 
 /* ───────────────────────── Portfolio ───────────────────────── */
@@ -750,6 +787,7 @@ html[data-pulse="flipped"] .work-card__chip::before {
   font-size: 13px;
   line-height: 1.6;
   color: var(--text-mute);
+  text-align: left;
 }
 
 /* ───────────────────────── Testimonials ─────────────────────────
@@ -779,6 +817,7 @@ html[data-pulse="flipped"] .work-card__chip::before {
   color: var(--text-dim);
   font-size: 15px;
   line-height: 1.65;
+  text-align: left;
 }
 .quote-card__by {
   gap: 11px;
@@ -1039,7 +1078,7 @@ html[data-pulse="flipped"] .work-card__chip::before {
   grid-template-columns: 0.83fr 1.17fr;
   gap: 56px;
   align-items: start;
-  margin-top: 40px;
+  margin-top: 52px;
 }
 /* Placed rather than ordered, so source order can stay number-first for the
    collapsed layout while the desktop grid still reads plate-then-number. */
@@ -1185,8 +1224,8 @@ html[data-pulse="flipped"] .work-card__chip::before {
 /* Every block below the readout is separated by a rule, matching the rhythm
    About sets with its pillar row. */
 .slight__block {
-  margin-top: 52px;
   padding-top: 34px;
+  margin-top: 40px;
 }
 .slight__body {
   margin-top: 18px;
@@ -1537,7 +1576,6 @@ html[data-pulse="flipped"] .work-card__chip::before {
   color: var(--text-mute);
   font-size: 12.5px;
   line-height: 1.7;
-  text-align: justify;
 }
 
 /* ───────────────────────── Responsive ─────────────────────────
@@ -1584,9 +1622,10 @@ html[data-pulse="flipped"] .work-card__chip::before {
   .svc-grid {
     grid-template-columns: 1fr;
   }
-  .work-grid {
-    grid-template-columns: 1fr;
-  }
+  /* .work-grid deliberately has no override here. Its own auto-fit floor of
+     280px already gives two columns down to 612px and one below that,
+     which is the tablet/phone split; forcing 1fr made a tablet show one card
+     at a time for no reason. */
   .quote-grid {
     grid-template-columns: 1fr;
   }
@@ -1640,6 +1679,35 @@ html[data-pulse="flipped"] .work-card__chip::before {
   }
   .transmission__trace {
     height: 70px;
+  }
+}
+
+/* ── tablet ─────────────────────────────────────────────────────────────────
+   The 860 breakpoint collapses this page to a single column, which is right
+   for a phone and wrong for the 612–860 band, where there is still room for
+   two of things. Only what actually breaks is corrected here.               */
+
+@media (min-width: 612px) and (max-width: 860px) {
+  /* Resonance is sized off its column. Once that column is the full container
+     it becomes a 700px graphic sitting under a 260px heading — the loudest
+     thing in the section, and about nothing. Beside the title instead, where
+     it goes back to closing the heading rather than replacing it. */
+  .about__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
+    column-gap: 28px;
+  }
+
+  .about__head > .marker,
+  .about__title {
+    grid-column: 1;
+  }
+
+  .about__resonance {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    margin-top: 0;
   }
 }
 
@@ -1859,4 +1927,611 @@ html.theme-anim *::after {
     transition: none !important;
     animation: none !important;
   }
+}
+
+/* ═══════════════════════ Capabilities ═══════════════════════
+   One route per capability. The left column is that work's own screens and
+   nothing else; the right column is the claim. The facade opens over both.
+
+   Everything here reads tokens only — these pages carry the site's design
+   language deliberately, because the screens inside them carry five other
+   ones. The frame has to be the constant or the set reads as chaos.        */
+
+/* First section on the page, under a fixed nav — .section's padding alone is
+   measured for sections that follow a hero, and here nothing does. */
+.cap.section {
+  padding-top: calc(var(--nav-h) + 46px);
+  /* Clear the fixed run band below, which replaces the site footer here. */
+  padding-bottom: calc(var(--nav-h) + 52px);
+}
+
+/* Holds the filter definition the transition drives. Zero-sized and out of
+   flow — it renders nothing itself. */
+.cap__filter {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.cap__grid {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: 44px;
+  align-items: start;
+}
+
+/* ── the filmstrip ──────────────────────────────────────────────────────── */
+
+.cap__strip {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cap__frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-solid);
+  overflow: hidden;
+  cursor: pointer;
+  transition: var(--t);
+  transition-property: border-color, transform;
+  /* The brand's own arrival: 0.72 → 1.05 overshoot → 1, staggered down the
+     strip so the frames lock in one after another rather than as a block. */
+  animation: pulseIn 0.42s ease backwards;
+  animation-delay: calc(var(--i) * 70ms);
+}
+
+.cap__frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* The screens are five different design languages and three of them are
+     light. Held back until hover, they read as specimens rather than as a
+     ransom note; the active one comes up to full. */
+  opacity: 0.74;
+  filter: saturate(0.82);
+  transition: var(--t);
+  transition-property: opacity, filter;
+}
+
+.cap__frame[data-active] {
+  border-color: var(--signal);
+  transform: translateX(3px);
+}
+
+.cap__frame[data-active] img {
+  opacity: 1;
+  filter: none;
+}
+
+.cap__frame-n {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-xs);
+  letter-spacing: var(--track-tight);
+  color: var(--text);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 1px 5px;
+}
+
+.cap__frame[data-active] .cap__frame-n {
+  color: var(--signal);
+  border-color: var(--signal);
+}
+
+.cap__strip-hint {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-xs);
+  letter-spacing: var(--track-flat);
+  color: var(--text-mute);
+  margin-top: 2px;
+}
+
+/* ── the claim ──────────────────────────────────────────────────────────── */
+
+.cap__text {
+  position: relative;
+}
+
+/* The claim, set as a head and a qualifier. Four of the six ran to three lines
+   of large uppercase as one unbroken string, which is the complaint this
+   answers: nothing in it led, so it had to be read through rather than in one
+   pass. Two lines of head over one small line of qualifier is a shorter block
+   on every page and a much lighter one.
+
+   31px is the ceiling for a reason — measured, not chosen. At 33px the two
+   shortest claims wrap to a second line and the block ends up taller than the
+   run it replaced. Re-measure at 1440 before raising it, and note the binding
+   page is vision-detection, not the longest one. */
+.cap__title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 500;
+  font-size: clamp(22px, 2.7vw, 31px);
+  line-height: 1.16;
+  letter-spacing: var(--track-flat);
+  text-transform: uppercase;
+  color: var(--text);
+  text-wrap: balance;
+  text-align: right;
+}
+
+/* Block, so it takes its own line whatever the head wraps to. Dimmed rather
+   than coral: coral is the active state on this page and a permanently lit
+   subheading would compete with the frame the reader is actually on. */
+.cap__qualifier {
+  display: block;
+  margin-top: 9px;
+  font-size: clamp(12px, 1.15vw, 14px);
+  line-height: 1.34;
+  letter-spacing: var(--track-tight);
+  color: var(--text-dim);
+}
+
+.cap__lead {
+  margin-top: 18px;
+  font-size: 16.5px;
+  line-height: 1.62;
+  color: var(--text);
+}
+
+.cap__body {
+  margin-top: 14px;
+  font-size: 14.5px;
+  line-height: 1.68;
+  color: var(--text-dim);
+}
+
+.cap__views {
+  list-style: none;
+  padding: 0;
+  margin: 30px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.cap__view {
+  position: relative;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0 15px 13px;
+  border-left: 1.5px solid transparent;
+  transition: border-left-color var(--t);
+  cursor: pointer;
+}
+
+.cap__view[data-active] {
+  border-left-color: var(--signal);
+}
+
+.cap__view-hit {
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* Stretch the button over its whole row, note included — the row already
+   highlights on hover, so anything less than the row being clickable is the
+   affordance lying. Done from the real button rather than with a click handler
+   on the li, so it stays one focusable control with one accessible name.
+
+   It does cost text selection over the note. The notes restate what is on the
+   screen the row opens, so opening it is the more useful of the two. */
+.cap__view-hit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.cap__view-n {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-sm);
+  letter-spacing: var(--track-tight);
+  color: var(--text-mute);
+}
+
+.cap__view[data-active] .cap__view-n {
+  color: var(--signal);
+}
+
+.cap__view-title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 500;
+  font-size: var(--label-lg);
+  letter-spacing: var(--track-tight);
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.cap__view-note {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.cap__disclosure {
+  margin-top: 22px;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-sm);
+  letter-spacing: var(--track-flat);
+  color: var(--text-mute);
+  border-left: 1.5px solid var(--signal);
+  padding-left: 11px;
+}
+
+/* ── the run ────────────────────────────────────────────────────────────── */
+
+/* Pinned, and the only footer these pages get. Mirrors the nav's height so
+   the page reads as a fixed frame with the capability held between the two. */
+.cap__band {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  height: var(--nav-h);
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.cap__band-inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 100%;
+}
+
+.cap__step {
+  flex: 1;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-md);
+  letter-spacing: var(--track-flat);
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color var(--t);
+}
+
+.cap__step--next {
+  text-align: right;
+}
+
+.cap__step:hover {
+  color: var(--signal);
+}
+
+.cap__ticks {
+  display: flex;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: none;
+}
+
+.cap__tick {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-xs);
+  letter-spacing: var(--track-flat);
+  color: var(--text-mute);
+  text-decoration: none;
+  transition: var(--t);
+  transition-property: color, border-color;
+}
+
+.cap__tick:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.cap__tick[data-here] {
+  color: var(--signal);
+  border-color: var(--signal);
+}
+
+/* Works with no page yet. The tick still shows — the length of the run is not
+   something to hide behind a shorter row. */
+.cap__tick[data-soon] {
+  opacity: 0.3;
+  border-style: dashed;
+}
+
+/* ═══════════════════════ The facade overlay ═══════════════════════
+   The screen is served live rather than as a still, so the type is real type.
+   It is laid out at the size it was built for and scaled — never reflowed —
+   and 1:1 drops the scale and lets the stage scroll, which is the only way the
+   smallest numerals are honestly legible.                                  */
+
+.facade {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  padding: 22px;
+}
+
+.facade__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--ink-deep) 86%, transparent);
+  backdrop-filter: blur(3px);
+  cursor: zoom-out;
+}
+
+.facade__shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.facade__shell:focus {
+  outline: none;
+}
+
+.facade__bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: none;
+  height: 44px;
+  padding: 0 12px 0 15px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-sm);
+  letter-spacing: var(--track-flat);
+  color: var(--text-dim);
+}
+
+/* Equal flex share with the tools, so the disclosure between them is centred on
+   the bar rather than on whatever space this happens to leave. The view title
+   changes length as you step through a work's screens, and the note slid with
+   it. Truncating rather than pushing also fixes the worse half of the same bug:
+   nowrap here plus flex:none on the tools overflowed the bar on a phone and put
+   the close button off-screen, which — with no Escape key and no scrim showing
+   at this width — left no way to close the overlay at all. */
+.facade__id {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  white-space: nowrap;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.facade__id-view {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.facade__id b {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.facade__id i {
+  font-style: normal;
+  color: var(--text-mute);
+}
+
+/* The disclosure sits on the chrome, once, at the artifact — never inside the
+   facade markup, which carries no disclaimer text by design. */
+.facade__note {
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: center;
+  color: var(--signal);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The other half of the centring pair. Never shrinks below its buttons, so if
+   the bar is too tight for equal halves the tools win and the id gives way —
+   the controls staying reachable outranks the note staying centred. */
+.facade__tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  flex: 1 1 0;
+}
+
+.facade__count {
+  padding: 0 3px;
+  color: var(--text-mute);
+}
+
+.facade__btn {
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: none;
+  font: inherit;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: var(--t);
+  transition-property: color, border-color;
+}
+
+.facade__btn:hover {
+  color: var(--signal);
+  border-color: var(--signal);
+}
+
+.facade__btn[aria-pressed="true"] {
+  color: var(--signal);
+  border-color: var(--signal);
+}
+
+.facade__btn--close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.facade__stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.facade__stage[data-actual] {
+  overflow: auto;
+}
+
+/* margin:auto rather than place-items:center — centring a flex item that
+   overflows its scroll container clips the leading edge, and at 1:1 it does. */
+.facade__fit {
+  position: relative;
+  margin: auto;
+  flex: none;
+}
+
+.facade__frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  transform-origin: 0 0;
+  background: #fff;
+  transition: opacity var(--t);
+}
+
+/* ── narrow ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 860px) {
+  .cap__grid {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+
+  /* The strip lies down and scrolls rather than forcing the page sideways —
+     same move the structured-light sequence makes. And it follows the claim
+     rather than leading it: stacked, a scroller you have to work sits between
+     the reader and the heading that says what the page is. */
+  .cap__strip {
+    order: 1;
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .cap__frame {
+    flex: none;
+    width: 218px;
+    scroll-snap-align: start;
+  }
+
+  .cap__strip-hint {
+    display: none;
+  }
+
+  .cap__band-inner {
+    gap: 12px;
+  }
+
+  /* No room for two capability names beside six ticks; the ticks are the
+     navigation that matters, so the prose steps go and the arrows stay. */
+  .cap__step {
+    font-size: var(--label-xs);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .facade {
+    padding: 0;
+  }
+
+  .facade__shell {
+    border: 0;
+    border-radius: 0;
+  }
+
+  .facade__note {
+    display: none;
+  }
+
+  /* Finger-sized. 26px is a comfortable mouse target and a poor thumb one, and
+     close is the only way out of the overlay at this width — there is no
+     keyboard for Escape and the shell covers the scrim edge to edge. */
+  .facade__bar {
+    height: 50px;
+    gap: 12px;
+  }
+
+  .facade__btn {
+    min-width: 36px;
+    height: 36px;
+  }
+
+  .facade__btn--close svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cap__frame {
+    animation: none;
+  }
+}
+
+/* Work cards that have a capability page behind them. The affordance is a
+   line of copy rather than a new card treatment — the grid reads as one set,
+   and the cards without a page yet must not look broken next to the ones
+   that have. */
+.work-card--link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.work-card--link:hover {
+  color: var(--signal);
+}
+
+/* Capability 06 is the exhibit rather than a facade: the marker places it in
+   the run, and StructuredLight supplies its own section beneath. Pull its top
+   padding in so the two do not read as separate pages stacked. */
+.cap[data-exhibit] {
+  padding-bottom: 0;
+}
+
+.cap[data-exhibit] .slight {
+  padding-top: 4px;
+  padding-bottom: calc(var(--nav-h) + 52px);
 }

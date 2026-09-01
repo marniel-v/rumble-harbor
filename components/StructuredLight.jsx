@@ -84,7 +84,7 @@ const steps = [
     fig: "ORIGINAL FOOTAGE",
     lit: true,
     caption:
-      "The rig running, room darkened. Gray-coded patterns step from coarse to fine across the object and the webcam reads each one back; line-plane intersection then gives every decoded pixel a depth.",
+      "The rig running. Gray-coded patterns step from coarse to fine across the object and the webcam reads each one back; line-plane intersection then gives every decoded pixel a depth.",
     motion: {
       src: "/structured-light/capture.mp4",
       poster: "/structured-light/capture-poster.jpg",
@@ -179,12 +179,6 @@ export default function StructuredLight() {
   return (
     <section className="section slight" id="structured-light">
       <div className="container">
-        <SignalMarker
-          label="STRUCTURED LIGHT"
-          meta="UNIVERSITY OF PRETORIA · 2012"
-          status="FIRST PLACE"
-          className="marker--section"
-        />
         <div className="slight__head">
           {/* The marker directly above already reads STRUCTURED LIGHT, so
                 the heading does not repeat it — that redundancy is what forced
@@ -219,6 +213,72 @@ export default function StructuredLight() {
               the middle that was never fixed, and that is on this page too.
             </p>
           </div>
+        </div>
+
+        {/* The sequence. Numbered, and in the order the pipeline runs. */}
+        <div className="slight__block">
+          <SignalMarker label="CAPTURE TO MODEL" meta="FIVE STAGES" />
+          <ol className="slight__seq">
+            {steps.map((s) => (
+              <li
+                className={`slight__step${s.wide ? " slight__step--wide" : ""}`}
+                key={s.n}
+              >
+                <div
+                  className={`slight__plate${s.paper ? " slight__plate--paper" : ""}${s.lit ? " slight__plate--lit" : ""}`}
+                >
+                  <span className="slight__step-n" aria-hidden>
+                    {s.n}
+                  </span>
+                  {s.motion ? (
+                    /* The still is rendered alongside and swapped in by CSS
+                       under prefers-reduced-motion. The poster frame carries
+                       the pattern on the object, so the stage still reads
+                       when the clip is suppressed. */
+                    <>
+                      <video
+                        className="slight__motion"
+                        width={s.motion.w}
+                        height={s.motion.h}
+                        poster={s.motion.poster}
+                        aria-label={s.motion.alt}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                      >
+                        <source src={s.motion.src} type="video/mp4" />
+                      </video>
+                      <img
+                        className="slight__motion-still"
+                        src={s.motion.poster}
+                        width={s.motion.w}
+                        height={s.motion.h}
+                        alt={s.motion.alt}
+                        loading="lazy"
+                      />
+                    </>
+                  ) : (
+                    s.images.map((im) => (
+                      <img
+                        key={im.src}
+                        src={im.src}
+                        width={im.w}
+                        height={im.h}
+                        alt={im.alt}
+                        loading="lazy"
+                      />
+                    ))
+                  )}
+                </div>
+                <div className="slight__step-head">
+                  <h3 className="slight__step-title">{s.title}</h3>
+                  <span className="slight__step-fig">{s.fig}</span>
+                </div>
+                <p className="slight__step-caption">{s.caption}</p>
+              </li>
+            ))}
+          </ol>
         </div>
 
         {/* The headline figure. Everything else on the page is in service of
@@ -345,72 +405,6 @@ export default function StructuredLight() {
             around it, which is what the spread in the last two columns is
             measuring.
           </p>
-        </div>
-
-        {/* The sequence. Numbered, and in the order the pipeline runs. */}
-        <div className="slight__block">
-          <SignalMarker label="CAPTURE TO MODEL" meta="FIVE STAGES" />
-          <ol className="slight__seq">
-            {steps.map((s) => (
-              <li
-                className={`slight__step${s.wide ? " slight__step--wide" : ""}`}
-                key={s.n}
-              >
-                <div
-                  className={`slight__plate${s.paper ? " slight__plate--paper" : ""}${s.lit ? " slight__plate--lit" : ""}`}
-                >
-                  <span className="slight__step-n" aria-hidden>
-                    {s.n}
-                  </span>
-                  {s.motion ? (
-                    /* The still is rendered alongside and swapped in by CSS
-                       under prefers-reduced-motion. The poster frame carries
-                       the pattern on the object, so the stage still reads
-                       when the clip is suppressed. */
-                    <>
-                      <video
-                        className="slight__motion"
-                        width={s.motion.w}
-                        height={s.motion.h}
-                        poster={s.motion.poster}
-                        aria-label={s.motion.alt}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                      >
-                        <source src={s.motion.src} type="video/mp4" />
-                      </video>
-                      <img
-                        className="slight__motion-still"
-                        src={s.motion.poster}
-                        width={s.motion.w}
-                        height={s.motion.h}
-                        alt={s.motion.alt}
-                        loading="lazy"
-                      />
-                    </>
-                  ) : (
-                    s.images.map((im) => (
-                      <img
-                        key={im.src}
-                        src={im.src}
-                        width={im.w}
-                        height={im.h}
-                        alt={im.alt}
-                        loading="lazy"
-                      />
-                    ))
-                  )}
-                </div>
-                <div className="slight__step-head">
-                  <h3 className="slight__step-title">{s.title}</h3>
-                  <span className="slight__step-fig">{s.fig}</span>
-                </div>
-                <p className="slight__step-caption">{s.caption}</p>
-              </li>
-            ))}
-          </ol>
         </div>
 
         <div className="slight__block slight__split">

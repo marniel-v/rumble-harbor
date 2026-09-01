@@ -17,12 +17,13 @@ export default function Footer() {
               ble Harbor
             </span>
           </a>
-          <span className="footer__tagline">Built to hold.</span>
         </div>
         <nav className="footer__links" aria-label="Footer">
           <a href="#about">About</a>
           <a href="#services">Services</a>
           <a href="#work">Work</a>
+          <a href="/capabilities/analytics">Capabilities</a>
+          <a href="#testimonials">Testimonials</a>
           <a href="#contact">Contact</a>
         </nav>
         <p className="footer__copy">© {year} Rumble Harbor</p>
