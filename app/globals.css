@@ -161,11 +161,19 @@ p {
 p {
   text-align: justify;
   letter-spacing: var(--track-flat);
-  /* Justification without hyphenation opens rivers at any wide measure — the
-     browser can only pad word spaces. Needs lang on <html>, which layout.js
-     sets. -webkit- for Safari before 17. */
+  /* Justification with no hyphenation opens rivers at any measure, because
+     word spaces are the only slack the browser has. Hyphenation closes them,
+     but unbounded it breaks short words (sin-gle, noth-ing), which reads as
+     damage rather than as typesetting. So the valve stays, bounded: nothing
+     under 12 characters, and at least 5 either side of the break, which is
+     long enough that the word still reads whole.
+
+     Needs lang on <html>, which layout.js sets. -webkit- for Safari before
+     17; browsers without hyphenate-limit-chars ignore it and fall back to
+     unbounded hyphenation, which is what this had before. */
   -webkit-hyphens: auto;
   hyphens: auto;
+  hyphenate-limit-chars: 12 5 5;
 }
 
 :focus-visible {
@@ -1940,9 +1948,54 @@ html.theme-anim *::after {
 /* First section on the page, under a fixed nav — .section's padding alone is
    measured for sections that follow a hero, and here nothing does. */
 .cap.section {
+  position: relative;
   padding-top: calc(var(--nav-h) + 46px);
   /* Clear the fixed run band below, which replaces the site footer here. */
   padding-bottom: calc(var(--nav-h) + 52px);
+}
+
+/* The hero's wash, on the pages that stand in for the hero — these routes open
+   cold under the nav with no hero above them, and the top of the page had
+   nothing warming it.
+
+   Same two gradients and the same arrival as .hero::before, with one change:
+   the vertical radii are stated in px rather than as a share of the box. The
+   hero is ~500px tall at every width, so its 42%/60% resolve to a stable
+   206–219px and 294–312px from 390 through 1440 — but a capability page runs
+   900px on analytics to several times that on the exhibit, and the same
+   percentages would give each page a differently-sized glow. 210/300 is the
+   hero's own geometry, held constant. Widths stay proportional because both
+   sections are full-bleed.
+
+   And no pulseIn, which is the second change. The hero is arrived at once, so
+   its glow can be an arrival. This section remounts on every step through the
+   deck, and a 1.6s wash re-firing on each one would put a second, slower
+   animation on top of the signal transition that is already carrying the move.
+   Static, it reads as one continuous field the pages travel across.
+
+   No overflow rule here, unlike .hero: html/body already clip the x-axis, which
+   is the only axis the glow can escape on, and a scroll container around the
+   structured-light exhibit is not worth buying twice. */
+.cap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 55% 210px at 50% 0%,
+      rgba(242, 95, 87, 0.17),
+      transparent 70%
+    ),
+    radial-gradient(ellipse 95% 300px at 50% 0%, var(--glow), transparent 72%);
+  pointer-events: none;
+}
+
+/* An absolutely positioned pseudo-element paints over in-flow content, so the
+   content has to be lifted — the same move .hero__inner makes. Both children
+   are covered: the container, and the bare panel the exhibit renders instead. */
+.cap > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Holds the filter definition the transition drives. Zero-sized and out of
@@ -2095,12 +2148,11 @@ html.theme-anim *::after {
   list-style: none;
   padding: 0;
   margin: 30px 0 0;
-  border-top: 1px solid var(--line);
 }
 
 .cap__view {
   position: relative;
-  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
   padding: 14px 0 15px 13px;
   border-left: 1.5px solid transparent;
   transition: border-left-color var(--t);
@@ -2159,6 +2211,39 @@ html.theme-anim *::after {
   margin-top: 6px;
   font-size: 13.5px;
   line-height: 1.6;
+  color: var(--text-dim);
+}
+
+/* Hanging label, so the two lines of scope align under each other rather than
+   under the word. No coral rule: that belongs to the disclosure, which marks
+   the facade, and this marks the work. Two different kinds of note. */
+.cap__role {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 0 12px;
+  margin-top: 26px;
+  padding-top: 16px;
+}
+
+.cap__role-label {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-sm);
+  letter-spacing: var(--track-flat);
+  line-height: 1.5;
+  color: var(--text-mute);
+}
+
+.cap__role-line {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.cap__role-scope {
+  grid-column: 2;
+  margin-top: 4px;
+  font-size: 13.5px;
+  line-height: 1.55;
   color: var(--text-dim);
 }
 

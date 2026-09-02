@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import PulseMark from "@/components/PulseMark";
 import SignalMarker from "@/components/SignalMarker";
 import StructuredLight from "@/components/StructuredLight";
 import FacadeOverlay from "@/components/capabilities/FacadeOverlay";
@@ -118,42 +119,41 @@ export default function CapabilityView({ work, prev, next }) {
           {/* The filter the transition drives. Attached to the panel only
               while it runs — a permanent filter costs a compositing layer and softens
               the text under it. */}
-            <svg className="cap__filter" aria-hidden="true" focusable="false">
-              <filter
-                id="rh-signal"
-                x="-18%"
-                y="-18%"
-                width="136%"
-                height="136%"
-                colorInterpolationFilters="sRGB"
-              >
-                {/* Anisotropic on purpose: slow across, fast down, so the
+          <svg className="cap__filter" aria-hidden="true" focusable="false">
+            <filter
+              id="rh-signal"
+              x="-18%"
+              y="-18%"
+              width="136%"
+              height="136%"
+              colorInterpolationFilters="sRGB"
+            >
+              {/* Anisotropic on purpose: slow across, fast down, so the
                   displacement tears the panel into horizontal bands instead of
                   fogging it evenly. */}
-                <feTurbulence
-                  ref={turbRef}
-                  type="fractalNoise"
-                  baseFrequency="0.0016 0.045"
-                  numOctaves="2"
-                  seed="7"
-                  result="noise"
-                />
-                <feDisplacementMap
-                  ref={dispRef}
-                  in="SourceGraphic"
-                  in2="noise"
-                  scale="0"
-                  xChannelSelector="R"
-                  yChannelSelector="G"
-                />
-              </filter>
-            </svg>
+              <feTurbulence
+                ref={turbRef}
+                type="fractalNoise"
+                baseFrequency="0.0016 0.045"
+                numOctaves="2"
+                seed="7"
+                result="noise"
+              />
+              <feDisplacementMap
+                ref={dispRef}
+                in="SourceGraphic"
+                in2="noise"
+                scale="0"
+                xChannelSelector="R"
+                yChannelSelector="G"
+              />
+            </filter>
+          </svg>
 
           {/* The exhibit has no facade behind it, so it has no filmstrip,
               no overlay and no disclosure — it renders the real thing. */}
           {!work.exhibit && (
             <>
-  
               <div className="cap__grid" ref={panelRef}>
                 {/* Left: this work's screens, and only this work's. */}
                 <div className="cap__strip" key={work.slug}>
@@ -198,6 +198,22 @@ export default function CapabilityView({ work, prev, next }) {
                       {p}
                     </p>
                   ))}
+
+                  {/* Closes the prose: the claim, then what part of it was
+                      actually mine. Everything below this line is about the
+                      screens rather than about the work. */}
+                  {work.role && (
+                    <div className="cap__role">
+                      <span className="cap__role-label">
+                        <PulseMark size={8} inline />
+                        ROLE
+                      </span>
+                      <p className="cap__role-line">
+                        {work.role.title} · {work.role.team} · {work.role.span}
+                      </p>
+                      <p className="cap__role-scope">{work.role.scope}</p>
+                    </div>
+                  )}
 
                   <ul className="cap__views">
                     {work.views.map((v, i) => (

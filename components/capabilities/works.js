@@ -12,6 +12,12 @@
  * as a heading and a subheading it is shorter and it leads. They join with a
  * plain space to reconstruct the sentence, which is what the page title does.
  *
+ * `role` states what part of the work was actually mine. It sits in the same
+ * slot on every page for the same reason the disclosure does: a scope note that
+ * always appears in one place reads as a spec line, where the same note dropped
+ * into the prose of some pages and not others reads as something being slid
+ * past the reader. Optional, and absent on works still being written up.
+ *
  * `views[].id` names a directory under facades/, which is gitignored and served
  * at runtime by app/capabilities/facade/[slug]/route.js. `ready: false` works
  * have no page yet; the band still renders their tick, so the length of the run
@@ -24,64 +30,80 @@ export const DISCLOSURE =
 export const works = [
   {
     slug: "analytics",
-    short: "Risk scoring over telemetry",
+    short: "Prototype to platform",
     n: "01",
     product: "Bellwether",
     kicker: "Analytics · Insights",
-    capability: "Risk scoring over high-volume telemetry",
-    qualifier: "with per-signal attribution",
-    lead: "A degradation model ranks 1,284 assets by a derived 0–100 score. The thirteen that clear the threshold are sorted worst-first, and every score itemises the signals that produced it, so the engineer deciding where to send a technician can see why the model said what it said.",
+    capability: "B2B analytics at organization scale",
+    qualifier: "from prototype to platform",
+    role: {
+      title: "Lead developer",
+      team: "Two-person team",
+      span: "One year",
+      scope:
+        "Backend architecture, data layer, caching and access control. Front-end structure, components, and part of the interface design.",
+    },
+    lead: "A B2B analytics platform that existed as a working prototype, with most of the logic still in the front end. Over a year I gave it a domain model, a query layer, and access control across tenants, and took it to two dozen client organizations reading data collected by a mobile app with twenty thousand users.",
     body: [
-      "The vertical is misdirection, deliberately. What is being claimed is the structure (entity × time-series × derived score × cohort × drill-down), and the plant here could be anything that emits telemetry. The substitution costs nothing, because the structure is the part that was hard.",
-      "Open either screen and check it. The distribution buckets sum to the monitored count, the contributing signals sum to the score, and the weights sum to 1.00. Nothing on these screens is a number that was typed in to look plausible.",
+      "Its job was not to hand an organization a dashboard and wish them luck. It had to turn raw activity into a few readable statements they could act on, for an audience that wasn't analysts and would have got nothing from a wall of charts. That takes a lot of derived numbers: global, country, organization, down to a single person. All of them were computed on demand, and an organization's view took three to five minutes to build while someone watched it load.",
+      "Making the queries cheaper helped the database and barely moved the page. The problem wasn't how fast the aggregation ran. It was that it ran while someone was waiting, and nobody had ever needed the number to be newer than a day.",
+      "So it moved to a nightly job that builds the hierarchy once, top down, each level derived from the one above. The query layer makes the chain you write the key it caches under, so anything sharing a prefix picks up where it diverges. A second organization's view is a filter over work already done, not a query of its own. Views went to under three seconds.",
     ],
     views: [
       {
         id: "bellwether-01-fleet-overview",
         n: "01",
         title: "Fleet overview",
-        note: "Thirteen assets over a 70-point threshold, worst first. The five buckets of the distribution chart sum to the 1,284 monitored; the top asset's contributing signals sum to its score of 91 exactly.",
+        note: "An aggregate over the whole population, a ranked list under it, and one entity broken into the signals behind its score. Three levels of the same data, all wanted on one screen, and in the naive version each one is its own query.",
       },
       {
         id: "bellwether-02-model-thresholds",
         n: "02",
         title: "Model & thresholds",
-        note: "The same score as configured policy: seven active signals weighted to 1.00, and a threshold sweep whose value at the current cut of 70 reproduces view 01's at-risk count. One signal sits below its coverage minimum and is weighted anyway.",
+        note: "The weights and the cut as configuration rather than code. Moving the threshold changes the population it selects, so the sweep beside it shows what each cut would flag before you commit to one.",
       },
     ],
     ready: true,
   },
   {
     slug: "cloud",
-    short: "Multi-cloud control planes",
+    short: "Billing under failure",
     n: "02",
     product: "Slipstream",
     kicker: "Cloud · Control Plane",
     capability: "Multi-cloud control planes",
-    qualifier: "and policy-driven protection at the edge",
-    lead: "A rollout is a gated, per-region process with an auditable trail, not a deploy button. Three views: the rollout in flight, the gates that halted it as editable policy, and the ruleset sitting in front of the same estate.",
+    qualifier: "metered down to the invoice",
+    role: {
+      title: "Full-stack developer",
+      team: "Three-person team",
+      span: "Three and a half years",
+      scope:
+        "Metered billing and invoicing, timeseries integration, and cloud provider integrations. The interfaces over them, including provisioning, live deployment progress and security policy. The migration of the existing front end onto the new stack during the UI overhaul.",
+    },
+    lead: "A control plane for deploying and securing application services across cloud providers. It was two years old and already had paying customers when I joined, with the basics working and not much beyond them. Over three and a half years on a team of three I built its metered billing, its timeseries layer and the integrations that brought new providers in, and shared the rebuild of its front end as it grew to a hundred tenants across six clouds.",
     body: [
-      "The three screens describe one estate rather than three unrelated ones. Region names, instance counts and node counts agree across all of them, and view 02's audit trail records view 01's halt and rollback to the second.",
-      "The headline error rate on view 01 is an instance-weighted mean over fresh regions only: wrong under any naive reading of the table below it, right under the one the tile states. That is the class of detail that is expensive to fabricate and cheap to check.",
+      "It already had billing when I arrived, of the kind that charges for a discrete action and nothing else. What the platform needed was to charge for consumption, metered continuously and opted into per customer, which changed what an invoice was. The amount stopped being a fact anyone could look up and became something the system worked out. Every other feature on the platform fails in front of the person using it. Billing fails behind them, once a month, against their card.",
+      "So the rule was that no failure anywhere in the pipeline could end in a wrong charge. It could end in an error someone could see, or in a state the customer could carry on from, and nowhere else. Holding it to that took seven versions. Six of them worked. Each one went back because working was not the bar, and billing is a bad place to find out what you missed.",
+      "The seventh ran every billing cycle for the rest of the engagement, across every tenant on the platform, and did not fail once.",
     ],
     views: [
       {
         id: "slipstream-01-rollout-console",
         n: "01",
         title: "Rollout console",
-        note: "Eight regions in four waves, 204 of 372 instances on the new version. One region holding on a failed gate, one rolled back after peaking at 1.874%, one with metrics 30 minutes stale and excluded from the headline.",
+        note: "A change going out in waves rather than all at once, with each region's progress and health visible while it moves. The interesting state is not the one where everything succeeded. It is the region that stopped, and what the system did about it without being asked.",
       },
       {
         id: "slipstream-02-gates-policy",
         n: "02",
         title: "Gates & policy",
-        note: "Six gates, five enforced. Firings partition by action into the 90-day outcomes: 25 halted plus 12 rolled back equals the 37 halt-gate firings. A tighter policy version is on record as rolled back for being less precise.",
+        note: "The conditions that halt a rollout, held as configuration rather than buried in the code that enforces them. A rule you can read is a rule you can argue with before it fires, which is most of the difference between a policy and a behaviour.",
       },
       {
         id: "slipstream-03-edge-protection",
         n: "03",
         title: "Edge protection",
-        note: "38.4M requests, 206 rules, 0.559% blocked. One rule group held in monitor since June because enforcing it would break two named consumers. Per-region node counts equal view 01's instance counts.",
+        note: "Rules in front of the same estate, some enforcing and some only watching. Turning one on is a decision with a blast radius, so monitor mode exists to say what enforcement would have done before anyone commits to it.",
       },
     ],
     ready: true,
