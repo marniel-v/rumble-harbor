@@ -30,6 +30,7 @@ export default function FacadeOverlay({ work, index, onIndex, onClose }) {
   const dialogRef = useRef(null);
   const [fit, setFit] = useState(0);
   const [actual, setActual] = useState(false);
+  const [note, setNote] = useState(true);
 
   const view = work.views[index];
   const count = work.views.length;
@@ -139,6 +140,13 @@ export default function FacadeOverlay({ work, index, onIndex, onClose }) {
               </>
             )}
             <button
+              className="facade__btn"
+              onClick={() => setNote((v) => !v)}
+              aria-pressed={note}
+            >
+              NOTE
+            </button>
+            <button
               className="facade__btn facade__btn--wide"
               onClick={() => setActual((v) => !v)}
               aria-pressed={actual}
@@ -181,6 +189,28 @@ export default function FacadeOverlay({ work, index, onIndex, onClose }) {
             />
           </div>
         </div>
+
+        {/* The same note the capability page runs beside this screen, kept with
+            the screen it is about. The notes are written to be read against the
+            thing — "three levels of the same data, all wanted on one screen" is
+            an instruction about where to look — and the page they live on is
+            behind the overlay for exactly as long as you are looking.
+
+            Floated over the stage rather than added as a footer, because the
+            fit scale is min(stageW/1440, stageH/900) and on any laptop it is
+            the height that binds: a strip of chrome would come off the size of
+            the screen it annotates. This way it costs the facade nothing, and
+            NOTE in the bar clears it when it sits over something you want.
+
+            Keyed on the view so stepping through a work re-states the note
+            rather than swapping text under a box that never moved. */}
+        {note && (
+          <div className="facade__caption" key={view.id}>
+            <span className="facade__caption-n">{view.n}</span>
+            <h2 className="facade__caption-title">{view.title}</h2>
+            <p className="facade__caption-note">{view.note}</p>
+          </div>
+        )}
       </div>
     </div>
   );

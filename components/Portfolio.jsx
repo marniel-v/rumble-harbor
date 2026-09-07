@@ -458,14 +458,14 @@ const projects = [
     key: "logistics",
     title: "Logistics · Estimation",
     chip: "Cost modeling",
-    desc: "An enterprise solution that routes material demand into transport schedules, forecasting cost and storage across each leg.",
+    desc: "A planning tool that turns a drawn transport network into tonnes per node per month, then prices three decades of it as a reviewable capex and opex budget.",
     Motif: MotifLogistics,
   },
   {
     key: "erp",
     title: "Operations · ERP",
     chip: "Unified ERP",
-    desc: "A single ERP running an entire operation, including manufacturing and inventory, shipping, staff access, and BoM and schematic version control.",
+    desc: "A single ERP running an entire operation, including manufacturing and inventory, shipping, access control, and BoM and schematic version control.",
     Motif: MotifERP,
   },
   {

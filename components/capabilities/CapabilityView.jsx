@@ -214,7 +214,14 @@ export default function CapabilityView({ work, prev, next }) {
                       <p className="cap__role-scope">{work.role.scope}</p>
                     </div>
                   )}
+                </div>
 
+                {/* The screen list is its own grid child rather than the tail
+                    of the claim, so the narrow layout can put the filmstrip
+                    between the two — the notes name frames, and stacked they
+                    have to follow the frames they name. On desktop it sits
+                    under the claim in the same column and reads as one block. */}
+                <div className="cap__notes">
                   <ul className="cap__views">
                     {work.views.map((v, i) => (
                       <li

@@ -2007,19 +2007,35 @@ html.theme-anim *::after {
   overflow: hidden;
 }
 
+/* Three children, not two: strip, claim, screen list. The claim and the list
+   are split so the narrow layout can slot the strip between them; here the
+   strip spans both rows and the two right-hand blocks stack in one column,
+   which is what a single .cap__text used to give. Column gap only — the blocks
+   carry their own margin-top, so a row gap would double the space. */
 .cap__grid {
   display: grid;
   grid-template-columns: 232px minmax(0, 1fr);
-  gap: 44px;
+  column-gap: 44px;
   align-items: start;
 }
 
 /* ── the filmstrip ──────────────────────────────────────────────────────── */
 
+/* Held in place while the claim scrolls past it. The right column runs several
+   times the strip's height, so without this the screens are gone by the time
+   you reach the notes that name them — and the notes are written to be read
+   against the frame, not instead of it.
+
+   Plain sticky, no inner scroller: no work carries more than three frames, so
+   the column is ~470px and clears the fixed nav and the fixed run band with
+   room to spare. Re-check if a work ever gains a fourth screen. */
 .cap__strip {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  grid-row: span 2;
+  position: sticky;
+  top: calc(var(--nav-h) + 24px);
 }
 
 .cap__frame {
@@ -2515,24 +2531,98 @@ html.theme-anim *::after {
   transition: opacity var(--t);
 }
 
+/* ── the note over the screen ───────────────────────────────────────────── */
+
+/* Anchored to the shell, not the stage: at 1:1 the stage is a scroll container,
+   and a caption that scrolled away from the screen it captions would be worse
+   than no caption. Glass over the facade, matching the run band's treatment —
+   the overlay's chrome is the site's, and the screen under it is not.
+
+   No coral left rule: that mark belongs to the disclosure, which is the thing
+   that says this is a facade. This is a note about the work. The coral is spent
+   on the index instead, which is where it goes on the page these came from —
+   .cap__view[data-active] .cap__view-n is the same lit numeral. */
+.facade__caption {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 6px 10px;
+  max-width: min(54ch, 46%);
+  padding: 11px 14px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  animation: facadeNote 0.3s ease backwards;
+}
+
+.facade__caption-n {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--label-sm);
+  letter-spacing: var(--track-tight);
+  color: var(--signal);
+}
+
+.facade__caption-title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 500;
+  font-size: var(--label-lg);
+  letter-spacing: var(--track-tight);
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+/* Under the title, clear of the index — the numeral hangs, so a note that ran
+   full width would tuck back under it and lose the alignment. */
+.facade__caption-note {
+  grid-column: 2;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+@keyframes facadeNote {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+}
+
 /* ── narrow ─────────────────────────────────────────────────────────────── */
 
 @media (max-width: 860px) {
   .cap__grid {
     grid-template-columns: 1fr;
-    gap: 26px;
   }
 
   /* The strip lies down and scrolls rather than forcing the page sideways —
      same move the structured-light sequence makes. And it follows the claim
      rather than leading it: stacked, a scroller you have to work sits between
-     the reader and the heading that says what the page is. */
+     the reader and the heading that says what the page is.
+
+     It stops short of the bottom, though. Ordered between the claim and the
+     screen list, because each note is written about a specific frame and is
+     unreadable with the frames already scrolled past. Its own margin-top holds
+     the 26px the grid used to gap; the list's margin-top holds the space
+     below. */
   .cap__strip {
     order: 1;
+    margin-top: 26px;
     flex-direction: row;
     overflow-x: auto;
     padding-bottom: 4px;
     scroll-snap-type: x mandatory;
+    /* Stacked, a pinned strip would sit on top of the claim it belongs to. */
+    position: static;
+    grid-row: auto;
+  }
+
+  .cap__notes {
+    order: 2;
   }
 
   .cap__frame {
@@ -2571,6 +2661,15 @@ html.theme-anim *::after {
     display: none;
   }
 
+  /* Full width at the foot of the screen. A 46% card on a phone is four words
+     a line, and the space the disclosure gives up above pays for it. */
+  .facade__caption {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    max-width: none;
+  }
+
   /* Finger-sized. 26px is a comfortable mouse target and a poor thumb one, and
      close is the only way out of the overlay at this width — there is no
      keyboard for Escape and the shell covers the scrim edge to edge. */
@@ -2592,6 +2691,10 @@ html.theme-anim *::after {
 
 @media (prefers-reduced-motion: reduce) {
   .cap__frame {
+    animation: none;
+  }
+
+  .facade__caption {
     animation: none;
   }
 }

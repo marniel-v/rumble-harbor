@@ -390,6 +390,7 @@ const shell = [
   [/font: 400 12px\/1\.42 "Helvetica Neue"/, "type scale"],
   [/\.wm \{ font-size: 15px; font-weight: 300; letter-spacing: \.215em/, "wordmark"],
   [/width: 292px; height: 30px/, "scan pill"],
+  [/\.av__b \{\s*\n\s*position: absolute; right: -5px; bottom: -5px;/, "avatar notification badge"],
   [/\.sec__h \{ flex: 0 0 32px/, "accordion section header"],
   [/\.idn \{ flex: 0 0 auto; padding: 9px 16px 8px/, "accordion identity block"],
 ];
@@ -398,6 +399,8 @@ for (const [re, name] of shell) {
   ok(22, `${name} — view 2`, re.test(html2), true);
 }
 ok(22, "neither view has a left rail", /class="rail|\.rail\b/.test(html1 + html2), false);
+ok(22, "the avatar badge shows the same count on both", checked(html1, "notif"), checked(html2, "notif"));
+ok(22, "…and it is a plausible unread count", num(checked(html1, "notif")) > 0, true);
 ok(22, "both name the same site",
   html1.includes("Vila&nbsp;do&nbsp;Conde"), html2.includes("Vila&nbsp;do&nbsp;Conde"));
 ok(22, "both carry the same build string",
