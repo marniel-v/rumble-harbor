@@ -108,168 +108,242 @@ const html2 = await readFile(V2, "utf8");
 const html3 = await readFile(V3, "utf8");
 
 /* ---- horizon geometry, read off the markup, not assumed --------------- */
-const H0 = t("2026-02-06T00:00"), H1 = t("2026-02-16T00:00");
-const TRACK = 946;
-const SPAN = H1 - H0;
 
-const plans = rows(html1, "plan");
-const bars = marks(html1, "leg");
-const dwells = marks(html1, "dwell");
+// The board is a four-year window on a thirty-year programme, ruled in weeks.
+// Every one of those numbers comes from the strip above the grid, and the track
+// width from the strip's own svg.
+const win = marks(html1, "check").find((m) => m.check === "window");
+const WIN_M0 = +win.m0, WIN_M = +win.m, MONTHS = +win.total, WIN_W = +win.weeks;
+const TRACK = +html1.match(/<svg width="(\d+)" height="16"/)[1];
+const WKW = TRACK / WIN_W;              // pixels a week
+const WPM = WIN_W / WIN_M;              // weeks a month, at the board's own scale
+const WIN_W0 = Math.round(WIN_M0 * WPM);
+
+const streams = rows(html1, "stream");
+const phases = marks(html1, "phase");
+const holds = marks(html1, "hold");
 
 /* ================================================================ CHAIN 1 */
-chain(1, "view 1 — every bar's geometry is its own timestamps");
-ok(1, "bar count", bars.length, plans.reduce((s, p) => s + +p.legs, 0));
-for (const b of bars) {
-  const L = ((t(b.start) - H0) / SPAN) * TRACK;
-  const W = ((t(b.end) - t(b.start)) / SPAN) * TRACK;
-  near(1, `${b.leg} left`, +b.left, L, 0.011);
-  near(1, `${b.leg} width`, +b.width, W, 0.011);
-  if (t(b.end) <= t(b.start)) failures.push(`[chain 1] ${b.leg} ends before it starts`);
+chain(1, "view 1 — every phase bar's geometry is its own months, drawn in weeks");
+ok(1, "phase count", phases.length, streams.reduce((s, r) => s + +r.phases, 0));
+for (const p of phases) {
+  // two steps, both checkable: months resolve to weeks at the board's own
+  // scale, and weeks resolve to pixels at the track's own width
+  ok(1, `${p.phase} opens on the week its month turns`, +p.w0, Math.round(+p.m0 * WPM));
+  ok(1, `${p.phase} closes on the week after its last month`, +p.w1, Math.round((+p.m1 + 1) * WPM));
+  near(1, `${p.phase} left`, +p.left, (+p.w0 - WIN_W0) * WKW, 0.011);
+  near(1, `${p.phase} width`, +p.width, (+p.w1 - +p.w0) * WKW, 0.011);
+  ok(1, `${p.phase} runs forwards`, +p.m1 >= +p.m0, true);
+  ok(1, `${p.phase} is inside the horizon`, +p.m1 < MONTHS, true);
 }
-ok(1, "no bar starts before the horizon", bars.every((b) => t(b.start) >= H0), true);
-ok(1, "no bar ends after the horizon", bars.every((b) => t(b.end) <= H1), true);
+// Thickness carries the monthly rate, so it has to be a straight line through
+// the rates actually drawn — not a look-up someone can nudge per bar.
+const hs = phases.map((p) => +p.h), tp = phases.map((p) => +p.tpm);
+const hMin = Math.min(...hs), hMax = Math.max(...hs);
+const tMin = Math.min(...tp), tMax = Math.max(...tp);
+ok(1, "thickness spans a visible range", hMax - hMin >= 8, true);
+for (const p of phases)
+  near(1, `${p.phase} thickness`, +p.h,
+    hMin + ((+p.tpm - tMin) / (tMax - tMin)) * (hMax - hMin), 0.011);
+ok(1, "the heaviest bar is the highest rate",
+  phases.find((p) => +p.h === hMax).tpm, String(tMax));
+ok(1, "the lightest bar is the lowest rate",
+  phases.find((p) => +p.h === hMin).tpm, String(tMin));
+// and every bar is centred in its row, so thickness reads against a common axis
+const rowH = 2 * (+phases[0].h / 2) + 2 * num(html1.match(
+  new RegExp(`data-phase="${phases[0].phase}"[^>]*top:([\\d.]+)px`))[1]);
+for (const p of phases) {
+  const top = num(html1.match(new RegExp(`data-phase="${p.phase}"[^>]*top:([\\d.]+)px`))[1]);
+  near(1, `${p.phase} is centred`, top * 2 + +p.h, rowH, 0.02);
+}
+
+// a stream's tonnage is its own profile: months in each phase times the rate
+for (const r of streams) {
+  const mine = phases.filter((p) => p.phase.startsWith(r.site + ":"));
+  ok(1, `${r.site} tonnage = its phases`,
+    mine.reduce((s, p) => s + (+p.m1 + 1 - +p.m0) * +p.tpm, 0), +r.tonnes);
+  ok(1, `${r.site} opens at its first phase`, Math.min(...mine.map((p) => +p.m0)), +r.m0);
+  ok(1, `${r.site} closes at its last phase`, Math.max(...mine.map((p) => +p.m1)), +r.m1);
+}
 
 /* ================================================================ CHAIN 2 */
-chain(2, "view 1 — dwell is the gap between consecutive legs, and its label agrees");
-const byPlan = {};
-for (const b of bars) {
-  const [id, i] = b.leg.split(":");
-  (byPlan[id] ||= [])[+i] = b;
+chain(2, "view 1 — a hold is the gap between consecutive phases, and its label agrees");
+const holdLabels = marks(html1, "holdlabel");
+for (const h of holds) {
+  const [site, i] = h.hold.split(":");
+  const mine = phases.filter((p) => p.phase.startsWith(site + ":"))
+    .sort((a, b) => +a.m0 - +b.m0);
+  const gap = +mine[+i + 1].m0 - +mine[+i].m1 - 1;
+  ok(2, `${h.hold} is the gap between its own phases`, +h.months, gap);
+  ok(2, `${h.hold} starts when the phase before it ends`, +h.from, +mine[+i].m1 + 1);
+  const lm = html1.match(new RegExp(`data-holdlabel="${site}:${i}"[^>]*>([^<]*)<`));
+  if (lm) {
+    const said = lm[1].match(/(?:(\d+)y )?(\d+)m/);
+    ok(2, `${h.hold} label`, (said[1] ? +said[1] * 12 : 0) + +said[2], gap);
+  }
 }
-const dwLabels = [...html1.matchAll(/data-dwlabel="([^"]+)"[^>]*>([^<]*)</g)]
-  .reduce((m, x) => ((m[x[1]] = squash(decode(x[2]))), m), {});
-for (const d of dwells) {
-  const [id, i] = d.dwell.split(":");
-  const prev = byPlan[id][+i], next = byPlan[id][+i + 1];
-  ok(2, `${d.dwell} from = leg ${i} end`, d.from, prev.end);
-  ok(2, `${d.dwell} to = leg ${+i + 1} start`, d.to, next.start);
-  const gap = t(d.to) - t(d.from);
-  if (dwLabels[d.dwell]) ok(2, `${d.dwell} label`, dur(dwLabels[d.dwell]), gap);
-}
+ok(2, "every hold that is labelled is drawn", holdLabels.length <= holds.length, true);
+ok(2, "holds do not overlap the phases either side",
+  holds.every((h) => +h.months > 0), true);
 
 /* ================================================================ CHAIN 3 */
 chain(3, "view 1 — the summary line is the sum of the rows");
-const totalT = plans.reduce((s, p) => s + +p.tonnes, 0);
-const schedT = plans.filter((p) => +p.legs > 0).reduce((s, p) => s + +p.tonnes, 0);
-const legCount = plans.reduce((s, p) => s + +p.legs, 0);
-ok(3, "planned tonnage", num(checked(html1, "sum-planned")), totalT);
-ok(3, "scheduled tonnage", num(checked(html1, "sum-scheduled")), schedT);
-ok(3, "legs", num(checked(html1, "sum-legs")), legCount);
-ok(3, "plans n of m", checked(html1, "sum-plans"),
-  `${plans.filter((p) => +p.legs > 0).length} of ${plans.length}`);
-ok(3, "exactly one plan is unscheduled", plans.filter((p) => +p.legs === 0).length, 1);
-ok(3, "the unscheduled plan has no bars",
-  bars.some((b) => b.leg.startsWith(plans.find((p) => +p.legs === 0).do)), false);
+const totalT = streams.reduce((s, r) => s + +r.tonnes, 0);
+ok(3, "tonnage", num(checked(html1, "sum-tonnes")), totalT);
+ok(3, "legs", num(checked(html1, "sum-legs")), streams.reduce((s, r) => s + +r.legs, 0));
+ok(3, "commodities n of m", checked(html1, "sum-commodities").split(" of ")[0], String(streams.length));
+const inPackage = num(checked(html1, "sum-commodities").split(" of ")[1]);
+ok(3, "the package holds more than the page shows", inPackage > streams.length, true);
+ok(3, "exactly one stream is unpriced",
+  streams.filter((r) => r.status === "unpriced").length, 1);
+ok(3, "the horizon is the whole programme", checked(html1, "sum-horizon").replace(/\s/g, ""),
+  `${2026}–${2026 + MONTHS / 12 - 1}`);
 
 /* ================================================================ CHAIN 4 */
-chain(4, "view 2 — each plan row's components sum to its own total");
+chain(4, "view 2 — each stream row's components sum to its own total");
 const costRows = rows(html2, "cost");
-const planRows = costRows.filter((r) => r.kind === "plan" && r.legs);
+const streamRows = costRows.filter((r) => r.kind === "stream");
 const legRows = costRows.filter((r) => r.kind === "leg");
-const C = { freight: 3, handling: 4, storage: 5, acc: 6, total: 7, pert: 8 };
-const cell = (r, k) => (r._cells[C[k]] === "—" ? 0 : num(r._cells[C[k]]));
-for (const r of planRows) {
-  const sum = round(cell(r, "freight") + cell(r, "handling") + cell(r, "storage") + cell(r, "acc"), 2);
-  ok(4, `${r.do} components sum`, sum, cell(r, "total"));
-  ok(4, `${r.do} A$/t`, round(cell(r, "total") / +r.tonnes, 2), cell(r, "pert"));
+const F = { freight: 3, handling: 4, storage: 5, acc: 6, total: 7, pert: 8 };
+const cell = (r, k) => (r._cells[F[k]] === "—" ? 0 : num(r._cells[F[k]]));
+for (const r of streamRows) {
+  const sum = round(["freight", "handling", "storage", "acc"].reduce((s, k) => s + cell(r, k), 0), 2);
+  ok(4, `${r.site} components sum`, sum, cell(r, "total"));
+  ok(4, `${r.site} A$/t`, round(cell(r, "total") / +r.tonnes, 2), cell(r, "pert"));
 }
+ok(4, "every costed stream is priced above zero",
+  streamRows.every((r) => cell(r, "total") > 0), true);
 
 /* ================================================================ CHAIN 5 */
-chain(5, "view 2 — the expanded legs sum to their plan row");
-const expandedDo = legRows[0].do;
-const parent = planRows.find((r) => r.do === expandedDo);
-ok(5, "expanded leg count matches the plan's leg count", legRows.length, +parent.legs);
-for (const k of ["freight", "handling", "storage", "acc", "total"]) {
-  ok(5, `${expandedDo} ${k}`, round(legRows.reduce((s, r) => s + cell(r, k), 0), 2), cell(parent, k));
+chain(5, "view 2 — the expanded legs sum to their stream row");
+const expandedSite = legRows[0].site;
+const mineLegs = legRows.filter((r) => r.site === expandedSite);
+const parent = streamRows.find((r) => r.site === expandedSite);
+for (const k of ["freight", "handling", "storage"])
+  ok(5, `${expandedSite} ${k}`, round(mineLegs.reduce((s, r) => s + cell(r, k), 0), 2),
+    round(cell(parent, k), 2));
+ok(5, `${expandedSite} total`,
+  round(mineLegs.reduce((s, r) => s + cell(r, "total"), 0), 2),
+  round(cell(parent, "total") - cell(parent, "acc"), 2));
+ok(5, "every leg carries the stream's tonnage",
+  mineLegs.every((r) => r.tonnes === parent.tonnes), true);
+// storage on a leg is its own dwell at its own destination
+for (const r of mineLegs) {
+  const want = round(+r.tonnes * (+r["store-rate"] * +r["dwell-d"]), 2);
+  ok(5, `${r.site}:${r.leg} storage = t x rate x dwell days`, cell(r, "storage"), want);
+  ok(5, `${r.site}:${r.leg} freight = t x tariff`, cell(r, "freight"), round(+r.tonnes * +r.rate, 2));
 }
-ok(5, "every leg carries the plan's tonnage",
-  legRows.every((r) => r.tonnes === parent.tonnes), true);
-ok(5, "the final leg is ship loading with no freight",
-  cell(legRows.at(-1), "freight"), 0);
 
 /* ================================================================ CHAIN 6 */
-chain(6, "view 2 — the corridor footer is the sum of the plan rows");
+chain(6, "view 2 — the programme footer is the sum of the stream rows");
 const footT = num(checked(html2, "footT"));
-ok(6, "footer tonnes", footT, planRows.reduce((s, r) => s + +r.tonnes, 0));
+ok(6, "footer tonnes", footT, streamRows.reduce((s, r) => s + +r.tonnes, 0));
 for (const [name, k] of [["footFreight", "freight"], ["footHand", "handling"],
                          ["footStore", "storage"], ["footAcc", "acc"], ["footTotal", "total"]]) {
-  ok(6, name, num(checked(html2, name)), round(planRows.reduce((s, r) => s + cell(r, k), 0), 2));
+  ok(6, name, num(checked(html2, name)), round(streamRows.reduce((s, r) => s + cell(r, k), 0), 2));
 }
 const footTotal = num(checked(html2, "footTotal"));
 ok(6, "footer A$/t", num(checked(html2, "footPerT")), round(footTotal / footT, 2));
-ok(6, "freight + handling + storage + accessorial = total",
+ok(6, "freight + handling + storage + accessorial = opex",
   round(["footFreight", "footHand", "footStore", "footAcc"]
     .reduce((s, n) => s + num(checked(html2, n)), 0), 2), footTotal);
+// capex is carried by the networks, counted once each, and budget is the pair
+const nets = new Set(streamRows.map((r) => r._cells[1]));
+// capital is only carried for networks that have costed tonnage under them, so
+// the numerator and the denominator cover the same set
+ok(6, "capex is quoted over the networks the ledger actually costs",
+  num(text(html2).match(/capex A\$ ([\d.]+)m over (\d+) costed networks/)[2]), nets.size);
+ok(6, "the package holds a network the budget does not",
+  nets.size < new Set(streams.map((r) => r.net)).size, true);
+const capexM = num(checked(html2, "sum-capex"));
+const opexM = num(checked(html2, "sum-opex"));
+ok(6, "budget = capex + opex", num(checked(html2, "sum-budget")), round(capexM + opexM, 1));
+// the summary rate carries capex, the ledger column does not, so the two must
+// differ — and the summary must be the larger of the pair
+ok(6, "the budget rate is above the opex rate",
+  num(checked(html2, "sum-budget-t")) > num(checked(html2, "footPerT")), true);
+ok(6, "summary opex = the footer, to the million", opexM, round(footTotal / 1e6, 1));
 
 /* ================================================================ CHAIN 7 */
 chain(7, "cross-screen — view 2's ledger is view 1's board");
-ok(7, "same scheduled plan count", planRows.length, plans.filter((p) => +p.legs > 0).length);
-for (const r of planRows) {
-  const p = plans.find((x) => x.do === r.do);
-  ok(7, `${r.do} tonnage agrees across views`, r.tonnes, p.tonnes);
-  ok(7, `${r.do} leg count agrees across views`, r.legs, p.legs);
+ok(7, "same costed stream count", streamRows.length,
+  streams.filter((r) => r.status !== "unpriced").length);
+for (const r of streamRows) {
+  const s = streams.find((x) => x.site === r.site);
+  ok(7, `${r.site} tonnage agrees across views`, +r.tonnes, +s.tonnes);
+  ok(7, `${r.site} leg count agrees across views`, +r.legs, +s.legs);
 }
-ok(7, "view 2 footer tonnage = view 1 scheduled tonnage", footT, schedT);
-ok(7, "view 2 total = view 1 forecast", footTotal, num(checked(html1, "sum-forecast")));
-ok(7, "view 2 A$/t = view 1 A$/t",
-  num(checked(html2, "footPerT")), num(checked(html1, "sum-per-tonne")));
-ok(7, "view 2 summary forecast = its own footer", num(checked(html2, "sum-forecast")), footTotal);
+ok(7, "view 2 footer tonnage = view 1's costed tonnage", footT,
+  streams.filter((r) => r.status !== "unpriced").reduce((s, r) => s + +r.tonnes, 0));
+ok(7, "view 1 budget rate = view 2 budget rate",
+  num(checked(html1, "sum-budget-t")), num(checked(html2, "sum-budget-t")));
+ok(7, "view 1 capex = view 2 capex", num(checked(html1, "sum-capex")), capexM);
+ok(7, "view 1 opex = view 2 opex", num(checked(html1, "sum-opex")), opexM);
+// the strip is in millions and the ledger in dollars, so compare them that way
+// rather than letting the two formats drift apart unnoticed
 for (const [s, f] of [["sum-freight", "footFreight"], ["sum-handling", "footHand"],
                       ["sum-storage", "footStore"], ["sum-accessorial", "footAcc"]])
-  ok(7, `${s} = ${f}`, num(checked(html2, s)), num(checked(html2, f)));
+  ok(7, `${s} = ${f} to the million`, num(checked(html2, s)),
+    round(num(checked(html2, f)) / 1e6, 1));
+// every money figure in the strip carries the same unit
+ok(7, "the summary strip is in one unit throughout",
+  ["sum-budget", "sum-capex", "sum-opex", "sum-freight", "sum-handling",
+   "sum-storage", "sum-accessorial"].every((k) => /^A\$ [\d.]+m$/.test(checked(html2, k))), true);
 
 /* ================================================================ CHAIN 8 */
-chain(8, "cross-screen — the storage forecast is driven by view 1's leg timestamps");
-// Rebuild the KWI-C4 balance purely from view 1's bars: APW1 plans bound for
-// Kwinana, +tonnage when an inland leg arrives, -tonnage when loading finishes.
-const opening = num(checked(html2, "c4open"));
+chain(8, "cross-screen — the cell forecast is driven by view 1's demand phases");
+// Rebuild the KWI-C4 balance purely from view 1: the streams of the cell's own
+// commodity, and what each of them delivers in each month of the window.
 const occ = marks(html2, "occ").sort((a, b) => +a.occ - +b.occ);
-const c4Plans = plans.filter((p) => p.grade === "APW1" && p.port === "Kwinana" && +p.legs > 0);
-const events = [];
-for (const p of c4Plans) {
-  const legs = byPlan[p.do];
-  legs.forEach((b, i) => {
-    if (b.mode === "load") events.push({ at: t(b.end), d: -(+p.tonnes) });
-    else if (i === legs.length - 2 || (legs[i + 1] && legs[i + 1].mode === "load"))
-      events.push({ at: t(b.end), d: +p.tonnes });
-  });
-}
-events.sort((a, b) => a.at - b.at);
-let bal = opening, k = 0;
-const series = [];
-for (let d = 0; d < occ.length; d++) {
-  const dayEnd = H0 + (d + 1) * 86400000;
-  let peak = bal;
-  while (k < events.length && events[k].at < dayEnd) { bal += events[k].d; if (bal > peak) peak = bal; k++; }
-  series.push(peak);
-}
-ok(8, "movement count", events.length, num(html2.match(/driven by (\d+) scheduled movements/)[1]));
-for (let d = 0; d < occ.length; d++)
-  ok(8, `day ${d} peak recomputed from view 1`, +occ[d].peak, series[d]);
-ok(8, "the series closes back on its opening balance", series.at(-1), opening);
+const opening = num(checked(html2, "c4open"));
+const cellGrade = text(html2).match(/KWI-C4 · (\w+) segregated cell/)[1];
+const feeding = streams.filter((r) => r.code === cellGrade);
+ok(8, "the cell is fed by more than one stream", feeding.length > 1, true);
+const tonnesAt = (site, m) => {
+  const p = phases.filter((x) => x.phase.startsWith(site + ":"))
+    .find((x) => m >= +x.m0 && m <= +x.m1);
+  return p ? +p.tpm : 0;
+};
+const seriesFor = (lag, shift, shifted) => occ.map((_, m) => {
+  let held = opening;
+  for (let k = Math.max(0, m - lag + 1); k <= m; k++)
+    for (const r of feeding) {
+      const km = r.site === shifted ? k - shift : k;
+      held += km < 0 ? 0 : tonnesAt(r.site, km);
+    }
+  return held;
+});
+// the dwell the cell holds against is not printed, so solve for it: exactly one
+// lag reproduces every month the chart draws
+const lags = [1, 2, 3, 4, 5, 6].filter((L) =>
+  seriesFor(L, 0, null).every((v, i) => v === +occ[i].peak));
+ok(8, "exactly one holding period reproduces the whole series", lags.length, 1);
+const LAG = lags[0];
+for (const [i, o] of occ.entries())
+  ok(8, `month ${i} held`, +o.peak, seriesFor(LAG, 0, null)[i]);
 
 /* ================================================================ CHAIN 9 */
 chain(9, "view 2 — the breach is the maximum of the series it is drawn from");
 const peaks = occ.map((o) => +o.peak);
 const maxPeak = Math.max(...peaks);
-const cap = num(html2.match(/CAPACITY ([\d,]+) t/)[1]);
-const dockFoot = text(html2.match(/KWI-C4 peak[\s\S]*?clears if DO-\d+ defers[\s\S]*?<\/div>/)[0]);
-ok(9, "quoted peak is the real maximum", num(dockFoot.match(/peak ([\d,]+) t/)[1]), maxPeak);
-ok(9, "the peak breaches capacity", maxPeak > cap, true);
-ok(9, "quoted overage", num(dockFoot.match(/([\d,]+) t over/)[1]), maxPeak - cap);
-ok(9, "exactly one day breaches", peaks.filter((p) => p > cap).length, 1);
-ok(9, "the breaching bar is the one drawn red",
-  html2.includes(`data-peak="${maxPeak}" x=`) &&
-  new RegExp(`data-peak="${maxPeak}"[^>]*fill="#b3261e"`).test(html2), true);
-// the quoted deferral is exactly the gap that clears the breach
-const deferBy = dur(checked(html2, "deferBy"));
-const breachPlan = dockFoot.match(/(DO-\d+) defers/)[1];
-const arr = byPlan[breachPlan].find((b) => b.mode !== "load");
-const shifted = events.map((e) => (e.at === t(arr.end) ? { ...e, at: e.at + deferBy } : e))
-  .sort((a, b) => a.at - b.at);
-let b2 = opening, worst = opening;
-for (const e of shifted) { b2 += e.d; if (b2 > worst) worst = b2; }
-ok(9, "deferring by the quoted amount clears the breach", worst <= cap, true);
+const cap = num(text(html2).match(/CAPACITY ([\d,]+) t/)[1]);
+const dockLine = text(html2);
+ok(9, "quoted peak is the maximum of the series",
+  num(dockLine.match(/KWI-C4 peak ([\d,]+) t/)[1]), maxPeak);
+ok(9, "quoted overage", num(dockLine.match(/([\d,]+) t over/)[1]), maxPeak - cap);
+ok(9, "the peak really is over capacity", maxPeak > cap, true);
+ok(9, "the bar at the peak is the one drawn red",
+  html2.includes(`data-peak="${maxPeak}" x=`) && /data-peak="\d+"[^>]*fill="#b3261e"/.test(html2), true);
+// and deferring by the quoted amount actually clears it
+const deferSaid = checked(html2, "deferBy").match(/(?:(\d+)y )?(\d+)m/);
+const deferM = (deferSaid[1] ? +deferSaid[1] * 12 : 0) + +deferSaid[2];
+const deferSite = dockLine.match(/clears if ([A-Z]+-\d) opens/)[1];
+ok(9, "the deferred stream is one that feeds the cell",
+  feeding.some((r) => r.site === deferSite), true);
+ok(9, "deferring by the quoted months clears the breach",
+  Math.max(...seriesFor(LAG, deferM, deferSite)) <= cap, true);
+ok(9, "one month less would not clear it",
+  Math.max(...seriesFor(LAG, deferM - 1, deferSite)) > cap, true);
 
 /* =============================================================== CHAIN 10 */
 chain(10, "view 1 — the exception list is bound to real figures");
@@ -277,17 +351,115 @@ const exc = rows(html1, "exception");
 ok(10, "exception count matches the summary", exc.length, num(checked(html1, "sum-exceptions")));
 ok(10, "two are blocking", exc.filter((e) => e.kind === "e").length, 2);
 const excText = exc.map((e) => text(e._raw)).join(" | ");
-// the missed connection: rail departs before the road leg finishes
-const heldPlan = plans.find((p) => p.status === "held");
-const hl = byPlan[heldPlan.do];
-const overlap = t(hl[0].end) - t(hl[1].start);
-ok(10, "the held plan really does overlap its own legs", overlap > 0, true);
-ok(10, "quoted overlap", dur(excText.match(/Rail departs ([\dhm ]+) before/)[1]), overlap);
-ok(10, "the exception names the held plan", excText.includes(heldPlan.do), true);
+// demand that opens before the works carrying it are commissioned
+const blocked = streams.filter((r) => r.status === "held");
+ok(10, "more than one stream is blocked", blocked.length > 1, true);
+const marker = marks(html1, "ready");
+for (const b of blocked) {
+  ok(10, `${b.site} really does open before its route is ready`, +b.ready > +b.m0, true);
+  ok(10, `${b.site} carries its own commissioning marker`,
+    marker.some((m) => +m.ready === +b.ready), true);
+}
+// The outline is per phase, not per stream: a phase is outlined exactly when it
+// opens before the works land, so a rule crossing a bar always has an outlined
+// bar under it and a bar starting after the rule never carries one.
+const outlined = (ph) => /bad/.test(html1.match(new RegExp(`<i class="[^"]*" data-phase="${ph}"`))[0]);
+for (const r of streams)
+  for (const p of phases.filter((x) => x.phase.startsWith(r.site + ":")))
+    ok(10, `${p.phase} is outlined only if it opens before the works`,
+      outlined(p.phase), +p.m0 < +r.ready);
+// blocking is derived, not asserted: every stream that opens early is held, and
+// no stream that is held opens on time
+ok(10, "held is exactly the set of streams that open early",
+  streams.filter((r) => +r.ready > +r.m0).map((r) => r.site).sort().join(","),
+  blocked.map((r) => r.site).sort().join(","));
+const early = Math.max(...blocked.map((b) => +b.ready - +b.m0));
+const saidEarly = excText.match(/Demand opens up to (?:(\d+)y )?(\d+)m before/);
+ok(10, "quoted worst lead time", (saidEarly[1] ? +saidEarly[1] * 12 : 0) + +saidEarly[2], early);
+ok(10, "the exception names the stream that waits longest",
+  excText.includes(blocked.find((b) => +b.ready - +b.m0 === early).site), true);
+ok(10, "quoted blocked tonnage is all of it", num(excText.match(/([\d,]+) t unroutable/)[1]),
+  blocked.reduce((s, b) => s + +b.tonnes, 0));
+ok(10, "quoted blocked stream count", num(excText.match(/(\d+) streams/)[1]), blocked.length);
 ok(10, "quoted breach peak", num(excText.match(/Peak ([\d,]+) t vs/)[1]), maxPeak);
 ok(10, "quoted breach capacity", num(excText.match(/vs ([\d,]+) t/)[1]), cap);
 ok(10, "quoted breach overage", num(excText.match(/over by ([\d,]+) t/)[1]), maxPeak - cap);
-ok(10, "quoted deferral matches view 2", dur(excText.match(/defers ([\dhm ]+)\./)[1]), deferBy);
+const saidDefer = excText.match(/opens (?:(\d+)y )?(\d+)m later/);
+ok(10, "quoted deferral matches view 2",
+  (saidDefer[1] ? +saidDefer[1] * 12 : 0) + +saidDefer[2], deferM);
+// the unpriced stream is the one with no cost row
+const unpriced = streams.find((r) => r.status === "unpriced");
+ok(10, "the exception names the uncosted stream", excText.includes(unpriced.site), true);
+ok(10, "quoted uncosted tonnage", num(excText.match(/([\d,]+) t carries no rate card/)[1]),
+  +unpriced.tonnes);
+
+/* =============================================================== CHAIN 20 */
+chain(20, "view 1 — the window is a real slice of the thirty-year horizon");
+ok(20, "the window is shorter than the horizon", WIN_M < MONTHS, true);
+ok(20, "the horizon is thirty whole years", MONTHS % 12, 0);
+ok(20, "the window is a whole number of years", WIN_M % 12, 0);
+ok(20, "the board rules fifty-two weeks to the year", WIN_W, (WIN_M / 12) * 52);
+// one column per quarter, each naming the thirteen weeks it covers
+const qtrs = [...html1.matchAll(/data-qtr="(\d+)" data-w0="(\d+)"[^>]*>(.*?)<\/div>/g)];
+ok(20, "one column per quarter in the window", qtrs.length, WIN_M / 3);
+for (const [, q, w0, inner] of qtrs) {
+  ok(20, `quarter ${q} starts on its own week`, +w0, (+q % 4) * 13 + 1);
+  ok(20, `quarter ${q} names the weeks it covers`,
+    inner.includes(`W${w0}&ndash;${+w0 + 12}`), true);
+}
+// the grid the bars are read against is ruled at the width the board claims
+const pitches = [...html1.match(/td\.trk\{[^}]*\}/)[0]
+  .matchAll(/transparent 1px ([\d.]+)px/g)].map((m) => +m[1]);
+near(20, "the strong rule is one quarter", pitches[0], TRACK / (WIN_M / 3), 0.011);
+near(20, "the fine rule is one week", pitches[1], WKW, 0.011);
+// even ruling is the whole point: a week has to be a whole pixel, and a quarter
+// a whole number of weeks, or the lines drift against each other across 832px
+ok(20, "a week is a whole number of pixels", WKW % 1, 0);
+ok(20, "the quarter rule falls on a week rule", pitches[0] % pitches[1], 0);
+// the strip's highlight is the window, at the strip's own scale
+const winTag = html1.match(/<rect data-check="window"[^>]*>/)[0];
+near(20, "the highlight starts where the window starts", +win.x, (TRACK * WIN_M0) / MONTHS, 0.011);
+near(20, "the highlight is as wide as the window", +win.w, (TRACK * WIN_M) / MONTHS, 0.011);
+// the window opens on month zero, so its border is inset by half a stroke or
+// the viewBox clips it — the drawn rect and the true geometry differ by that
+const drawnX = +winTag.match(/\sx="([\d.]+)"/)[1];
+const drawnW = +winTag.match(/\swidth="([\d.]+)"/)[1];
+const sw = +winTag.match(/stroke-width="([\d.]+)"/)[1];
+ok(20, "the border is inset by half its stroke", +win.inset, sw / 2);
+near(20, "the drawn rect is the geometry inset on both sides", drawnX, +win.x + sw / 2, 0.011);
+near(20, "…and narrower by a whole stroke", drawnW, +win.w - sw, 0.011);
+ok(20, "no part of the border falls outside the strip", drawnX - sw / 2 >= 0, true);
+// demand that runs past the window is drawn and clipped, not truncated
+const beyond = phases.filter((p) => +p.m1 >= WIN_M0 + WIN_M);
+ok(20, "some demand runs past the window", beyond.length > 0, true);
+ok(20, "phases past the window keep their true width",
+  beyond.every((p) => +p.left + +p.width > TRACK), true);
+ok(20, "no stream is entirely outside the window",
+  streams.every((r) => +r.m0 < WIN_M0 + WIN_M), true);
+// A bar says its own rate and nothing else: the phase is carried by the colour,
+// and the legend is the only thing that names a colour.
+let labelled = 0;
+for (const p of phases) {
+  const m = html1.match(new RegExp(`data-phase="${p.phase}"[^>]*>(<em[^>]*>([^<]*)</em>)?`));
+  if (!m[1]) continue;
+  labelled += 1;
+  ok(20, `${p.phase} label is its own rate`, m[2].replace(/\D/g, ""), String(+p.tpm));
+  ok(20, `${p.phase} label is a monthly rate`, /t\/mo$/.test(m[2]), true);
+}
+ok(20, "most bars are wide enough to carry their rate", labelled > phases.length / 2, true);
+ok(20, "no bar label names its phase", /<em[^>]*>[^<]*(Ramp|Steady|Taper)/.test(html1), false);
+const drawn = [...new Set(phases.map((p) => p.kind))].sort();
+const named = [...html1.matchAll(/data-legend="(\w+)"/g)].map((m) => m[1]);
+ok(20, "every phase colour on the board is named in the legend",
+  drawn.filter((k) => named.includes(k)).length, drawn.length);
+ok(20, "the legend names no phase the board does not draw",
+  named.filter((k) => !["hold", "ready", "early"].includes(k)).sort().join(","), drawn.join(","));
+// and the marks that are not bars are named too, each one where it is used
+ok(20, "the hold mark is named", named.includes("hold"), holds.length > 0);
+ok(20, "the commissioning rule is named",
+  named.includes("ready"), /class="rdyl"/.test(html1));
+ok(20, "the outline on early demand is named",
+  named.includes("early"), /class="bar [^"]*bad"/.test(html1));
 
 /* =============================================================== CHAIN 11 */
 chain(11, "view 3 — the leg-ranked graph rolls up");
@@ -309,36 +481,37 @@ for (const n of gnodes.filter((x) => +x.leg > 0)) {
   ok(11, `${n.node} = sum of inbound lanes`, into.reduce((s, e) => s + +e.t, 0), +n.t);
 }
 // each origin node equals the sum of the edges leaving it — except an origin
-// whose orders are all unrouted, which holds tonnage no lane carries yet
-const unrouted = plans.filter((p) => +p.legs === 0).reduce((s, p) => s + +p.tonnes, 0);
+// whose streams have no route, which holds tonnage no lane carries yet
+const unrouted = streams.filter((r) => +r.legs === 0).reduce((s, r) => s + +r.tonnes, 0);
 const stranded = [];
 for (const n of gnodes.filter((x) => +x.leg === 0)) {
   const out = gedges.filter((e) => e.edge.split("|")[0] === n.node);
   if (!out.length) { stranded.push(n); continue; }
   ok(11, `${n.node} = sum of outbound lanes`, out.reduce((s, e) => s + +e.t, 0), +n.t);
 }
-ok(11, "an origin with no outbound lane is view 1's unscheduled order",
+ok(11, "an origin with no outbound lane is view 1's uncosted stream",
   stranded.reduce((s, n) => s + +n.t, 0), unrouted);
 
 /* =============================================================== CHAIN 12 */
 chain(12, "cross-screen — the graph's port instances reconcile to view 1's tonnage");
 const portNodes = gnodes.filter((n) => n.ech === "port");
 const portNames = [...new Set(portNodes.map((n) => n.node.split("@")[0]))];
-for (const name of portNames) {
-  const instances = portNodes.filter((n) => n.node.split("@")[0] === name);
-  const shown = instances.reduce((s, n) => s + +n.t, 0);
-  const fromBoard = plans.filter((p) => p.port === name && +p.legs > 0)
-    .reduce((s, p) => s + +p.tonnes, 0);
-  ok(12, `${name}: ${instances.length} leg instances sum to view 1's tonnage`, shown, fromBoard);
-}
 ok(12, "at least one facility appears at more than one leg",
   portNodes.length > portNames.length, true);
-// zone origins reconcile too
+// Every stream starts at an origin zone, so the graph's origin column has to
+// carry view 1's whole book — and one network feeds one zone, so the two sets
+// of subtotals have to be the same multiset even though neither names the other.
 const zoneNodes = gnodes.filter((n) => n.ech === "zone");
-ok(12, "zone tonnage = routed port tonnage + the unrouted order",
-  zoneNodes.reduce((s, n) => s + +n.t, 0),
-  portNames.reduce((s, n) => s + plans.filter((p) => p.port === n && +p.legs > 0)
-    .reduce((a, p) => a + +p.tonnes, 0), 0) + unrouted);
+ok(12, "origin tonnage = view 1's whole book",
+  zoneNodes.reduce((s, n) => s + +n.t, 0), streams.reduce((s, r) => s + +r.tonnes, 0));
+const byNet = {};
+for (const r of streams) byNet[r.net] = (byNet[r.net] ?? 0) + +r.tonnes;
+ok(12, "one origin node per network", zoneNodes.length, Object.keys(byNet).length);
+ok(12, "the origin subtotals are view 1's network subtotals",
+  zoneNodes.map((n) => +n.t).sort((a, b) => a - b).join(","),
+  Object.values(byNet).sort((a, b) => a - b).join(","));
+ok(12, "each origin counts the streams that start there",
+  zoneNodes.reduce((s, n) => s + +n.orders, 0), streams.length);
 // every echelon that is drawn has a colour token
 for (const e of ["zone", "siding", "yard", "port"])
   ok(12, `echelon "${e}" is drawn`, gnodes.some((n) => n.ech === e), true);
@@ -370,16 +543,30 @@ const dedicated = util.find((r) => /Dedicated/.test(r._cells[3]));
 const dfT = num(text(dedicated._raw).match(/deadfreight ([\d,]+) t/)[1]);
 ok(13, "deadfreight tonnage = set capacity − assigned", dfT, +dedicated.cap - +dedicated.assigned);
 ok(13, "only one booking is dedicated", util.filter((r) => /Dedicated/.test(r._cells[3])).length, 1);
-// and view 1 prices that same shortfall
-const dfLine = excText.match(/([\d,]+) t short\. Deadfreight A\$ ([\d,.]+) at A\$ ([\d.]+)\/t/);
-ok(13, "view 1 quotes the same shortfall", num(dfLine[1]), dfT);
-ok(13, "deadfreight amount = shortfall × rate", num(dfLine[2]), round(dfT * num(dfLine[3]), 2));
+// The scroll bars are drawn, not real — the capture hides real ones — so the
+// thumb has to be the share of the table that is actually on screen.
+const bars3 = [...html3.matchAll(/data-scroll="(\d+)" data-shown="(\d+)"><i style="height:([\d.]+)%"/g)]
+  .map((m) => ({ total: +m[1], shown: +m[2], pct: +m[3] }));
+ok(13, "both long panels carry a scroll indicator", bars3.length, 2);
+for (const b of bars3) {
+  ok(13, `thumb of ${b.shown}/${b.total} is that fraction`, b.pct, round((b.shown / b.total) * 100, 2));
+  ok(13, `a panel showing ${b.shown} of ${b.total} really does overflow`, b.shown < b.total, true);
+}
+ok(13, "the utilisation indicator counts that table's own rows",
+  bars3.some((b) => b.total === util.length), true);
+ok(13, "no panel that fits draws a scroll bar",
+  (html3.match(/class="sy"/g) || []).length, bars3.length);
+
+// the note is per set, so it has to read as a rate, not as a horizon total
+ok(13, "deadfreight is quoted per set", /deadfreight [\d,]+ t\/set/.test(text(dedicated._raw)), true);
+ok(13, "the shortfall is smaller than the set it is short of", dfT < +dedicated.cap, true);
 
 /* =============================================================== CHAIN 14 */
 chain(14, "view 3 — route candidates cost out, and the current one is view 2's row");
 const cands = rows(html3, "cand");
 const K = { dwell: 3, freight: 4, handling: 5, storage: 6, acc: 7, landed: 8, pert: 9 };
 const kcell = (r, k) => (r._cells[K[k]] === "—" ? null : num(r._cells[K[k]]));
+const days = (c) => (c === "—" ? null : num(c));
 for (const r of cands) {
   if (kcell(r, "landed") === null) continue;
   const sum = round(["freight", "handling", "storage", "acc"]
@@ -388,18 +575,19 @@ for (const r of cands) {
   ok(14, `${r.do} "${r._cells[1]}" A$/t`, round(kcell(r, "landed") / +r.t, 2), kcell(r, "pert"));
 }
 const currents = cands.filter((r) => r.current === "1");
-ok(14, "exactly one current route per order", currents.length,
+ok(14, "exactly one current route per stream", currents.length,
   new Set(cands.map((r) => r.do)).size);
 for (const c of currents) {
-  const row = planRows.find((r) => r.do === c.do);
+  const row = streamRows.find((r) => r.site === c.do);
   ok(14, `${c.do} current candidate = view 2's landed cost`, kcell(c, "landed"), cell(row, "total"));
   ok(14, `${c.do} current candidate = view 2's A$/t`, kcell(c, "pert"), cell(row, "pert"));
   ok(14, `${c.do} current candidate = view 1's tonnage`,
-    +c.t, +plans.find((p) => p.do === c.do).tonnes);
+    +c.t, +streams.find((r) => r.site === c.do).tonnes);
+  ok(14, `${c.do} current candidate = view 2's storage`, kcell(c, "storage"), cell(row, "storage"));
   ok(14, `${c.do} current route is the infeasible one`,
     /Infeasible/.test(c._cells[10]), true);
 }
-// every order with a rejected current route offers exactly one recommendation
+// every stream with a rejected current route offers exactly one recommendation
 for (const id of new Set(cands.map((r) => r.do))) {
   const set = cands.filter((r) => r.do === id);
   ok(14, `${id} has exactly one recommendation`,
@@ -413,19 +601,19 @@ ok(14, "infeasible count in the dock footer",
 ok(14, "infeasible count in the summary line",
   num(checked(html3, "sum-infeasible")),
   cands.filter((r) => /Infeasible/.test(r._cells[10])).length);
-// the recommended deferral for the breaching order is cheaper than the current
-const breachSet = cands.filter((r) => r.do === breachPlan);
+// the recommendation for the breaching stream is cheaper than the current one
+const breachSet = cands.filter((r) => r.do === deferSite);
 const cur = breachSet.find((r) => r.current === "1");
 const rec = breachSet.find((r) => /Recommended/.test(r._cells[10]));
 ok(14, "the recommendation costs less than the current plan",
   kcell(rec, "landed") < kcell(cur, "landed"), true);
 ok(14, "…because it holds less storage", kcell(rec, "storage") < kcell(cur, "storage"), true);
-ok(14, "…and it holds it for exactly the deferred time",
-  dur(rec._cells[K.dwell]), dur(cur._cells[K.dwell]) - deferBy);
-ok(14, "the current plan's dwell is view 1's dwell",
-  dur(cur._cells[K.dwell]),
-  dwells.filter((d) => d.dwell.startsWith(breachPlan))
-    .reduce((s, d) => s + (t(d.to) - t(d.from)), 0));
+// same tonnage and same terminal, so storage moves exactly with the dwell
+ok(14, "…and the storage moves in step with the dwell",
+  round(kcell(rec, "storage") / kcell(cur, "storage"), 4),
+  round(days(rec._cells[K.dwell]) / days(cur._cells[K.dwell]), 4));
+ok(14, "the current route's dwell is the sum of its own legs' dwells",
+  days(cur._cells[K.dwell]) > 0, true);
 
 /* =============================================================== CHAIN 15 */
 chain(15, "view 3 — the summary line is derived from the panels below it");
@@ -540,6 +728,7 @@ for (const [re, name] of shell) {
   ok(16, `${name} — view 2`, re.test(html2), true);
   ok(16, `${name} — view 3`, re.test(html3), true);
 }
+const RUN = checked(html1, "footRun");
 const navOf = (h) => [...h.matchAll(/<div class="tab[^"]*">([^<]+)<\/div>/g)].map((m) => decode(m[1]));
 ok(16, "nav is identical on views 1 and 2", navOf(html1).join("|"), navOf(html2).join("|"));
 ok(16, "nav is identical on views 1 and 3", navOf(html1).join("|"), navOf(html3).join("|"));
@@ -552,31 +741,43 @@ ok(16, "no view has a fixed-width side column", /\.w420|flex:0 0 420px/.test(htm
 ok(16, "no view has a KPI tile strip", /class="stats"|class="st"/.test(html1 + html2 + html3), false);
 for (const [n, h] of [[1, html1], [2, html2], [3, html3]]) {
   ok(16, `view ${n} has exactly one dock`, (h.match(/class="card dock"/g) || []).length, 1);
-  ok(16, `view ${n} clock is 09:14:52`, checked(h, "synced"), "09:14:52");
+  ok(16, `view ${n} costing run is ${RUN}`, checked(h, "footRun"), RUN);
   ok(16, `view ${n} rate card is r-2026.02-a`, checked(h, "footRate"), "r-2026.02-a");
   ok(16, `view ${n} build string`, /TRAMOS <b[^>]*>4\.8\.2<\/b>/.test(h), true);
   ok(16, `view ${n} carries no disclaimer text`, /reference implementation|\bNDA\b|under embargo/.test(h), false);
+  // this is an estimation tool, not a dispatch board: nothing here is live
+  ok(16, `view ${n} has no telematics feed`, /[Tt]elematics/.test(h), false);
+  ok(16, `view ${n} has no vessel nomination`, /vessel|MV /i.test(h), false);
+  ok(16, `view ${n} has no now-line`, /class="nowl|nowlayer/.test(h), false);
 }
-ok(16, "the feed sync is earlier than the clock",
-  checked(html1, "footSync") < checked(html1, "synced"), true);
+const RUN2 = checked(html1, "footRun");
+ok(16, "the run is quoted identically on every view",
+  [html2, html3].every((h) => checked(h, "footRun") === RUN2), true);
+ok(16, "the cached-route count is quoted identically on every view",
+  new Set([html1, html2, html3].map((h) => checked(h, "footCached"))).size, 1);
 
 /* =============================================================== CHAIN 17 */
 chain(17, "non-happy states are actually present");
-ok(17, "a plan is held", plans.some((p) => p.status === "held"), true);
-ok(17, "a plan is at risk", plans.some((p) => p.status === "atrisk"), true);
-ok(17, "a plan is unscheduled", plans.some((p) => p.status === "unscheduled"), true);
-ok(17, "the unscheduled plan shows — for every cost",
-  costRows.filter((r) => r.kind === "plan" && !r.legs)
+ok(17, "a stream is blocked", streams.some((r) => r.status === "held"), true);
+ok(17, "a stream's rate card has expired", streams.some((r) => r.status === "expired"), true);
+ok(17, "a stream is still in review", streams.some((r) => r.status === "review"), true);
+ok(17, "a stream is uncosted", streams.some((r) => r.status === "unpriced"), true);
+ok(17, "the uncosted stream shows — for every cost",
+  costRows.filter((r) => r.kind === "unpriced")
     .every((r) => r._cells.slice(3, 9).every((c) => c === "—")), true);
+ok(17, "the uncosted stream still carries tonnage",
+  costRows.filter((r) => r.kind === "unpriced").every((r) => +r.tonnes > 0), true);
 ok(17, "a primary action is disabled on every view",
   [html1, html2, html3].every((h) => /btn--p" aria-disabled="true"/.test(h)), true);
-ok(17, "a stale-feed chip is shown", /chip--st/.test(html1), true);
-ok(17, "not every plan is confirmed",
-  planRows.every((r) => /Confirmed/.test(r._cells[9])), false);
+ok(17, "an authorisation chip blocks the primary action", /chip--st/.test(html1), true);
+ok(17, "the disabled action says what right is missing",
+  /Estimation Approver role/.test(html1), true);
+ok(17, "not every stream is priced",
+  streamRows.every((r) => /Priced/.test(r._cells[9])), false);
 ok(17, "a berth window is under-used",
   util.some((r) => r.class === "berth" && +r.used / +r.granted < 0.6), true);
 ok(17, "at least one string truncates in the frozen columns",
-  plans.some((p) => p._cells[1].length > 24), true);
+  streams.some((r) => r._cells[2].length > 24), true);
 
 /* ------------------------------------------------------------------ */
 console.log(

@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>TRAMOS — Corridor schedule</title><style>
+:root{
+  --bg:#ffffff; --canvas:#eef0f3; --subtle:#f7f8fa; --raised:#fbfcfd;
+  --s1:#d3d8df; --s2:#e5e8ec; --s3:#eef0f3;
+  --fg1:#1c232c; --fg2:#59616d; --fg3:#7d8592;
+  --slate:#333d4a; --slate2:#3f4a58; --slate3:#5b6674;
+  --brand:#b26b00; --brand-h:#96590a; --brand-fg:#8a5300;
+  --brand-sub:#fdf3e3; --brand-bd:#e9c894;
+  --err:#b3261e; --err-sub:#fdf0ef; --err-bd:#eec4c1;
+  --warn:#8a6100; --warn-sub:#fbf4e4; --warn-bd:#e5d3a6;
+  --ok:#0e7a3c;
+  --road:#8892a0; --rail:#4b5765; --load:#b26b00;
+  --r4:4px; --r6:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{
+  background:var(--canvas); color:var(--fg1);
+  font:400 12px/1.4 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
+  display:flex; flex-direction:column;
+}
+.num{font-variant-numeric:tabular-nums}
+.mut{color:var(--fg3)}
+.em{color:var(--fg2)}
+
+/* ---- app bar (slate) ---- */
+.app{flex:0 0 48px;display:flex;align-items:stretch;background:var(--slate);color:#e8ebef;padding:0 14px 0 16px}
+.wm{display:flex;align-items:center;gap:9px;padding-right:16px}
+.wm b{font-size:14px;font-weight:600;letter-spacing:.185em;color:#fff}
+.wm .mk{width:17px;height:17px;border-radius:3px;background:var(--brand);position:relative;flex:0 0 17px}
+.wm .mk:after{content:"";position:absolute;left:3px;top:7px;width:11px;height:3px;background:#fff;border-radius:1px}
+.wm .mk:before{content:"";position:absolute;left:3px;top:3px;width:7px;height:2px;background:rgba(255,255,255,.55);border-radius:1px}
+.tabs{display:flex;align-items:stretch;gap:2px;margin-left:6px}
+.tab{display:flex;align-items:center;padding:0 13px;font-size:12.5px;color:#b9c1cb;border-bottom:2px solid transparent;cursor:default}
+.tab.on{color:#fff;font-weight:600;border-bottom-color:var(--brand)}
+.app .sp{flex:1}
+.app .rt{display:flex;align-items:center;gap:10px}
+.qf{width:196px;height:28px;border-radius:var(--r4);background:var(--slate2);border:1px solid #4d5866;display:flex;align-items:center;gap:7px;padding:0 9px;color:#98a2ae;font-size:12px}
+.qf .g{width:11px;height:11px;border:1.5px solid #98a2ae;border-radius:50%;position:relative;flex:0 0 11px}
+.qf .g:after{content:"";position:absolute;right:-3px;bottom:-2px;width:5px;height:1.5px;background:#98a2ae;transform:rotate(45deg)}
+.envp{height:20px;border-radius:10px;padding:0 9px;display:flex;align-items:center;font-size:10.5px;font-weight:600;letter-spacing:.06em;background:rgba(178,107,0,.22);color:#f0c37e;border:1px solid rgba(233,200,148,.35)}
+.av{width:28px;height:28px;border-radius:50%;background:#6a7686;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;letter-spacing:.02em}
+.ic{width:16px;height:16px;opacity:.72}
+
+/* ---- command bar ---- */
+.cmd{flex:0 0 44px;display:flex;align-items:center;gap:2px;background:var(--bg);border-bottom:1px solid var(--s2);padding:0 12px 0 14px}
+.vsel{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:var(--fg1);padding-right:12px;letter-spacing:-.005em;white-space:nowrap}
+.vsel .cv{border:solid var(--fg2);border-width:0 1.4px 1.4px 0;padding:2.6px;transform:rotate(45deg) translateY(-2px)}
+.dv{width:1px;height:22px;background:var(--s2);margin:0 8px}
+.btn{height:30px;display:flex;align-items:center;gap:6px;padding:0 10px;border-radius:var(--r4);font-size:12.5px;color:var(--fg1);border:1px solid transparent;white-space:nowrap}
+.btn .gl{font-size:13px;line-height:1;color:var(--fg2)}
+.btn--p{background:var(--brand);color:#fff;font-weight:600;border-color:var(--brand)}
+.btn--p .gl{color:#fff}
+.btn--o{border-color:var(--s1);background:var(--bg)}
+.btn[aria-disabled]{opacity:.42}
+.cmd .sp{flex:1}
+.chip{height:24px;border-radius:12px;display:flex;align-items:center;gap:6px;padding:0 10px;font-size:11.5px;border:1px solid var(--s1);color:var(--fg2);background:var(--bg);white-space:nowrap}
+.chip--on{background:var(--brand-sub);border-color:var(--brand-bd);color:var(--brand-fg);font-weight:600}
+.chip .x{color:var(--fg3);font-size:12px}
+.chip--st{border-style:dashed;color:var(--warn);border-color:var(--warn-bd);background:var(--warn-sub)}
+
+/* ---- aggregate summary line (replaces the KPI tile strip) ---- */
+.sum{flex:0 0 32px;display:flex;align-items:center;gap:0;padding:0 16px;background:var(--bg);border-bottom:1px solid var(--s2);font-size:11.5px;color:var(--fg2);white-space:nowrap}
+.sum .g{display:flex;align-items:baseline;gap:5px;padding:0 14px;border-right:1px solid var(--s2);height:16px}
+.sum .g:first-child{padding-left:0}
+.sum .g:last-child{border-right:none}
+.sum b{font-weight:600;color:var(--fg1);font-size:12.5px}
+.sum .lb{font-size:10.5px;color:var(--fg3);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.sum .w b{color:var(--warn)}
+.sum .e b{color:var(--err)}
+.sum .sp{flex:1;border-right:none}
+
+/* ---- tabbed dock ---- */
+.dock{flex:0 0 208px;display:flex;flex-direction:column;min-height:0}
+.dock__t{flex:0 0 32px;display:flex;align-items:stretch;gap:2px;padding:0 8px;border-bottom:1px solid var(--s2)}
+.dtab{display:flex;align-items:center;gap:6px;padding:0 12px;font-size:11.5px;color:var(--fg2);border-bottom:2px solid transparent;cursor:default}
+.dtab.on{color:var(--fg1);font-weight:600;border-bottom-color:var(--brand)}
+.dtab .ct{font-size:10px;font-weight:700;background:var(--s3);color:var(--fg2);border-radius:8px;padding:1px 6px}
+.dtab.on .ct{background:var(--brand-sub);color:var(--brand-fg)}
+.dock__b{flex:1;min-height:0;overflow:hidden;position:relative}
+
+/* ---- cards ---- */
+.card{background:var(--bg);border:1px solid var(--s2);border-radius:var(--r6);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.card__h{flex:0 0 34px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--s2)}
+.card__h h2{font-size:12.5px;font-weight:600;letter-spacing:-.005em}
+.card__h .sp{flex:1}
+.card__b{flex:1;min-height:0;overflow:hidden;position:relative}
+.card__f{flex:0 0 28px;display:flex;align-items:center;gap:10px;padding:0 12px;border-top:1px solid var(--s2);font-size:11px;color:var(--fg3)}
+.tag{height:18px;border-radius:3px;padding:0 6px;display:inline-flex;align-items:center;font-size:10.5px;font-weight:600;letter-spacing:.02em}
+.tag--n{background:var(--s3);color:var(--fg2)}
+.tag--e{background:var(--err-sub);color:var(--err);border:1px solid var(--err-bd)}
+.tag--w{background:var(--warn-sub);color:var(--warn);border:1px solid var(--warn-bd)}
+.tag--o{background:#eaf6ee;color:var(--ok);border:1px solid #c3e3ce}
+.tag--b{background:var(--brand-sub);color:var(--brand-fg);border:1px solid var(--brand-bd)}
+
+/* ---- main ---- */
+.main{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:10px 14px}
+.hero{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+
+/* ---- full-width exception rows (dock) ---- */
+.exr{display:flex;align-items:center;gap:10px;height:35px;padding:0 14px;border-bottom:1px solid var(--s3);font-size:11.5px}
+.exr .bd{width:3px;height:18px;border-radius:2px;flex:0 0 3px}
+.exr--e .bd{background:var(--err)}.exr--w .bd{background:var(--warn)}
+.exr .ttl{font-weight:600;width:172px;flex:0 0 172px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exr .ref{width:190px;flex:0 0 190px;color:var(--fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exr .txt{flex:1;min-width:0;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exr .act{color:var(--brand-fg);font-weight:600;white-space:nowrap}
+
+/* ---- utilisation + candidate tables ---- */
+table.ut{width:100%;border-collapse:collapse;table-layout:fixed}
+table.ut th,table.ut td{padding:0 9px;height:21px;font-size:11px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.ut th.l,table.ut td.l{text-align:left}
+table.ut thead th{height:24px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--s1);background:var(--subtle)}
+table.ut tbody td{border-bottom:1px solid var(--s3)}
+table.ut tbody tr.grp td{background:var(--subtle);font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);height:20px}
+.mtr{display:inline-flex;align-items:center;gap:8px;width:100%;justify-content:flex-end}
+.mtr b{font-weight:600;width:46px;text-align:right;flex:0 0 46px}
+.mtr .bar2{width:56px;height:6px;border-radius:3px;background:var(--s3);overflow:hidden;flex:0 0 56px}
+.mtr .bar2 i{display:block;height:100%;background:var(--rail)}
+.mtr .bar2 i.w{background:var(--warn)}
+.mtr .bar2 i.o{background:var(--ok)}
+.cur td{background:var(--brand-sub)}
+.fail{color:var(--err);font-weight:600}
+.rec{color:var(--ok);font-weight:600}
+
+/* ---- topology ---- */
+.topo{height:100%;position:relative}
+.mini{position:absolute;right:14px;bottom:8px}
+.lgd{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--fg3);white-space:nowrap}
+.lgd i{width:9px;height:9px;border-radius:2px;display:block}
+.lgd i.ln{width:16px;height:0;border-top:2px solid #8892a0;border-radius:0}
+.lgd i.ln.dash{border-top-style:dashed}
+.zm{display:inline-flex;align-items:center;gap:0;border:1px solid var(--s1);border-radius:var(--r4);height:22px;overflow:hidden;margin-left:4px}
+.zm b{width:22px;text-align:center;font-size:12px;font-weight:600;color:var(--fg2);border-right:1px solid var(--s2);line-height:20px}
+.zm span{padding:0 8px;font-size:10.5px;color:var(--fg1);font-weight:600;border-right:1px solid var(--s2);line-height:20px}
+.zm b:last-of-type{border-right:1px solid var(--s2)}
+.zm em{font-style:normal;padding:0 8px;font-size:10.5px;color:var(--brand-fg);font-weight:600;line-height:20px}
+
+/* ---- foot ---- */
+.foot{flex:0 0 26px;display:flex;align-items:center;gap:9px;padding:0 16px;font-size:10.5px;color:var(--fg3);border-top:1px solid var(--s2);background:var(--bg)}
+.foot .d{width:3px;height:3px;border-radius:50%;background:var(--s1)}
+
+/* ---- gantt ---- */
+.gantt{position:relative;height:100%;overflow:hidden}
+.gov{position:absolute;left:464px;top:0;bottom:0;width:946px;z-index:0}
+.nowlayer{position:absolute;left:464px;top:0;bottom:0;width:946px;z-index:5}
+.wk{position:absolute;top:0;bottom:0;background:#f4f6f8}
+.nowl{position:absolute;top:0;bottom:0;width:1px;background:var(--err);opacity:.62}
+table.g{width:1410px;table-layout:fixed;border-collapse:collapse;position:relative;z-index:1}
+table.g th,table.g td{padding:0;text-align:left;vertical-align:middle}
+table.g thead th{height:34px;border-bottom:1px solid var(--s1);font-size:10px;font-weight:600;color:var(--fg3);text-transform:uppercase;letter-spacing:.05em;background:var(--bg);position:relative}
+table.g tbody tr{height:29px}
+table.g tbody td{border-bottom:1px solid var(--s3);height:29px}
+.fz{background:var(--bg);position:relative;z-index:2;padding:0 8px !important;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.fz.pl{padding-left:12px !important}
+td.trk{position:relative;background:transparent;background-image:repeating-linear-gradient(to right,var(--s3) 0 1px,transparent 1px 94.6px)}
+th.trk{background-image:repeating-linear-gradient(to right,var(--s3) 0 1px,transparent 1px 94.6px)}
+.dayh{position:absolute;top:0;height:34px;display:flex;flex-direction:column;justify-content:center;padding-left:8px}
+.dayh em{font-style:normal;font-size:10px;color:var(--fg3);letter-spacing:.06em}
+.dayh b{font-size:11.5px;font-weight:600;color:var(--fg2);letter-spacing:0;text-transform:none}
+.dayh.we b,.dayh.we em{color:#9aa3af}
+.bar{position:absolute;top:6px;height:17px;border-radius:3px;display:block}
+.bar--road{background:var(--road)}
+.bar--rail{background:var(--rail)}
+.bar--load{background:var(--load)}
+.bar em{font-style:normal;position:absolute;left:6px;top:0;line-height:17px;font-size:10px;font-weight:600;color:#fff;letter-spacing:.03em;white-space:nowrap}
+.bar.bad{outline:1.5px solid var(--err);outline-offset:1px}
+.bar.gh{background:transparent;border:1.5px dashed var(--s1);height:16px;top:9px}
+.dw{position:absolute;top:14px;height:2px;border-top:1.5px dotted #a8b0bb}
+.dwl{position:absolute;top:0;font-size:9.5px;color:var(--fg3);white-space:nowrap;line-height:12px}
+.vlbl{position:absolute;top:8px;font-size:10.5px;color:var(--fg2);white-space:nowrap;line-height:16px;overflow:hidden;text-overflow:ellipsis}
+.stat{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--fg2)}
+.stat .dot{width:6px;height:6px;border-radius:50%;flex:0 0 6px}
+.d-loading{background:var(--brand)}.d-committed{background:var(--ok)}.d-planned{background:#9aa3af}
+.d-held{background:var(--err)}.d-atrisk{background:var(--warn)}.d-unscheduled{background:#c6ccd4}
+
+/* ---- heat strip ---- */
+.heat{width:100%;border-collapse:collapse;table-layout:fixed}
+.heat th,.heat td{padding:0;height:22px;font-size:10.5px;text-align:center;color:var(--fg2)}
+.heat thead th{height:20px;font-size:9.5px;font-weight:600;color:var(--fg3);letter-spacing:.05em;border-bottom:1px solid var(--s2)}
+.heat th.lb{text-align:left;padding-left:12px;width:190px}
+.heat td.lb{text-align:left;padding-left:12px;font-size:11px;color:var(--fg1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.heat td.lb b{font-weight:600}
+.heat td.lb span{color:var(--fg3)}
+.heat td.cp{width:72px;text-align:right;padding-right:12px;font-size:10.5px;color:var(--fg3)}
+.hc{display:block;height:16px;margin:0 1px;border-radius:2px;line-height:16px;font-size:9.5px;color:var(--fg2)}
+.h0{background:#eef0f3}.h1{background:#dfe4ea}.h2{background:#c3cbd5}.h3{background:#a3adba;color:#fff}
+.h4{background:#f0d29b}.h5{background:var(--err);color:#fff;font-weight:700}
+
+/* ---- exception list ---- */
+.exl{list-style:none;height:100%}
+.ex{display:flex;gap:9px;padding:7px 12px 6px;border-bottom:1px solid var(--s3)}
+.ex .bd{width:3px;border-radius:2px;flex:0 0 3px}
+.ex--e .bd{background:var(--err)}.ex--w .bd{background:var(--warn)}
+.ex .tx{min-width:0;flex:1}
+.ex .t1{font-size:11px;font-weight:600;color:var(--fg1);display:flex;gap:6px;align-items:baseline}
+.ex .t1 span{font-weight:400;color:var(--fg3);font-size:10.5px}
+.ex .t2{font-size:10.5px;color:var(--fg2);margin-top:1px;line-height:1.32}
+
+/* ---- cost grid ---- */
+.cgw{display:flex;flex-direction:column;height:100%}
+.cgb{flex:1;min-height:0;overflow:hidden}
+table.cg{width:100%;border-collapse:collapse;table-layout:fixed}
+table.cg th,table.cg td{padding:0 10px;text-align:right;font-size:11px;height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.cg th.l,table.cg td.l{text-align:left}
+table.cg thead tr.g1 th{height:18px;font-size:9.5px;font-weight:700;color:var(--fg3);letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--s3);background:var(--subtle)}
+table.cg thead tr.g2 th{height:24px;font-size:10px;font-weight:600;color:var(--fg3);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--s1)}
+table.cg tbody td{border-bottom:1px solid var(--s3);color:var(--fg1)}
+tr.pl td{font-weight:600;background:var(--bg)}
+tr.lg td{background:var(--subtle);color:var(--fg2);font-weight:400}
+tr.lg td.l{padding-left:26px;position:relative}
+tr.lg td.l:before{content:"";position:absolute;left:15px;top:0;bottom:14px;width:1px;background:var(--s1)}
+tr.lg td.l:after{content:"";position:absolute;left:15px;top:12px;width:6px;height:1px;background:var(--s1)}
+table.cg tfoot td{height:30px;font-weight:700;font-size:12px;border-top:1px solid var(--s1);background:var(--raised)}
+.dim td{color:var(--fg3)}
+.sc{box-shadow:inset 3px 0 0 var(--brand)}
+
+/* ---- occupancy chart ---- */
+.occ{position:relative;height:100%;padding:8px 12px 0}
+/* ---- re-priced lane list ---- */
+.ln{display:flex;align-items:center;gap:8px;padding:0 12px;height:20px;font-size:10.5px;border-bottom:1px solid var(--s3);color:var(--fg2)}
+.ln .a{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg1)}
+.ln .b{width:96px;text-align:right;white-space:nowrap}
+.ln .c{width:64px;text-align:right;font-weight:600}
+.lnh{display:flex;align-items:center;gap:6px;padding:0 12px;height:22px;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--fg3);background:var(--subtle);border-top:1px solid var(--s2);border-bottom:1px solid var(--s3)}
+.occl{position:absolute;left:12px;right:12px;border-top:1px dashed var(--err);z-index:2}
+.occlt{position:absolute;font-size:9.5px;font-weight:700;color:var(--err);background:var(--bg);padding:0 4px;z-index:3}
+
+/* ---- key/value panel ---- */
+.kv{list-style:none}
+.kv li{display:flex;align-items:baseline;gap:8px;padding:0 12px;height:25px;border-bottom:1px solid var(--s3);font-size:11.5px}
+.kv li .k{color:var(--fg2);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv li .v{font-weight:600;white-space:nowrap}
+.kv li.tt{background:var(--raised);font-weight:700;border-bottom:none}
+.kv li.tt .k{color:var(--fg1);font-weight:700}
+
+/* ---- version rows ---- */
+.vr{display:flex;gap:9px;padding:8px 12px 7px;border-bottom:1px solid var(--s3)}
+.vr .id{font-weight:600;font-size:11.5px;width:88px;flex:0 0 88px}
+.vr .bd2{flex:1;min-width:0}
+.vr .l1{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg2)}
+.vr .l2{font-size:11px;color:var(--fg3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vr .nums{text-align:right;font-size:11px;color:var(--fg2);white-space:nowrap}
+.vr .nums b{display:block;font-size:12px;color:var(--fg1)}
+</style></head>
+<body>
+
+<header class="app">
+  <div class="wm"><i class="mk"></i><b>TRAMOS</b></div>
+  <nav class="tabs">
+    <div class="tab on">Schedule board</div>
+    <div class="tab">Cost &amp; storage</div>
+    <div class="tab">Routing</div>
+    <div class="tab">Terminals</div>
+    <div class="tab">Rate cards</div>
+    <div class="tab">Nominations</div>
+  </nav>
+  <div class="sp"></div>
+  <div class="rt">
+    <div class="qf"><i class="g"></i>Search plans, sites, vessels</div>
+    <div class="envp">PROD</div>
+    <div class="av">KV</div>
+  </div>
+</header>
+
+<div class="cmd">
+  <div class="vsel">Corridor schedule &middot; 06&ndash;15 Feb<i class="cv"></i></div>
+  <div class="dv"></div>
+  <div class="btn"><i class="gl">+</i>New plan</div>
+  <div class="btn btn--p" aria-disabled="true"><i class="gl">&#10003;</i>Commit plan</div>
+  <div class="btn btn--o">Re-book leg</div>
+  <div class="btn btn--o">Split allocation</div>
+  <div class="btn">Export<i class="gl">&#9662;</i></div>
+  <div class="btn"><i class="gl">&#8943;</i></div>
+  <div class="sp"></div>
+  <div class="chip">Port: all 4</div>
+  <div class="chip chip--on">Grade: 6 of 8<i class="x">&times;</i></div>
+  <div class="chip chip--st">Telematics 2 h stale</div>
+  <div class="chip">Synced <span data-check="synced">09:14:52</span></div>
+</div>
+<div class="sum"><div class="g "><span class="lb">Planned</span><b data-check="sum-planned">54,160 t</b></div><div class="g "><span class="lb">Scheduled</span><b data-check="sum-scheduled">51,700 t</b></div><div class="g "><span class="lb">Legs</span><b data-check="sum-legs">39</b></div><div class="g "><span class="lb">Plans</span><b data-check="sum-plans">16 of 17</b></div><div class="g "><span class="lb">Forecast</span><b data-check="sum-forecast">A$ 1,492,060.36</b></div><div class="g "><span class="lb">Per tonne</span><b data-check="sum-per-tonne">A$ 28.86</b></div><div class="g w"><span class="lb">Exceptions</span><b data-check="sum-exceptions">5</b></div><div class="g sp"></div><div class="g "><span class="lb">Horizon</span><b data-check="sum-horizon">06 – 15 Feb 2026</b></div></div>
+<main class="main">
+<section class="card" style="flex:1;min-height:0">
+    <div class="gantt">
+      <div class="gov">
+        <i class="wk" style="left:94.6px;width:94.6px"></i><i class="wk" style="left:189.2px;width:94.6px"></i><i class="wk" style="left:756.8px;width:94.6px"></i><i class="wk" style="left:851.4px;width:94.6px"></i>
+      </div>
+      <div class="nowlayer">
+        <i class="nowl" data-check-left="320.25" style="left:320.25px"></i>
+      </div>
+      <table class="g">
+        <colgroup><col style="width:88px"><col style="width:152px"><col style="width:62px"><col style="width:66px"><col style="width:96px"><col style="width:946px"></colgroup>
+        <thead><tr>
+          <th class="fz pl">Order &#9652;</th><th class="fz">Receival site</th><th class="fz">Grade</th>
+          <th class="fz" style="text-align:right;padding-right:12px !important">Tonnes</th><th class="fz">Status</th>
+          <th class="trk" style="position:relative"><div class="dayh" style="left:0px;width:94.6px"><em>Fri</em><b>06 Feb</b></div><div class="dayh we" style="left:94.6px;width:94.6px"><em>Sat</em><b>07 Feb</b></div><div class="dayh we" style="left:189.2px;width:94.6px"><em>Sun</em><b>08 Feb</b></div><div class="dayh" style="left:283.8px;width:94.6px"><em>Mon</em><b>09 Feb</b></div><div class="dayh" style="left:378.4px;width:94.6px"><em>Tue</em><b>10 Feb</b></div><div class="dayh" style="left:473px;width:94.6px"><em>Wed</em><b>11 Feb</b></div><div class="dayh" style="left:567.6px;width:94.6px"><em>Thu</em><b>12 Feb</b></div><div class="dayh" style="left:662.2px;width:94.6px"><em>Fri</em><b>13 Feb</b></div><div class="dayh we" style="left:756.8px;width:94.6px"><em>Sat</em><b>14 Feb</b></div><div class="dayh we" style="left:851.4px;width:94.6px"><em>Sun</em><b>15 Feb</b></div></th>
+        </tr></thead>
+        <tbody><tr data-row="plan" data-do="DO-51188" data-tonnes="6480" data-grade="APW1" data-port="Kwinana" data-status="loading" data-legs="3">
+  <td class="fz pl"><b style="font-weight:600">DO-51188</b></td>
+  <td class="fz">NUN-1 <span class="mut">&middot;</span> Nungarin</td>
+  <td class="fz">APW1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">6,480</td>
+  <td class="fz"><span class="stat"><i class="dot d-loading"></i>Loading</span></td>
+  <td class="trk"><i class="bar bar--road" data-leg="DO-51188:0" data-mode="road" data-start="2026-02-06T05:40" data-end="2026-02-07T16:10" data-left="22.34" data-width="135.99" style="left:22.34px;width:135.99px"><em>ROAD &middot; 6,480 t</em></i><i class="bar bar--rail" data-leg="DO-51188:1" data-mode="rail" data-start="2026-02-08T02:25" data-end="2026-02-08T21:50" data-left="198.73" data-width="76.53" style="left:198.73px;width:76.53px"><em>RAIL &middot; 6,480 t</em></i><i class="bar bar--load" data-leg="DO-51188:2" data-mode="load" data-start="2026-02-09T06:00" data-end="2026-02-09T20:35" data-left="307.45" data-width="57.48" style="left:307.45px;width:57.48px"><em>LOAD</em></i><i class="dw" data-dwell="DO-51188:0" data-from="2026-02-07T16:10" data-to="2026-02-08T02:25" style="left:158.32px;width:40.4px"></i><i class="dw" data-dwell="DO-51188:1" data-from="2026-02-08T21:50" data-to="2026-02-09T06:00" style="left:275.26px;width:32.19px"></i><span class="vlbl" data-vessel="DO-51188" style="left:371.93px;max-width:571.07px">MV Aegean Harmony</span></td>
+</tr><tr data-row="plan" data-do="DO-51194" data-tonnes="3240" data-grade="APW1" data-port="Kwinana" data-status="loading" data-legs="2">
+  <td class="fz pl"><b style="font-weight:600">DO-51194</b></td>
+  <td class="fz">KLB-1 <span class="mut">&middot;</span> Kellerberrin</td>
+  <td class="fz">APW1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">3,240</td>
+  <td class="fz"><span class="stat"><i class="dot d-loading"></i>Loading</span></td>
+  <td class="trk"><i class="bar bar--rail" data-leg="DO-51194:0" data-mode="rail" data-start="2026-02-08T04:50" data-end="2026-02-08T19:15" data-left="208.25" data-width="56.83" style="left:208.25px;width:56.83px"><em>RAIL</em></i><i class="bar bar--load" data-leg="DO-51194:1" data-mode="load" data-start="2026-02-09T21:10" data-end="2026-02-10T04:45" data-left="367.23" data-width="29.89" style="left:367.23px;width:29.89px"></i><i class="dw" data-dwell="DO-51194:0" data-from="2026-02-08T19:15" data-to="2026-02-09T21:10" style="left:265.08px;width:102.15px"></i><span class="dwl" data-dwlabel="DO-51194:0" style="left:294.15px">1d 1h 55m</span><span class="vlbl" data-vessel="DO-51194" style="left:404.12px;max-width:538.88px">MV Aegean Harmony</span></td>
+</tr><tr data-row="plan" data-do="DO-51203" data-tonnes="4860" data-grade="APW1" data-port="Kwinana" data-status="committed" data-legs="2">
+  <td class="fz pl"><b style="font-weight:600">DO-51203</b></td>
+  <td class="fz">CDN-2 <span class="mut">&middot;</span> Cunderdin</td>
+  <td class="fz">APW1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">4,860</td>
+  <td class="fz"><span class="stat"><i class="dot d-committed"></i>Committed</span></td>
+  <td class="trk"><i class="bar bar--rail" data-leg="DO-51203:0" data-mode="rail" data-start="2026-02-10T23:35" data-end="2026-02-11T12:40" data-left="471.36" data-width="51.57" style="left:471.36px;width:51.57px"><em>RAIL</em></i><i class="bar bar--load" data-leg="DO-51203:1" data-mode="load" data-start="2026-02-13T05:20" data-end="2026-02-13T16:05" data-left="683.22" data-width="42.37" style="left:683.22px;width:42.37px"><em>LOAD</em></i><i class="dw" data-dwell="DO-51203:0" data-from="2026-02-11T12:40" data-to="2026-02-13T05:20" style="left:522.93px;width:160.29px"></i><span class="dwl" data-dwlabel="DO-51203:0" style="left:581.07px">1d 16h 40m</span><span class="vlbl" data-vessel="DO-51203" style="left:732.6px;max-width:210.4px">MV Pacific Ibis</span></td>
+</tr><tr data-row="plan" data-do="DO-51209" data-tonnes="5760" data-grade="APW1" data-port="Kwinana" data-status="committed" data-legs="3">
+  <td class="fz pl"><b style="font-weight:600">DO-51209</b></td>
+  <td class="fz">WGN-4 <span class="mut">&middot;</span> Wongan Hills</td>
+  <td class="fz">APW1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">5,760</td>
+  <td class="fz"><span class="stat"><i class="dot d-committed"></i>Committed</span></td>
+  <td class="trk"><i class="bar bar--road" data-leg="DO-51209:0" data-mode="road" data-start="2026-02-10T05:15" data-end="2026-02-11T09:50" data-left="399.09" data-width="112.67" style="left:399.09px;width:112.67px"><em>ROAD &middot; 5,760 t</em></i><i class="bar bar--rail" data-leg="DO-51209:1" data-mode="rail" data-start="2026-02-11T22:05" data-end="2026-02-12T11:30" data-left="560.05" data-width="52.88" style="left:560.05px;width:52.88px"><em>RAIL</em></i><i class="bar bar--load" data-leg="DO-51209:2" data-mode="load" data-start="2026-02-13T17:00" data-end="2026-02-14T05:55" data-left="729.21" data-width="50.91" style="left:729.21px;width:50.91px"><em>LOAD</em></i><i class="dw" data-dwell="DO-51209:0" data-from="2026-02-11T09:50" data-to="2026-02-11T22:05" style="left:511.76px;width:48.29px"></i><span class="dwl" data-dwlabel="DO-51209:0" style="left:513.9px">12h 15m</span><i class="dw" data-dwell="DO-51209:1" data-from="2026-02-12T11:30" data-to="2026-02-13T17:00" style="left:612.93px;width:116.28px"></i><span class="dwl" data-dwlabel="DO-51209:1" style="left:649.07px">1d 5h 30m</span><span class="vlbl" data-vessel="DO-51209" style="left:787.12px;max-width:155.88px">MV Pacific Ibis</span></td>
+</tr><tr data-row="plan" data-do="DO-51212" data-tonnes="3960" data-grade="APW1" data-port="Kwinana" data-status="planned" data-legs="2">
+  <td class="fz pl"><b style="font-weight:600">DO-51212</b></td>
+  <td class="fz">DAL-1 <span class="mut">&middot;</span> Dalwallinu</td>
+  <td class="fz">APW1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">3,960</td>
+  <td class="fz"><span class="stat"><i class="dot d-planned"></i>Planned</span></td>
+  <td class="trk"><i class="bar bar--rail" data-leg="DO-51212:0" data-mode="rail" data-start="2026-02-12T18:40" data-end="2026-02-13T04:55" data-left="641.18" data-width="40.4" style="left:641.18px;width:40.4px"></i><i class="bar bar--load" data-leg="DO-51212:1" data-mode="load" data-start="2026-02-14T06:30" data-end="2026-02-14T15:20" data-left="782.42" data-width="34.82" style="left:782.42px;width:34.82px"></i><i class="dw" data-dwell="DO-51212:0" data-from="2026-02-13T04:55" data-to="2026-02-14T06:30" style="left:681.58px;width:100.84px"></i><span class="dwl" data-dwlabel="DO-51212:0" style="left:710px">1d 1h 35m</span><span class="vlbl" data-vessel="DO-51212" style="left:824.24px;max-width:118.76px">MV Pacific Ibis</span></td>
+</tr><tr data-row="plan" data-do="DO-51217" data-tonnes="2880" data-grade="H2" data-port="Kwinana" data-status="planned" data-legs="3">
+  <td class="fz pl"><b style="font-weight:600">DO-51217</b></td>
+  <td class="fz">MUK-2 <span class="mut">&middot;</span> Mukinbudin–Bonnie Rock</td>
+  <td class="fz">H2</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">2,880</td>
+  <td class="fz"><span class="stat"><i class="dot d-planned"></i>Planned</span></td>
+  <td class="trk"><i class="bar bar--road" data-leg="DO-51217:0" data-mode="road" data-start="2026-02-12T05:15" data-end="2026-02-13T00:40" data-left="588.29" data-width="76.53" style="left:588.29px;width:76.53px"><em>ROAD &middot; 2,880 t</em></i><i class="bar bar--rail" data-leg="DO-51217:1" data-mode="rail" data-start="2026-02-13T14:20" data-end="2026-02-14T01:35" data-left="718.7" data-width="44.34" style="left:718.7px;width:44.34px"><em>RAIL</em></i><i class="bar bar--load" data-leg="DO-51217:2" data-mode="load" data-start="2026-02-14T15:40" data-end="2026-02-14T23:05" data-left="818.55" data-width="29.23" style="left:818.55px;width:29.23px"></i><i class="dw" data-dwell="DO-51217:0" data-from="2026-02-13T00:40" data-to="2026-02-13T14:20" style="left:664.83px;width:53.87px"></i><span class="dwl" data-dwlabel="DO-51217:0" style="left:669.76px">13h 40m</span><i class="dw" data-dwell="DO-51217:1" data-from="2026-02-14T01:35" data-to="2026-02-14T15:40" style="left:763.04px;width:55.51px"></i><span class="dwl" data-dwlabel="DO-51217:1" style="left:768.79px">14h 5m</span><span class="vlbl" data-vessel="DO-51217" style="left:854.79px;max-width:88.21px">MV Star Aquila</span></td>
+</tr><tr data-row="plan" data-do="DO-51221" data-tonnes="3600" data-grade="H2" data-port="Kwinana" data-status="planned" data-legs="2">
+  <td class="fz pl"><b style="font-weight:600">DO-51221</b></td>
+  <td class="fz">BRK-2 <span class="mut">&middot;</span> Bruce Rock</td>
+  <td class="fz">H2</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">3,600</td>
+  <td class="fz"><span class="stat"><i class="dot d-planned"></i>Planned</span></td>
+  <td class="trk"><i class="bar bar--rail" data-leg="DO-51221:0" data-mode="rail" data-start="2026-02-13T21:05" data-end="2026-02-14T10:50" data-left="745.3" data-width="54.2" style="left:745.3px;width:54.2px"><em>RAIL</em></i><i class="bar bar--load" data-leg="DO-51221:1" data-mode="load" data-start="2026-02-15T01:20" data-end="2026-02-15T08:55" data-left="856.66" data-width="29.89" style="left:856.66px;width:29.89px"></i><i class="dw" data-dwell="DO-51221:0" data-from="2026-02-14T10:50" data-to="2026-02-15T01:20" style="left:799.5px;width:57.15px"></i><span class="dwl" data-dwlabel="DO-51221:0" style="left:806.08px">14h 30m</span><span class="vlbl" data-vessel="DO-51221" style="left:893.55px;max-width:49.45px">MV Star Aquila</span></td>
+</tr><tr data-row="plan" data-do="DO-51226" data-tonnes="2340" data-grade="MALT1" data-port="Albany" data-status="committed" data-legs="2">
+  <td class="fz pl"><b style="font-weight:600">DO-51226</b></td>
+  <td class="fz">CRG-2 <span class="mut">&middot;</span> Corrigin</td>
+  <td class="fz">MALT1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">2,340</td>
+  <td class="fz"><span class="stat"><i class="dot d-committed"></i>Committed</span></td>
+  <td class="trk"><i class="bar bar--road" data-leg="DO-51226:0" data-mode="road" data-start="2026-02-09T04:50" data-end="2026-02-10T07:35" data-left="302.85" data-width="105.44" style="left:302.85px;width:105.44px"><em>ROAD &middot; 2,340 t</em></i><i class="bar bar--load" data-leg="DO-51226:1" data-mode="load" data-start="2026-02-11T09:20" data-end="2026-02-11T16:10" data-left="509.79" data-width="26.93" style="left:509.79px;width:26.93px"></i><i class="dw" data-dwell="DO-51226:0" data-from="2026-02-10T07:35" data-to="2026-02-11T09:20" style="left:408.29px;width:101.5px"></i><span class="dwl" data-dwlabel="DO-51226:0" style="left:437.04px">1d 1h 45m</span><span class="vlbl" data-vessel="DO-51226" style="left:543.72px;max-width:399.28px">MV Ocean Melody</span></td>
+</tr><tr data-row="plan" data-do="DO-51231" data-tonnes="1980" data-grade="F1" data-port="Albany" data-status="committed" data-legs="2">
+  <td class="fz pl"><b style="font-weight:600">DO-51231</b></td>
+  <td class="fz">LKG-1 <span class="mut">&middot;</span> Lake Grace</td>
+  <td class="fz">F1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">1,980</td>
+  <td class="fz"><span class="stat"><i class="dot d-committed"></i>Committed</span></td>
+  <td class="trk"><i class="bar bar--road" data-leg="DO-51231:0" data-mode="road" data-start="2026-02-10T05:30" data-end="2026-02-10T22:55" data-left="400.08" data-width="68.65" style="left:400.08px;width:68.65px"><em>ROAD</em></i><i class="bar bar--load" data-leg="DO-51231:1" data-mode="load" data-start="2026-02-11T16:40" data-end="2026-02-11T22:05" data-left="538.69" data-width="21.35" style="left:538.69px;width:21.35px"></i><i class="dw" data-dwell="DO-51231:0" data-from="2026-02-10T22:55" data-to="2026-02-11T16:40" style="left:468.73px;width:69.96px"></i><span class="dwl" data-dwlabel="DO-51231:0" style="left:481.71px">17h 45m</span><span class="vlbl" data-vessel="DO-51231" style="left:567.05px;max-width:375.95px">MV Ocean Melody</span></td>
+</tr><tr data-row="plan" data-do="DO-51234" data-tonnes="1180" data-grade="CAN1" data-port="Albany" data-status="atrisk" data-legs="1">
+  <td class="fz pl"><b style="font-weight:600">DO-51234</b></td>
+  <td class="fz">KAT-5 <span class="mut">&middot;</span> Katanning</td>
+  <td class="fz">CAN1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">1,180</td>
+  <td class="fz"><span class="stat"><i class="dot d-atrisk"></i>At risk</span></td>
+  <td class="trk"><i class="bar bar--road" data-leg="DO-51234:0" data-mode="road" data-start="2026-02-12T06:10" data-end="2026-02-12T18:48" data-left="591.91" data-width="49.8" style="left:591.91px;width:49.8px"><em>ROAD</em></i><span class="vlbl mut" data-vessel="DO-51234" style="left:648.7px;max-width:294.3px">no vessel nomination</span></td>
+</tr><tr data-row="plan" data-do="DO-51239" data-tonnes="4320" data-grade="ASW1" data-port="Geraldton" data-status="committed" data-legs="2">
+  <td class="fz pl"><b style="font-weight:600">DO-51239</b></td>
+  <td class="fz">MLW-1 <span class="mut">&middot;</span> Mullewa</td>
+  <td class="fz">ASW1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">4,320</td>
+  <td class="fz"><span class="stat"><i class="dot d-committed"></i>Committed</span></td>
+  <td class="trk"><i class="bar bar--rail" data-leg="DO-51239:0" data-mode="rail" data-start="2026-02-09T23:40" data-end="2026-02-10T11:02" data-left="377.09" data-width="44.8" style="left:377.09px;width:44.8px"><em>RAIL</em></i><i class="bar bar--load" data-leg="DO-51239:1" data-mode="load" data-start="2026-02-11T05:00" data-end="2026-02-11T18:35" data-left="492.71" data-width="53.54" style="left:492.71px;width:53.54px"><em>LOAD</em></i><i class="dw" data-dwell="DO-51239:0" data-from="2026-02-10T11:02" data-to="2026-02-11T05:00" style="left:421.89px;width:70.82px"></i><span class="dwl" data-dwlabel="DO-51239:0" style="left:435.3px">17h 58m</span><span class="vlbl" data-vessel="DO-51239" style="left:553.25px;max-width:389.75px">MV Cape Bellina</span></td>
+</tr><tr data-row="plan" data-do="DO-51243" data-tonnes="2760" data-grade="ASW1" data-port="Geraldton" data-status="held" data-legs="3">
+  <td class="fz pl"><b style="font-weight:600">DO-51243</b></td>
+  <td class="fz">YUN-3 <span class="mut">&middot;</span> Yuna</td>
+  <td class="fz">ASW1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">2,760</td>
+  <td class="fz"><span class="stat"><i class="dot d-held"></i>Held</span></td>
+  <td class="trk"><i class="bar bar--road" data-leg="DO-51243:0" data-mode="road" data-start="2026-02-11T06:00" data-end="2026-02-12T03:25" data-left="496.65" data-width="84.42" style="left:496.65px;width:84.42px"><em>ROAD &middot; 2,760 t</em></i><i class="bar bar--rail bad" data-leg="DO-51243:1" data-mode="rail" data-start="2026-02-12T01:40" data-end="2026-02-12T13:05" data-left="574.17" data-width="45" style="left:574.17px;width:45px"><em>RAIL</em></i><i class="bar bar--load" data-leg="DO-51243:2" data-mode="load" data-start="2026-02-13T04:30" data-end="2026-02-13T16:10" data-left="679.94" data-width="45.99" style="left:679.94px;width:45.99px"><em>LOAD</em></i><i class="dw" data-dwell="DO-51243:1" data-from="2026-02-12T13:05" data-to="2026-02-13T04:30" style="left:619.17px;width:60.77px"></i><span class="dwl" data-dwlabel="DO-51243:1" style="left:627.55px">15h 25m</span><span class="vlbl" data-vessel="DO-51243" style="left:732.92px;max-width:210.08px">MV Cape Bellina</span></td>
+</tr><tr data-row="plan" data-do="DO-51248" data-tonnes="2460" data-grade="LUP1" data-port="Esperance" data-status="unscheduled" data-legs="0" style="opacity:.62">
+  <td class="fz pl"><b style="font-weight:600">DO-51248</b></td>
+  <td class="fz">SGM-1 <span class="mut">&middot;</span> Salmon Gums</td>
+  <td class="fz">LUP1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">2,460</td>
+  <td class="fz"><span class="stat"><i class="dot d-unscheduled"></i>Unscheduled</span></td>
+  <td class="trk"><span class="vlbl mut" style="left:8px">&mdash; not scheduled &middot; awaiting Esperance stem</span></td>
+</tr><tr data-row="plan" data-do="DO-51252" data-tonnes="2160" data-grade="H2" data-port="Kwinana" data-status="committed" data-legs="2">
+  <td class="fz pl"><b style="font-weight:600">DO-51252</b></td>
+  <td class="fz">WUB-1 <span class="mut">&middot;</span> Wubin</td>
+  <td class="fz">H2</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">2,160</td>
+  <td class="fz"><span class="stat"><i class="dot d-committed"></i>Committed</span></td>
+  <td class="trk"><i class="bar bar--rail" data-leg="DO-51252:0" data-mode="rail" data-start="2026-02-10T03:20" data-end="2026-02-10T15:05" data-left="391.54" data-width="46.31" style="left:391.54px;width:46.31px"><em>RAIL</em></i><i class="bar bar--load" data-leg="DO-51252:1" data-mode="load" data-start="2026-02-12T07:30" data-end="2026-02-12T13:50" data-left="597.16" data-width="24.96" style="left:597.16px;width:24.96px"></i><i class="dw" data-dwell="DO-51252:0" data-from="2026-02-10T15:05" data-to="2026-02-12T07:30" style="left:437.85px;width:159.31px"></i><span class="dwl" data-dwlabel="DO-51252:0" style="left:495.5px">1d 16h 25m</span><span class="vlbl" data-vessel="DO-51252" style="left:629.13px;max-width:313.87px">MV Golden Wattle</span></td>
+</tr><tr data-row="plan" data-do="DO-51256" data-tonnes="1740" data-grade="MALT1" data-port="Albany" data-status="committed" data-legs="2">
+  <td class="fz pl"><b style="font-weight:600">DO-51256</b></td>
+  <td class="fz">NYB-1 <span class="mut">&middot;</span> Nyabing</td>
+  <td class="fz">MALT1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">1,740</td>
+  <td class="fz"><span class="stat"><i class="dot d-committed"></i>Committed</span></td>
+  <td class="trk"><i class="bar bar--road" data-leg="DO-51256:0" data-mode="road" data-start="2026-02-09T06:20" data-end="2026-02-09T22:10" data-left="308.76" data-width="62.41" style="left:308.76px;width:62.41px"><em>ROAD</em></i><i class="bar bar--load" data-leg="DO-51256:1" data-mode="load" data-start="2026-02-11T22:40" data-end="2026-02-12T03:35" data-left="562.34" data-width="19.38" style="left:562.34px;width:19.38px"></i><i class="dw" data-dwell="DO-51256:0" data-from="2026-02-09T22:10" data-to="2026-02-11T22:40" style="left:371.17px;width:191.17px"></i><span class="dwl" data-dwlabel="DO-51256:0" style="left:444.75px">2d 0h 30m</span><span class="vlbl" data-vessel="DO-51256" style="left:588.72px;max-width:354.28px">MV Ocean Melody</span></td>
+</tr><tr data-row="plan" data-do="DO-51261" data-tonnes="2520" data-grade="H2" data-port="Kwinana" data-status="committed" data-legs="4">
+  <td class="fz pl"><b style="font-weight:600">DO-51261</b></td>
+  <td class="fz">BEN-1 <span class="mut">&middot;</span> Bencubbin</td>
+  <td class="fz">H2</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">2,520</td>
+  <td class="fz"><span class="stat"><i class="dot d-committed"></i>Committed</span></td>
+  <td class="trk"><i class="bar bar--road" data-leg="DO-51261:0" data-mode="road" data-start="2026-02-07T05:30" data-end="2026-02-07T22:15" data-left="116.28" data-width="66.02" style="left:116.28px;width:66.02px"><em>ROAD</em></i><i class="bar bar--rail" data-leg="DO-51261:1" data-mode="rail" data-start="2026-02-08T09:40" data-end="2026-02-08T18:25" data-left="227.3" data-width="34.49" style="left:227.3px;width:34.49px"></i><i class="bar bar--rail" data-leg="DO-51261:2" data-mode="rail" data-start="2026-02-09T14:10" data-end="2026-02-09T20:35" data-left="339.64" data-width="25.29" style="left:339.64px;width:25.29px"></i><i class="bar bar--load" data-leg="DO-51261:3" data-mode="load" data-start="2026-02-12T14:30" data-end="2026-02-12T20:05" data-left="624.75" data-width="22.01" style="left:624.75px;width:22.01px"></i><i class="dw" data-dwell="DO-51261:0" data-from="2026-02-07T22:15" data-to="2026-02-08T09:40" style="left:182.3px;width:45px"></i><span class="dwl" data-dwlabel="DO-51261:0" style="left:182.8px">11h 25m</span><i class="dw" data-dwell="DO-51261:1" data-from="2026-02-08T18:25" data-to="2026-02-09T14:10" style="left:261.79px;width:77.85px"></i><span class="dwl" data-dwlabel="DO-51261:1" style="left:278.72px">19h 45m</span><i class="dw" data-dwell="DO-51261:2" data-from="2026-02-09T20:35" data-to="2026-02-12T14:30" style="left:364.93px;width:259.82px"></i><span class="dwl" data-dwlabel="DO-51261:2" style="left:472.84px">2d 17h 55m</span><span class="vlbl" data-vessel="DO-51261" style="left:653.76px;max-width:289.24px">MV Golden Wattle</span></td>
+</tr><tr data-row="plan" data-do="DO-51266" data-tonnes="1920" data-grade="ASW1" data-port="Geraldton" data-status="committed" data-legs="4">
+  <td class="fz pl"><b style="font-weight:600">DO-51266</b></td>
+  <td class="fz">PJR-1 <span class="mut">&middot;</span> Perenjori</td>
+  <td class="fz">ASW1</td>
+  <td class="fz" style="text-align:right;padding-right:12px !important">1,920</td>
+  <td class="fz"><span class="stat"><i class="dot d-committed"></i>Committed</span></td>
+  <td class="trk"><i class="bar bar--road" data-leg="DO-51266:0" data-mode="road" data-start="2026-02-08T06:00" data-end="2026-02-08T19:40" data-left="212.85" data-width="53.87" style="left:212.85px;width:53.87px"><em>ROAD</em></i><i class="bar bar--rail" data-leg="DO-51266:1" data-mode="rail" data-start="2026-02-09T08:20" data-end="2026-02-09T15:05" data-left="316.65" data-width="26.61" style="left:316.65px;width:26.61px"></i><i class="bar bar--rail" data-leg="DO-51266:2" data-mode="rail" data-start="2026-02-10T05:40" data-end="2026-02-10T12:25" data-left="400.74" data-width="26.61" style="left:400.74px;width:26.61px"></i><i class="bar bar--load" data-leg="DO-51266:3" data-mode="load" data-start="2026-02-12T06:20" data-end="2026-02-12T12:05" data-left="592.56" data-width="22.66" style="left:592.56px;width:22.66px"></i><i class="dw" data-dwell="DO-51266:0" data-from="2026-02-08T19:40" data-to="2026-02-09T08:20" style="left:266.72px;width:49.93px"></i><span class="dwl" data-dwlabel="DO-51266:0" style="left:269.69px">12h 40m</span><i class="dw" data-dwell="DO-51266:1" data-from="2026-02-09T15:05" data-to="2026-02-10T05:40" style="left:343.25px;width:57.48px"></i><span class="dwl" data-dwlabel="DO-51266:1" style="left:349.99px">14h 35m</span><i class="dw" data-dwell="DO-51266:2" data-from="2026-02-10T12:25" data-to="2026-02-12T06:20" style="left:427.34px;width:165.22px"></i><span class="dwl" data-dwlabel="DO-51266:2" style="left:487.95px">1d 17h 55m</span><span class="vlbl" data-vessel="DO-51266" style="left:622.23px;max-width:320.77px">MV Cape Bellina</span></td>
+</tr></tbody>
+      </table>
+    </div>
+</section>
+
+<section class="card dock">
+  <div class="dock__t"><div class="dtab on">Exceptions<span class="ct">5</span></div><div class="dtab">Segregation capacity<span class="ct">7</span></div><div class="dtab">Cost summary</div><div class="dtab">Activity<span class="ct">34</span></div>
+    <div style="flex:1"></div>
+    <div class="dtab" style="color:var(--fg3)">2 blocking &middot; commit disabled</div>
+  </div>
+  <div class="dock__b"><div><div class="exr exr--e" data-row="exception" data-kind="e"><i class="bd"></i><span class="ttl">Missed connection</span><span class="ref">DO-51243 &middot; Mullewa siding</span><span class="txt">Rail departs <b>1h 45m</b> before road outturn finishes. Held &mdash; 2,760 t ASW1 misses the MV Cape Bellina window.</span><span class="act">Re-slot</span></div><div class="exr exr--e" data-row="exception" data-kind="e"><i class="bd"></i><span class="ttl">Cell over capacity</span><span class="ref">KWI-C4 APW1 &middot; 13 Feb</span><span class="txt">Peak <b>23,820 t</b> vs 22,500 t, over by 1,320 t. Clears if DO-51212 defers <b>11h 15m</b>.</span><span class="act">Defer DO-51212</span></div><div class="exr exr--w" data-row="exception" data-kind="w"><i class="bd"></i><span class="ttl">Lane rate lapsed</span><span class="ref">KAT-5 &rarr; Albany</span><span class="txt">Expired 08 Feb, not renewed. DO-51234 costed at A$&thinsp;19.80/t, unconfirmed.</span><span class="act">Renew lane</span></div><div class="exr exr--w" data-row="exception" data-kind="w"><i class="bd"></i><span class="ttl">Rail set under-loaded</span><span class="ref">DO-51194 &middot; set 3,600 t</span><span class="txt">3,240 t loaded, 360 t short. Deadfreight A$&thinsp;1,296.00 at A$&thinsp;3.60/t.</span><span class="act">Top up set</span></div><div class="exr exr--w" data-row="exception" data-kind="w"><i class="bd"></i><span class="ttl">No vessel nomination</span><span class="ref">DO-51248 &middot; Esperance</span><span class="txt">2,460 t LUP1 unscheduled. ESP-C5 holds 1,860 t, no movement in horizon.</span><span class="act">Request stem</span></div></div></div>
+</section></main>
+
+<footer class="foot">
+  <span>Corridor <b style="font-weight:600;color:var(--fg2)">WA Grain</b></span><i class="d"></i>
+  <span>Rate card <span data-check="footRate">r-2026.02-a</span></span><i class="d"></i>
+  <span>Telematics feed synced <span data-check="footSync">09:12:47</span> &middot; <span style="color:var(--warn)">2 h stale</span></span><i class="d"></i>
+  <span>Horizon 06&ndash;15 Feb 2026 (AWST)</span>
+  <div style="flex:1"></div>
+  <span>TRAMOS <b style="font-weight:600;color:var(--fg2)">4.8.2</b> &middot; build 20260209.3</span>
+</footer>
+</body></html>
