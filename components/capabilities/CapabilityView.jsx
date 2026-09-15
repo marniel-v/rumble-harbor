@@ -69,7 +69,7 @@ export default function CapabilityView({ work, prev, next }) {
   const go = useCallback(
     async (target, back) => {
       if (!target) return;
-      const href = `/capabilities/${target.slug}`;
+      const href = `/portfolio/${target.slug}`;
       if (prefersReducedMotion() || !panelRef.current) {
         router.push(href);
         return;
@@ -110,7 +110,7 @@ export default function CapabilityView({ work, prev, next }) {
       >
         <div className="container">
           <SignalMarker
-            label="CAPABILITY"
+            label="PORTFOLIO"
             meta={work.n}
             status={work.product ?? "FIRST PLACE · 2012"}
             className="marker--section"
@@ -150,9 +150,37 @@ export default function CapabilityView({ work, prev, next }) {
             </filter>
           </svg>
 
+          {/* The bio: a portrait where the filmstrip would be, the claim
+              beside it, and nothing under it — no screens to note and no
+              substitution to disclose. */}
+          {work.bio && (
+            <div className="cap__grid" ref={panelRef}>
+              <figure className="cap__portrait">
+                <img
+                  src={`/portfolio/${work.slug}/portrait.jpg`}
+                  alt=""
+                  width={480}
+                  height={600}
+                />
+              </figure>
+              <div className="cap__text">
+                <h1 className="cap__title">
+                  {work.capability}{" "}
+                  <span className="cap__qualifier">{work.qualifier}</span>
+                </h1>
+                <p className="cap__lead">{work.lead}</p>
+                {work.body.map((p) => (
+                  <p key={p} className="cap__body">
+                    {p}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* The exhibit has no facade behind it, so it has no filmstrip,
               no overlay and no disclosure — it renders the real thing. */}
-          {!work.exhibit && (
+          {!work.exhibit && !work.bio && (
             <>
               <div className="cap__grid" ref={panelRef}>
                 {/* Left: this work's screens, and only this work's. */}
@@ -169,7 +197,7 @@ export default function CapabilityView({ work, prev, next }) {
                       aria-label={`Open ${v.title}`}
                     >
                       <img
-                        src={`/capabilities/${work.slug}/${v.n}.jpg`}
+                        src={`/portfolio/${work.slug}/${v.n}.jpg`}
                         alt=""
                         width={480}
                         height={300}
@@ -269,12 +297,12 @@ export default function CapabilityView({ work, prev, next }) {
           first work, no forward step on the last. The absent one leaves a
           spacer rather than collapsing, or the ticks would slide off centre at
           either end of the set. */}
-      <nav className="cap__band" aria-label="Capabilities">
+      <nav className="cap__band" aria-label="Portfolio">
         <div className="container cap__band-inner">
           {prev ? (
             <Link
               className="cap__step"
-              href={`/capabilities/${prev.slug}`}
+              href={`/portfolio/${prev.slug}`}
               onClick={nav(prev, true)}
             >
               ← {prev.short}
@@ -291,7 +319,7 @@ export default function CapabilityView({ work, prev, next }) {
                   {w.ready ? (
                     <Link
                       className="cap__tick"
-                      href={`/capabilities/${w.slug}`}
+                      href={`/portfolio/${w.slug}`}
                       onClick={nav(w, w.n < work.n)}
                       data-here={here ? "" : undefined}
                       aria-current={here ? "page" : undefined}
@@ -311,7 +339,7 @@ export default function CapabilityView({ work, prev, next }) {
           {next ? (
             <Link
               className="cap__step cap__step--next"
-              href={`/capabilities/${next.slug}`}
+              href={`/portfolio/${next.slug}`}
               onClick={nav(next, false)}
             >
               {next.short} →

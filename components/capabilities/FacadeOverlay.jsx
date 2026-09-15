@@ -180,7 +180,7 @@ export default function FacadeOverlay({ work, index, onIndex, onClose }) {
             <iframe
               className="facade__frame"
               title={`${work.product}, ${view.title}`}
-              src={`/capabilities/facade/${view.id}`}
+              src={`/portfolio/facade/${view.id}`}
               width={NATIVE_W}
               height={NATIVE_H}
               loading="lazy"

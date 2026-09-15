@@ -22,7 +22,7 @@ export default function Footer() {
           <a href="#about">About</a>
           <a href="#services">Services</a>
           <a href="#work">Work</a>
-          <a href="/capabilities/analytics">Capabilities</a>
+          <a href="/portfolio/analytics">Portfolio</a>
           <a href="#testimonials">Testimonials</a>
           <a href="#contact">Contact</a>
         </nav>

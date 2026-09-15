@@ -2106,6 +2106,27 @@ html.theme-anim *::after {
   margin-top: 2px;
 }
 
+/* ── the portrait ───────────────────────────────────────────────────────── */
+
+/* The bio's stand-in for the strip: same column, same pin, same frame as
+   .cap__frame, minus the hover states — it opens nothing. */
+.cap__portrait {
+  margin: 0;
+  position: sticky;
+  top: calc(var(--nav-h) + 24px);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-solid);
+  overflow: hidden;
+  animation: pulseIn 0.42s ease backwards;
+}
+
+.cap__portrait img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 /* ── the claim ──────────────────────────────────────────────────────────── */
 
 .cap__text {
@@ -2631,6 +2652,15 @@ html.theme-anim *::after {
     scroll-snap-align: start;
   }
 
+  /* Stacked, the portrait leads the claim at the strip's width rather than
+     filling the column — a full-bleed face above a heading is a hero, not a
+     bio. */
+  .cap__portrait {
+    position: static;
+    width: 218px;
+    margin-bottom: 26px;
+  }
+
   .cap__strip-hint {
     display: none;
   }
@@ -2690,7 +2720,8 @@ html.theme-anim *::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cap__frame {
+  .cap__frame,
+  .cap__portrait {
     animation: none;
   }
 

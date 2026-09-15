@@ -6,7 +6,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { IconMenu, IconClose } from "@/components/Icons";
 import useCurrentLink from "@/components/useCurrentLink";
 
-/* Root-relative, not bare fragments: the nav now renders on /capabilities/*
+/* Root-relative, not bare fragments: the nav now renders on /portfolio/*
    too, where "#about" points at nothing. */
 const links = [
   { label: "About", href: "/#about" },
@@ -14,7 +14,7 @@ const links = [
   { label: "Work", href: "/#work" },
   // Enters the run at its start rather than at a landing page — there isn't
   // one, and 01 is where the argument begins.
-  { label: "Capabilities", href: "/capabilities/analytics" },
+  { label: "Portfolio", href: "/portfolio/analytics" },
   { label: "Testimonials", href: "/#testimonials" },
   { label: "Contact", href: "/#contact" },
 ];

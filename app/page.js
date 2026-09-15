@@ -15,7 +15,7 @@ export default function Home() {
         <Hero />
         <About />
         <Services />
-        {/* StructuredLight moved to /capabilities/vision-3d — it is capability
+        {/* StructuredLight moved to /portfolio/vision-3d — it is capability
             06, and a deep case study of one project sat oddly on the home page
             when no other project has one. */}
         <Portfolio />

@@ -73,8 +73,8 @@ export default function useCurrentLink() {
      the value ARIA defines for a position within a page rather than a
      destination. */
   return (href) => {
-    if (href.startsWith("/capabilities")) {
-      return pathname.startsWith("/capabilities") ? "page" : undefined;
+    if (href.startsWith("/portfolio")) {
+      return pathname.startsWith("/portfolio") ? "page" : undefined;
     }
     const hash = href.split("#")[1];
     return hash && hash === section ? "location" : undefined;

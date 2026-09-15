@@ -499,7 +499,7 @@ export default function Portfolio() {
         <div className="work-grid">
           {projects.map((p) => {
             const Motif = p.Motif;
-            const to = linked.has(p.key) ? `/capabilities/${p.key}` : null;
+            const to = linked.has(p.key) ? `/portfolio/${p.key}` : null;
             const Wrap = to ? Link : "article";
 
             return (

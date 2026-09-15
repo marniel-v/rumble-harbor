@@ -19,15 +19,36 @@
  * past the reader. Optional, and absent on works still being written up.
  *
  * `views[].id` names a directory under facades/, which is gitignored and served
- * at runtime by app/capabilities/facade/[slug]/route.js. `ready: false` works
+ * at runtime by app/portfolio/facade/[slug]/route.js. `ready: false` works
  * have no page yet; the band still renders their tick, so the length of the run
  * is honest even while most of it is unbuilt.
+ *
+ * `bio` opens the run at 00: a portrait where the filmstrip would be, and the
+ * claim beside it. No screens, no facade, no disclosure — nothing on it is a
+ * reconstruction.
  */
 
 export const DISCLOSURE =
   "Reference implementation. The original is under NDA.";
 
 export const works = [
+  {
+    slug: "bio",
+    short: "Bio",
+    n: "Bio",
+    product: "About Me",
+    kicker: "Bio",
+    capability: "Marniel Vosloo",
+    qualifier: "Senior Software Engineer",
+    lead: "I’m a senior software engineer specialising in the design and development of complex, production-grade systems. I work across the full stack, with particular strength in backend architecture, data-intensive applications, distributed systems, cloud infrastructure, and algorithmic problem solving.",
+    body: [
+      "I’m at my best when the problem is complicated, the constraints are real, and there is no clean greenfield solution. I’ve built and evolved systems spanning B2B analytics, multi-cloud infrastructure, manufacturing, and logistics, often taking ownership from architecture and technical design through implementation and long-term operation.",
+      "My approach is pragmatic and engineering-led: understand the problem, choose the right tools for the constraints, and build systems that are performant, reliable, maintainable, and capable of evolving with the business.",
+    ],
+    bio: true,
+    views: [],
+    ready: true,
+  },
   {
     slug: "analytics",
     short: "Prototype to platform",
@@ -43,13 +64,13 @@ export const works = [
       scope:
         "Backend architecture, data layer, caching and access control. Front-end structure, components, and part of the interface design.",
     },
-    lead: "A B2B analytics platform existed as a working prototype, with most of its logic in the frontend. Over a year, I built the backend that replaced it: the domain model, query layer, multi-tenant access control, and caching architecture. Two dozen client organisations used it against data collected by a mobile app with 20,000 users.",
+    lead: "I took a working B2B analytics prototype whose business logic lived largely in the browser and turned it into a backend-driven platform serving two dozen client organisations and data from a mobile app with 20,000 users. Over the course of a year, I designed and built the domain model, query layer, multi-tenant access control, and caching architecture, with the central challenge being how to make increasingly complex hierarchical analytics fast enough to operate at organisational scale.",
     body: [
-      "I was the lead engineer on a two-person team. My manager had built the original prototype and set the product direction, while interface design was shared between us. I owned the technical design, backend, and frontend architecture. The product already worked; the challenge was moving its business logic out of the browser and into a backend that could scale.",
-      "The platform was designed to turn raw activity into a small set of actionable statements rather than expose clients to a wall of charts. Almost nothing displayed was stored. Every figure was derived across a hierarchy spanning global, country, organisation, and individual levels.",
-      "That became the central performance problem. An organisation view could execute around twenty queries, many repeating work performed elsewhere, and take three to five minutes to complete. Reducing the query count lowered database load but did little for the user, because the expensive part was the aggregation itself, and the data only needed to be a day old.",
-      "I moved those calculations into a nightly processing pipeline that built the hierarchy once, top down. Each level reused the work already completed above it, and the query layer turned the structure of each query into its cache key. Queries sharing a prefix therefore shared the same cached work rather than recomputing it.",
-      "The result was a backend that could derive organisation-level, global, and individual views from a common calculation chain rather than treating each as a separate query problem. Pages that had taken several minutes to assemble now loaded in under three seconds.",
+      "The product was intentionally different from a conventional dashboard. Rather than presenting clients with a wall of charts, it turned raw activity into a small set of actionable statements, deriving figures across global, country, organisation, and individual levels. Almost nothing displayed was stored, so each view depended on calculations against the underlying data.",
+      "As the platform grew, that approach exposed a performance problem that could not be solved simply by reducing the number of queries. An organisation view could execute around twenty of them, often repeating work that had already been performed elsewhere, yet even after reducing the query count the page could still take three to five minutes to assemble. The real cost was the aggregation itself, and because the data only needed to be a day old, there was little reason to perform that work while a user was waiting for a page to load.",
+      "I moved the calculations into a nightly processing pipeline that built the hierarchy once, from the top down, allowing each level to reuse the work already completed above it. The query layer then used the structure of each query as its cache key, so queries sharing a prefix could reuse the same cached work instead of recomputing the same aggregation independently.",
+      "This changed the architecture from a collection of expensive page-level calculations into a common calculation chain that could support organisation, global, and individual views alike. Pages that had previously taken several minutes to assemble now loaded in under three seconds.",
+      "I was the lead engineer on a two-person team, owning the technical design, backend, and frontend architecture while my manager continued to set product direction and we shared interface design. The result was not simply a faster application, but a backend that could support the product’s analytical model without pushing its computational cost onto every user request.",
     ],
     views: [
       {
@@ -82,13 +103,13 @@ export const works = [
       scope:
         "Metered billing and invoicing, time-series integration, and cloud-provider integrations. The interfaces over them, including provisioning, live deployment progress, and security policy. Migration of the existing frontend onto the new stack.",
     },
-    lead: "A control plane for deploying and securing application services across cloud providers. It was already two years old and carrying paying customers when I joined, with the core platform working but much of the infrastructure still to be built. Over three and a half years, I developed its metered billing, time-series layer, cloud-provider integrations, and the interfaces over them as the platform grew to 100 tenants across six clouds.",
+    lead: "I helped grow a production control plane for deploying and securing application services from an established two-year-old platform into a 100-tenant system spanning six clouds. Over three and a half years, I built core capabilities across infrastructure, observability, security, and billing, but the work that demanded the most engineering discipline was metered billing: turning continuous consumption into an accurate, recoverable calculation that could withstand failure without ever producing the wrong invoice.",
     body: [
-      "I was one of three full-stack engineers, with a frontend developer joining in the final year. At that size, ownership was end to end rather than divided by layer: each of us was responsible for complete subsystems. The platform was already in production and generating revenue, so every capability had to be introduced without taking it offline.",
-      "The work therefore came as complete subsystems rather than isolated tickets. The time-series integration let the platform report what it had actually done rather than what it had been configured to do. Provider integrations added new clouds, node provisioning, and live installation feedback so stalled deployments could be identified before they failed. I also built the WAF user interface and migrated the existing frontend onto the new stack.",
-      "Billing was the most demanding problem. The existing model charged for discrete actions; the platform now needed to charge for continuous consumption, metered over time and enabled independently for each customer. That changed billing from a lookup into a calculation.",
-      "The requirement was stronger than simply avoiding errors. A failed request, a partial calculation, a retry, missing telemetry, or a process that stopped halfway through a billing run could never turn into a duplicate or incorrect charge. Failures had to be visible and recoverable, with the same inputs producing the same result when processing resumed.",
-      "That constraint took seven iterations to satisfy. Six versions worked under normal conditions; each went back because normal conditions were not the bar. The seventh shipped and has completed every billing cycle across every tenant without a single billing failure.",
+      "When I joined, the platform already had paying customers and the basic control plane was working, but much of the infrastructure still needed to be built. That meant the work had to happen around a live production system rather than behind one. I was one of three full-stack engineers, with a frontend developer joining in the final year, and ownership was deliberately end to end: each engineer was responsible for complete subsystems rather than working within a particular technical layer.",
+      "That model carried through the platform as it expanded. The time-series layer allowed it to report what infrastructure had actually done rather than what it had been configured to do, while provider integrations extended support across clouds and introduced node provisioning and live installation feedback so stalled deployments could be identified before they became failures. Alongside those systems, I built the WAF interface and migrated the existing frontend onto the new stack.",
+      "Billing became the most difficult of those subsystems because the requirement changed fundamentally. The existing implementation charged for discrete actions; the platform now needed to charge for continuous consumption, measured over time and enabled independently for each customer. What had previously been a lookup therefore became a calculation, and correctness had to hold even when the process doing that calculation did not.",
+      "A failed request, a partial calculation, a retry, missing telemetry, or a billing run that stopped halfway through could never result in a duplicate or incorrect charge. Failures had to be visible and recoverable, with the same inputs producing the same result when processing resumed. Six iterations appeared to work under normal conditions, but each was rejected because normal operation was not sufficient for a production billing system.",
+      "The seventh iteration finally satisfied the requirement and shipped. Since then, it has completed every billing cycle across every tenant without a single billing failure.",
     ],
     views: [
       {
@@ -127,14 +148,14 @@ export const works = [
       scope:
         "Data model, backend architecture, frontend application, and deployment. I also managed the company network and IT infrastructure that supported it",
     },
-    lead: "An electronics manufacturer was running its operational history on spreadsheets. Over six years, I built the platform that replaced them: item master data and inventory, the manufacturing floor and its procedures, outbound shipping, and version-controlled engineering packages. Forty people used it daily across thousands of items.",
+    lead: "Over six years, I replaced a manufacturing operation built around spreadsheets with a production platform that became the system of record for inventory, manufacturing, shipping, and engineering data. As the sole developer and IT infrastructure owner, I evolved it in place through a live factory operation, using the system to enforce manufacturing procedures, establish unit-level traceability, and support the company’s ISO 9001 certification.",
     body: [
-      "I was the sole developer and also responsible for the company’s IT infrastructure. My manager provided the operational direction and feature requirements, while a CS designer helped shape UI from the halfway point. I owned the technical design, implementation, and day-to-day evolution of the system. The platform stayed in production throughout the six-year build, so there was no greenfield rewrite or clean migration window. Every capability had to be introduced without disrupting an active manufacturing operation.",
-      "The company was not ISO 9001 certified when the project began. The platform helped achieve certification by enforcing manufacturing procedures, maintaining complete traceability for every unit, and providing the documentation needed to support them.",
-      "The hardest problem was unit-level traceability. A barcode scan needed to reconstruct a unit’s entire history: where its components came from, which build they entered, and every station, procedure, and production event they passed through. Common table expressions allowed me to build the traceability chain once, while indexes were designed around the path the lookup actually followed. The result was typical lookups in around half a second, with more complex views covering hundreds of items completing in roughly three seconds.",
-      "The engineering packages carried the same requirement from the other direction. BoMs, schematics, and configuration files were versioned per module, access was controlled by department and category, changes notified dependent users, and production was protected from superseded revisions.",
-      "The same constraints shaped how I approached requirements. In a live manufacturing environment, technically possible was not enough; changes had to be safe to introduce and maintain in place. When a proposed solution created operational risk, I pushed back and solved the underlying problem another way.",
-      "The platform remains in production to this day.",
+      "The starting point was an electronics manufacturer whose operational history was spread across spreadsheets. By the end, forty people were using the platform every day across thousands of items, with functionality covering item master data and inventory, the manufacturing floor and its procedures, outbound shipping, and version-controlled engineering packages. The company was not ISO 9001 certified when the project began; the system helped achieve certification by putting those procedures into the production process, preserving complete traceability for every unit, and providing the documentation needed to support them.",
+      "The six-year timescale was not simply a reflection of the amount of functionality involved. The factory had to keep operating throughout the build, so there was no clean migration window and no opportunity for a wholesale rewrite. Each capability had to be introduced into an existing production environment without disrupting the operation, which made the safety and maintainability of every change part of the engineering problem.",
+      "Unit-level traceability became the clearest example. A barcode scan needed to reconstruct an individual unit’s history, tracing its components back to their sources, identifying the build they entered, and following the stations, procedures, and production events they passed through. That relationship crossed around fifteen tables, and the initial query took close to two minutes.",
+      "Because rebuilding the system was not an option, I tackled the problem at the query layer. Common table expressions allowed the traceability chain to be constructed once, while indexes were designed around the path the lookup actually followed. Typical lookups fell to around half a second, while more complex views covering hundreds of items completed in roughly three seconds.",
+      "The same emphasis on control and history shaped the engineering package system. BoMs, schematics, and configuration files were versioned per module, access was controlled by department and category, changes notified dependent users, and production was protected from superseded revisions. Across the platform, the guiding principle was the same: in a live manufacturing environment, a solution was only successful if it could be introduced safely and then maintained without creating operational risk.",
+      "My manager provided the operational direction and feature requirements, while a CS designer helped shape the UI from the halfway point, but I owned the technical design, implementation, and day-to-day evolution of the system. After six years of incremental development, the platform remains in production to this day.",
     ],
     views: [
       {
@@ -167,13 +188,14 @@ export const works = [
       scope:
         "Application architecture on Power Platform, with custom React components for the interactive parts. The Python calculation service on Azure Functions, the schedule import, and the Entra identity and access setup.",
     },
-    lead: "A transport estimation tool existed as a console script that calculated containers, trucks, trips, and the kilometres behind a fuel estimate. Over four months, I built the application that replaced it: a network designer, costing engine, and budget workflow. A package could contain up to 1,000+ commodities, while networks could grow into complex, multi-leg transport models with hundreds of interconnected nodes. Costing resolved month by month across 30+ years.",
+    lead: "In four months, I replaced a transport estimation script with an application capable of costing complex multi-leg networks across 1,000+ commodities and more than 30 years of project demand. The solution combined a network designer, costing engine, and budget workflow, with the architecture deliberately split between what Power Platform could provide quickly and what needed to be engineered from scratch.",
     body: [
-      "I was the only engineer on a four-person team. Three logistics specialists owned the domain calculations and guided the interface; I owned the architecture, calculation engine, and application around it. With only four months to deliver, I chose Power Platform because it made an enterprise solution practical to develop within that timeframe, providing the multi-user shell, shared components, and approval workflow while leaving the engineering effort for what had to be built from scratch. I implemented authentication through Entra and the authorisation rules governing who could generate budgets.",
-      "The core problem was modelling a network rather than simply routing a shipment. Planners defined origins, demand splits, transport modes, utilisation, legs, and destinations, then assigned those networks to commodities and material groups. The costing engine expanded that model into tonnes by node and month across the project lifetime before producing the final budget.",
-      "The network editor was my first wrong turn. Power Apps galleries could represent the data but were not capable of editing the network effectively, so I replaced them with custom React components hosted inside the platform. It was more complex to own, but it produced an editor planners could actually work with.",
-      "The calculation engine ran as a Python service on Azure Functions. I redesigned and optimised the routing algorithms to solve complex networks efficiently, including manually defined road sections, then expanded demand into commodity-by-node-by-month quantities and priced them. Runs were parallelised, and recurring routes were cached rather than solved repeatedly. A full network returned in under thirty seconds; a re-run in under ten, making scenario analysis practical.",
-      "Designed networks also became reusable. Planners could apply an existing network to different commodities, building a shared library instead of recreating the same transport model. Budgets then emerged as line-by-line capex and opex proposals, routed through review and approval so competing scenarios could be evaluated before one was selected.",
+      "I was the only engineer on a four-person team, working with three logistics specialists who owned the domain calculations and guided the interface. The original tool was a console script that counted containers, trucks, trips, and kilometres behind a fuel estimate; the replacement needed to let planners define origins, demand splits, transport modes, utilisation, legs, and destinations, then apply those networks to commodities and material groups and resolve the resulting cost month by month across the life of the project.",
+      "The four-month deadline made technology choice part of the architecture. I used Power Platform for the multi-user shell, shared components, and approval workflow, which kept the delivery practical while allowing the engineering effort to concentrate on the network editor, calculation engine, authentication through Entra, and the authorisation rules governing who could generate a budget.",
+      "That decision did not mean keeping everything inside the platform. The first version of the network editor used Power Apps galleries to represent the underlying data, but they proved too restrictive for the way planners actually needed to work. Rather than forcing the workflow into those constraints, I replaced the galleries with custom React components hosted inside the platform. It increased the complexity of the solution, but produced an editor that could properly support network design.",
+      "The calculation engine followed the same principle. Running as a Python service on Azure Functions, it expanded the network into commodity-by-node-by-month quantities, priced the resulting movements, and handled complex routing efficiently, including manually defined road sections. I also redesigned and optimised the routing algorithms, parallelised independent work, and cached recurring routes so that repeated calculations did not have to solve the same paths again.",
+      "Those changes made the application practical for scenario analysis: a full network could return in under thirty seconds, while a re-run completed in under ten. The work also turned individual network designs into reusable assets, allowing planners to apply an existing network to different commodities rather than recreating it each time.",
+      "The final budgets emerged as line-by-line capex and opex proposals that could be routed through review and approval, giving planners a way to compare competing scenarios before selecting one. The result was a substantial step up from the original script, not because every part was custom-built, but because each technology was used where it solved the problem most effectively.",
     ],
     views: [
       {

@@ -10,7 +10,7 @@ const nextConfig = {
    * working perfectly in dev. Naming it here puts it in the bundle.
    */
   outputFileTracingIncludes: {
-    "/capabilities/facade/[slug]": ["./facades/*/index.html"],
+    "/portfolio/facade/[slug]": ["./facades/*/index.html"],
   },
 };
 
