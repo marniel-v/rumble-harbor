@@ -96,6 +96,24 @@ export default function CapabilityView({ work, prev, next }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, go, next, prev]);
 
+  // Warm the HTTP cache with this work's screens once the page has finished
+  // loading, so opening the overlay reads the facade document from cache and
+  // pays only parse and paint. Low priority and after `load` so it never
+  // competes with the page itself.
+  useEffect(() => {
+    const warm = () => {
+      for (const v of work.views) {
+        fetch(`/portfolio/facade/${v.id}`, { priority: "low" }).catch(() => {});
+      }
+    };
+    if (document.readyState === "complete") {
+      warm();
+      return;
+    }
+    window.addEventListener("load", warm, { once: true });
+    return () => window.removeEventListener("load", warm);
+  }, [work.views]);
+
   const nav = (target, back) => (e) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();

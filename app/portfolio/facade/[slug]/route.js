@@ -46,7 +46,10 @@ export async function GET(_request, { params }) {
         "content-type": "text/html; charset=utf-8",
         "x-robots-tag": "noindex, nofollow",
         "content-security-policy": "frame-ancestors 'self'",
-        "cache-control": "public, max-age=0, must-revalidate",
+        // Five minutes, so the warm-up fetch CapabilityView makes on page load
+        // is what the overlay iframe reads. With max-age=0 the browser would
+        // revalidate and the prefetch would buy nothing.
+        "cache-control": "public, max-age=300",
       },
     });
   } catch {

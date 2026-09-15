@@ -14,7 +14,7 @@ const links = [
   { label: "Work", href: "/#work" },
   // Enters the run at its start rather than at a landing page — there isn't
   // one, and 01 is where the argument begins.
-  { label: "Portfolio", href: "/portfolio/analytics" },
+  { label: "Portfolio", href: "/portfolio/bio" },
   { label: "Testimonials", href: "/#testimonials" },
   { label: "Contact", href: "/#contact" },
 ];
