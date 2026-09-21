@@ -31,6 +31,10 @@ export default function FacadeOverlay({ work, index, onIndex, onClose }) {
   const [fit, setFit] = useState(0);
   const [actual, setActual] = useState(false);
   const [note, setNote] = useState(true);
+  // Which view's document has finished loading in the frame. Tracked by id
+  // rather than as a boolean so stepping to another view drops the frame out
+  // on the same render that swaps `src`, with no reset effect racing it.
+  const [loadedId, setLoadedId] = useState(null);
 
   const view = work.views[index];
   const count = work.views.length;
@@ -115,7 +119,9 @@ export default function FacadeOverlay({ work, index, onIndex, onClose }) {
             </span>
           </span>
 
-          <span className="facade__note">{DISCLOSURE}</span>
+          {work.disclosure !== false && (
+            <span className="facade__note">{DISCLOSURE}</span>
+          )}
 
           <span className="facade__tools">
             {count > 1 && (
@@ -185,7 +191,14 @@ export default function FacadeOverlay({ work, index, onIndex, onClose }) {
               height={NATIVE_H}
               loading="lazy"
               sandbox="allow-same-origin"
-              style={{ transform: `scale(${scale})`, opacity: fit ? 1 : 0 }}
+              onLoad={() => setLoadedId(view.id)}
+              // Held invisible until the document has painted, so the frame's
+              // blank white never shows over the dark stage; the CSS opacity
+              // transition then fades the facade up from the stage instead.
+              style={{
+                transform: `scale(${scale})`,
+                opacity: fit && loadedId === view.id ? 1 : 0,
+              }}
             />
           </div>
         </div>

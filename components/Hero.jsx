@@ -1,12 +1,15 @@
 import Transmission from "@/components/Transmission";
-import PulseText from "@/components/PulseText";
 import SignalMarker from "@/components/SignalMarker";
 
 export default function Hero() {
   return (
     <section className="hero" id="top">
       <div className="container hero__inner">
-        <SignalMarker label="DEV HOUSE" status="EST 2026" icon={false} />
+        <SignalMarker
+          label="SOFTWARE ENGINEERING STUDIO"
+          status="EST 2026"
+          icon={false}
+        />
 
         <div className="hero__field">
           <Transmission />

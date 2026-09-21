@@ -1,0 +1,16 @@
+# Mirrors .gitignore — graphify reads this file INSTEAD of .gitignore when it exists.
+node_modules
+graphify-out
+.next
+out
+.env*.local
+.DS_Store
+npm-debug.log*
+
+# facades/ holds finished screens from other sessions. The graph only needs
+# each screen's index.html (what works.js views[].id resolves to), not the
+# generators, verifiers, source material or screenshots behind them.
+facades/*.mjs
+facades/_tramos-source
+facades/_verso-source
+facades/*/*.png

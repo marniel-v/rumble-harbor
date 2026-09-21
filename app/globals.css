@@ -1586,6 +1586,78 @@ html[data-pulse="flipped"] .work-card__chip::before {
   line-height: 1.7;
 }
 
+/* ───────────────────────── Transmission ─────────────────────────
+   Noise in, wordmark, signal out — three items on one centre line. The traces
+   are the flexible pair and the lockup is fixed, so the type never resizes to
+   fit the box; the field just gives more or less run to the signal either side.
+   `min-width: 0` because SVG flex items otherwise refuse to go below their
+   intrinsic width and push the lockup off centre. */
+.transmission {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2.4vw, 30px);
+  width: 100%;
+  /* The phone rule sizes the lockup in cqw, so the field is the reference —
+     the lockup then fills whatever this is dropped into, not the viewport. */
+  container-type: inline-size;
+}
+.transmission__trace {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 96px;
+}
+/* Stacked, unlike the nav lockup — the two words are near enough the same
+   width in Bristone that the block squares up on its own. Tight leading keeps
+   the pair reading as one mass for the traces to point at.
+
+   `flex-start` is load-bearing, not a default worth trimming. The two words are
+   different widths, so anything that lets them size independently of each other
+   breaks the shared left edge: the default `stretch` gives both spans the full
+   block width and the inherited `text-align: center` from .hero__inner then
+   centres each one inside its own box, and `center` misaligns them directly.
+   Start-aligned, each span shrinks to its own text, so the edge holds and
+   text-align stops mattering wherever this is dropped. */
+.transmission__mark {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  line-height: 0.98;
+}
+/* Justified to a common width, both edges — the lockup is a block, not two
+   centred lines. The column has no width of its own, so it takes the wider
+   line's natural width; `stretch` above then hands that same width to the
+   shorter line, which spreads its letters to fill it. Nothing is measured and
+   nothing is hard-coded against Bristone's metrics: whichever line is wider
+   sets the measure and keeps its own natural spacing, because it has no slack
+   to distribute.
+   `baseline` is what puts the mark back on the baseline — as a flex item it
+   has lost the `vertical-align` that .pulse--inline relies on. Tracking moves
+   to `gap`: letter-spacing would add a phantom advance after the final glyph
+   and hold the line off its own right edge, which is the bug this rule
+   exists to fix. */
+.transmission__word {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.02em;
+  letter-spacing: normal;
+  font-size: clamp(34px, 6.2vw, 68px);
+}
+/* The mark still needs its optical nudge — the heavy edge lands on the right
+   under PULSE_FLIPPED, so an evenly distributed gap reads as a tight one and
+   the B closes on it — but not the full inline correction. Nav and Footer set
+   the mark in running text where the only thing holding it off the next letter
+   is tracking; here the distribution already opens every pair, so most of that
+   0.3em is being paid twice. Scoped rather than changed at source, since the
+   two cases genuinely want different numbers.
+   This trades against `gap` above: the margin widens the item, leaving less
+   free space to share, so raising it also pulls the other pairs in. */
+.transmission__word .pulse--inline {
+  margin-right: 0.16em;
+}
+
 /* ───────────────────────── Responsive ─────────────────────────
    One block per breakpoint. A component that changes at 860px changes here,
    not next to its own rules. */
@@ -1611,7 +1683,7 @@ html[data-pulse="flipped"] .work-card__chip::before {
   .hero__cta {
     flex-direction: column;
     width: 100%;
-    max-width: 320px;
+    max-width: 220px;
   }
   .hero__cta .btn {
     width: 100%;
@@ -1729,6 +1801,18 @@ html[data-pulse="flipped"] .work-card__chip::before {
   .transmission__trace {
     display: none;
   }
+  /* With the traces gone the lockup is the whole field, so it takes the full
+     width instead of sitting at the 34px floor beside 320px buttons. HARBOR
+     is the wider line at 5.7655em (Bristone advances plus five 0.02em gaps),
+     so 17.34cqw would land exactly on the edge; 17 stops ~2% short and the
+     space-between justification takes up the rest, rather than a hinting
+     rounding pushing the last letter past the edge into .hero's clip. */
+  .transmission__mark {
+    flex: 1 1 auto;
+  }
+  .transmission__word {
+    font-size: 17cqw;
+  }
   /* One plate per row on a phone. A stack keeps every figure legible and the
      01–05 index keeps it reading as a run; a horizontal scroller would hide
      most of the stages behind a gesture. */
@@ -1778,75 +1862,6 @@ html.theme-anim *::after {
   transition: var(--t-theme) !important;
   transition-property:
     background-color, background-image, border-color, fill, stroke !important;
-}
-
-/* ───────────────────────── Transmission ─────────────────────────
-   Noise in, wordmark, signal out — three items on one centre line. The traces
-   are the flexible pair and the lockup is fixed, so the type never resizes to
-   fit the box; the field just gives more or less run to the signal either side.
-   `min-width: 0` because SVG flex items otherwise refuse to go below their
-   intrinsic width and push the lockup off centre. */
-.transmission {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(12px, 2.4vw, 30px);
-  width: 100%;
-}
-.transmission__trace {
-  flex: 1 1 0;
-  min-width: 0;
-  height: 96px;
-}
-/* Stacked, unlike the nav lockup — the two words are near enough the same
-   width in Bristone that the block squares up on its own. Tight leading keeps
-   the pair reading as one mass for the traces to point at.
-
-   `flex-start` is load-bearing, not a default worth trimming. The two words are
-   different widths, so anything that lets them size independently of each other
-   breaks the shared left edge: the default `stretch` gives both spans the full
-   block width and the inherited `text-align: center` from .hero__inner then
-   centres each one inside its own box, and `center` misaligns them directly.
-   Start-aligned, each span shrinks to its own text, so the edge holds and
-   text-align stops mattering wherever this is dropped. */
-.transmission__mark {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  line-height: 0.98;
-}
-/* Justified to a common width, both edges — the lockup is a block, not two
-   centred lines. The column has no width of its own, so it takes the wider
-   line's natural width; `stretch` above then hands that same width to the
-   shorter line, which spreads its letters to fill it. Nothing is measured and
-   nothing is hard-coded against Bristone's metrics: whichever line is wider
-   sets the measure and keeps its own natural spacing, because it has no slack
-   to distribute.
-   `baseline` is what puts the mark back on the baseline — as a flex item it
-   has lost the `vertical-align` that .pulse--inline relies on. Tracking moves
-   to `gap`: letter-spacing would add a phantom advance after the final glyph
-   and hold the line off its own right edge, which is the bug this rule
-   exists to fix. */
-.transmission__word {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.02em;
-  letter-spacing: normal;
-  font-size: clamp(34px, 6.2vw, 68px);
-}
-/* The mark still needs its optical nudge — the heavy edge lands on the right
-   under PULSE_FLIPPED, so an evenly distributed gap reads as a tight one and
-   the B closes on it — but not the full inline correction. Nav and Footer set
-   the mark in running text where the only thing holding it off the next letter
-   is tracking; here the distribution already opens every pair, so most of that
-   0.3em is being paid twice. Scoped rather than changed at source, since the
-   two cases genuinely want different numbers.
-   This trades against `gap` above: the margin widens the item, leaving less
-   free space to share, so raising it also pulls the other pairs in. */
-.transmission__word .pulse--inline {
-  margin-right: 0.16em;
 }
 
 /* ───────────────────────── PulseText ─────────────────────────
@@ -2181,6 +2196,30 @@ html.theme-anim *::after {
   color: var(--text-dim);
 }
 
+/* Stands where the lead and body would: one big cone, centred, with the
+   label under it. */
+.cap__construction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 40px;
+  text-align: center;
+}
+
+.cap__cone {
+  color: var(--text-mute);
+}
+
+.cap__construction-note {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 500;
+  font-size: var(--label-lg);
+  letter-spacing: var(--track-tight);
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
 .cap__views {
   list-style: none;
   padding: 0;
@@ -2489,6 +2528,7 @@ html.theme-anim *::after {
 .facade__count {
   padding: 0 3px;
   color: var(--text-mute);
+  white-space: nowrap;
 }
 
 .facade__btn {
@@ -2620,16 +2660,23 @@ html.theme-anim *::after {
     grid-template-columns: 1fr;
   }
 
-  /* The strip lies down and scrolls rather than forcing the page sideways —
-     same move the structured-light sequence makes. And it follows the claim
-     rather than leading it: stacked, a scroller you have to work sits between
-     the reader and the heading that says what the page is.
+  /* The claim's wrapper dissolves so its pieces become grid items in their
+     own right: stacked, the strip and the portrait want to sit *inside* the
+     claim — between its title and its lead — not before or after it. Nothing
+     in .cap__text is positioned against it, so losing the containing block
+     costs nothing. */
+  .cap__text {
+    display: contents;
+  }
 
-     It stops short of the bottom, though. Ordered between the claim and the
-     screen list, because each note is written about a specific frame and is
-     unreadable with the frames already scrolled past. Its own margin-top holds
-     the 26px the grid used to gap; the list's margin-top holds the space
-     below. */
+  /* The strip lies down and scrolls rather than forcing the page sideways —
+     same move the structured-light sequence makes. It follows the title, so
+     the heading that says what the page is still leads, but comes before the
+     lead, so the reader sees the screens before reading about them. Its own
+     margin-top holds the 26px the grid used to gap; the lead's margin-top
+     holds the space below. Everything after it shares one order so source
+     order keeps them in sequence: lead, body, role, then the screen list,
+     whose notes name frames and have to follow the frames they name. */
   .cap__strip {
     order: 1;
     margin-top: 26px;
@@ -2642,6 +2689,10 @@ html.theme-anim *::after {
     grid-row: auto;
   }
 
+  .cap__lead,
+  .cap__body,
+  .cap__construction,
+  .cap__role,
   .cap__notes {
     order: 2;
   }
@@ -2652,13 +2703,23 @@ html.theme-anim *::after {
     scroll-snap-align: start;
   }
 
-  /* Stacked, the portrait leads the claim at the strip's width rather than
-     filling the column — a full-bleed face above a heading is a hero, not a
-     bio. */
+  /* The bio keeps two columns, 40/60: the portrait beside the title, the prose
+     under both. A full-bleed face above a heading is a hero, not a bio. The
+     lead's own margin-top holds the space under the row. The portrait column
+     stops at the wide layout's 232px, or the tablet band shows a bigger face
+     than the desktop does. */
+  .cap__grid--bio {
+    grid-template-columns: min(40%, 232px) minmax(0, 1fr);
+    column-gap: 16px;
+  }
+
+  .cap__grid--bio .cap__lead,
+  .cap__grid--bio .cap__body {
+    grid-column: 1 / -1;
+  }
+
   .cap__portrait {
     position: static;
-    width: 218px;
-    margin-bottom: 26px;
   }
 
   .cap__strip-hint {
@@ -2716,6 +2777,30 @@ html.theme-anim *::after {
   .facade__btn--close svg {
     width: 16px;
     height: 16px;
+  }
+}
+
+/* A portrait phone. The tools alone run ~310px with their finger-sized
+   buttons, which leaves the id a dozen characters at 375 and nothing at all
+   below that — so the bar wraps, id on one line and tools on the next. Width
+   rather than orientation, because a landscape phone at 812 fits everything
+   on one line and cannot spare a second row of chrome from 375px of height.
+   Spread rather than right-aligned: the two groups — stepping and toggling —
+   read as two groups, and the targets at either edge are the easy ones. */
+@media (max-width: 520px) {
+  .facade__bar {
+    flex-wrap: wrap;
+    height: auto;
+    gap: 8px 12px;
+    padding: 10px 12px;
+  }
+
+  .facade__id {
+    flex-basis: 100%;
+  }
+
+  .facade__tools {
+    justify-content: space-between;
   }
 }
 

@@ -53,7 +53,7 @@ const themeScript = `
 `;
 
 export const metadata = {
-  title: "Rumble Harbor — Software Engineering for Complex Systems",
+  title: "Rumble Harbor — From Signal to System",
   description:
     "Complexity is inevitable. Fragility isn't. Rumble Harbor builds software systems that hold under pressure — across web, mobile, and cloud.",
 };

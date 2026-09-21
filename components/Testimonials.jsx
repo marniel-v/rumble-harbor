@@ -17,7 +17,7 @@ import SignalMarker from "@/components/SignalMarker";
 const quotes = [
   {
     key: "logistics",
-    text: "We came in with a half-finished estimation platform and a hard deadline. It shipped on time, and the architecture has held through every load spike since.",
+    text: "Marniel is a highly technically fluent software engineer who is goal oriented: give him the objective, not the steps, and he gets there. He is grounded in the traditions of best practice while pushing the boundaries of what is possible with current technology.",
     name: "Chris Ryan",
     photo: "/testimonials/chris-ryan.jpeg",
     linkedin:
@@ -38,8 +38,9 @@ software.`,
   },
   {
     key: "manufacturing",
-    text: "The vision models were the easy part. Getting them into an ERP that runs a factory floor was the work, and it was handled end to end.",
+    text: "I had the privilege of working with Marniel a few years ago. He consistently went the extra mile, putting in the time and effort to finish work on schedule. Marniel is passionate about all things software, and he isn't afraid to speak up and challenge ideas in order to achieve the best result.",
     name: "Alwyn Lubbe",
+    photo: "/testimonials/alwyn-lubbe.jpeg",
     role: "Engineer",
     sector: "Mecalc",
   },

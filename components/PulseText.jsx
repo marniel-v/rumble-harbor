@@ -12,6 +12,7 @@ const TAIL = WIDTH * 1.6; // front is past the last glyph by a still-visible mar
 const RAMP = 24;
 const PAD = 32;
 const VISIBLE = 0.25;
+const SETTLE = 150; // ms without a scroll event before the strike
 
 const clamp01 = (n) => (n < 0 ? 0 : n > 1 ? 1 : n);
 
@@ -184,27 +185,49 @@ export default function PulseText({ children, className = "" }) {
 
     const ro = new ResizeObserver(() => glyphs.length && measure());
 
+    // The strike waits for the reader to stop scrolling, not just for the
+    // block to come into view. A phone flick brings it in and keeps going,
+    // and struck at first sight the front — which does most of its travel
+    // in the first second — is already past the fold by the time the page
+    // settles and the eye lands. Measured at the strike, too, so the origin
+    // is where the reader actually is rather than where they first were.
+    let visible = false;
+    let struck = false;
+    let settle = 0;
+
+    function strike() {
+      if (struck || cancelled || !visible) return;
+      struck = true;
+      io.disconnect();
+      window.removeEventListener("scroll", arm);
+      measure();
+      ro.observe(block);
+      raf = requestAnimationFrame((now) => {
+        start = now;
+        frame(now);
+      });
+    }
+
+    function arm() {
+      clearTimeout(settle);
+      settle = setTimeout(strike, SETTLE);
+    }
+
     const io = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
-        io.disconnect();
-        document.fonts.ready.then(() => {
-          if (cancelled) return;
-          measure();
-          ro.observe(block);
-          raf = requestAnimationFrame((now) => {
-            start = now;
-            frame(now);
-          });
-        });
+        visible = entries.some((e) => e.intersectionRatio >= VISIBLE);
+        if (visible) document.fonts.ready.then(() => !cancelled && arm());
       },
       { threshold: VISIBLE },
     );
     io.observe(block);
+    window.addEventListener("scroll", arm, { passive: true });
 
     return () => {
       cancelled = true;
+      clearTimeout(settle);
       cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", arm);
       io.disconnect();
       ro.disconnect();
     };

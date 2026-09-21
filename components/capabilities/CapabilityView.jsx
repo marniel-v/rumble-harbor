@@ -13,7 +13,11 @@ import PulseMark from "@/components/PulseMark";
 import SignalMarker from "@/components/SignalMarker";
 import StructuredLight from "@/components/StructuredLight";
 import FacadeOverlay from "@/components/capabilities/FacadeOverlay";
-import { works, DISCLOSURE } from "@/components/capabilities/works";
+import {
+  works,
+  DISCLOSURE,
+  CONSTRUCTION,
+} from "@/components/capabilities/works";
 import {
   prefersReducedMotion,
   runSignal,
@@ -172,7 +176,7 @@ export default function CapabilityView({ work, prev, next }) {
               beside it, and nothing under it — no screens to note and no
               substitution to disclose. */}
           {work.bio && (
-            <div className="cap__grid" ref={panelRef}>
+            <div className="cap__grid cap__grid--bio" ref={panelRef}>
               <figure className="cap__portrait">
                 <img
                   src={`/portfolio/${work.slug}/portrait.jpg`}
@@ -238,12 +242,34 @@ export default function CapabilityView({ work, prev, next }) {
                     {work.capability}{" "}
                     <span className="cap__qualifier">{work.qualifier}</span>
                   </h1>
-                  <p className="cap__lead">{work.lead}</p>
-                  {work.body?.map((p) => (
-                    <p key={p} className="cap__body">
-                      {p}
-                    </p>
-                  ))}
+                  {work.construction ? (
+                    <div className="cap__construction">
+                      <svg
+                        className="cap__cone"
+                        viewBox="0 0 24 24"
+                        width="128"
+                        height="128"
+                        aria-hidden="true"
+                      >
+                        <path d="M10 3h4l4.5 15H5.5z" fill="var(--signal)" />
+                        <path
+                          d="M8.6 8.5h6.8l.9 3H7.7zM6.9 14h10.2l.9 3H6z"
+                          fill="var(--bg)"
+                        />
+                        <path d="M3 18h18v2H3z" fill="currentColor" />
+                      </svg>
+                      <p className="cap__construction-note">{CONSTRUCTION}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="cap__lead">{work.lead}</p>
+                      {work.body?.map((p) => (
+                        <p key={p} className="cap__body">
+                          {p}
+                        </p>
+                      ))}
+                    </>
+                  )}
 
                   {/* Closes the prose: the claim, then what part of it was
                       actually mine. Everything below this line is about the
@@ -288,7 +314,9 @@ export default function CapabilityView({ work, prev, next }) {
                     ))}
                   </ul>
 
-                  <p className="cap__disclosure">{DISCLOSURE}</p>
+                  {work.disclosure !== false && (
+                    <p className="cap__disclosure">{DISCLOSURE}</p>
+                  )}
                 </div>
               </div>
             </>

@@ -18,6 +18,10 @@
  * into the prose of some pages and not others reads as something being slid
  * past the reader. Optional, and absent on works still being written up.
  *
+ * `disclosure: false` drops the NDA line from a work's page and from the bar
+ * of its facade overlay. Left out, the line shows, which is the honest default
+ * for a reconstruction; a work only opts out when it has nothing to disclose.
+ *
  * `views[].id` names a directory under facades/, which is gitignored and served
  * at runtime by app/portfolio/facade/[slug]/route.js. `ready: false` works
  * have no page yet; the band still renders their tick, so the length of the run
@@ -30,6 +34,10 @@
 
 export const DISCLOSURE =
   "Reference implementation. The original is under NDA.";
+
+/* `construction: true` on a work swaps its lead and body for this note. The
+   title, screens and role still render — only the prose is held back. */
+export const CONSTRUCTION = "Under Construction";
 
 export const works = [
   {
@@ -51,7 +59,7 @@ export const works = [
   },
   {
     slug: "analytics",
-    short: "Prototype to platform",
+    short: "Prototype to Platform",
     n: "01",
     product: "Bellwether",
     kicker: "Analytics · Insights",
@@ -90,7 +98,7 @@ export const works = [
   },
   {
     slug: "cloud",
-    short: "Billing under failure",
+    short: "Billing Under Failure",
     n: "02",
     product: "Slipstream",
     kicker: "Cloud · Control Plane",
@@ -135,7 +143,7 @@ export const works = [
   },
   {
     slug: "erp",
-    short: "Systems of record",
+    short: "Systems of Record",
     n: "03",
     product: "Millrace",
     kicker: "Operations · ERP",
@@ -175,7 +183,7 @@ export const works = [
   },
   {
     slug: "logistics",
-    short: "Topology to budget",
+    short: "Topology to Budget",
     n: "04",
     product: "TRAMOS",
     kicker: "Logistics · Estimation",
@@ -221,13 +229,15 @@ export const works = [
   },
   {
     slug: "vision-detection",
-    short: "Label detection",
+    short: "Label Detection",
     n: "05",
     product: "Verso",
     kicker: "Vision · Detection",
     capability: "Locating and decoding a label",
     qualifier: "at any orientation",
     lead: "An accession label photographed at whatever angle it was glued on, located, deskewed and read into catalogue fields, with a confidence on every field, a stated threshold, and a human queue for the records that do not clear it.",
+    disclosure: false,
+    construction: true,
     body: [
       "The field confidences are the product of their own per-character confidences, which is what a sequence model actually emits. The accession number reads 0.973 across eight characters. The inscription reads 0.406 across ten, dragged under the 0.940 auto-accept threshold by a single glyph at 0.697, and that is precisely why this record is in review rather than accepted.",
       "What the detector found second is not a label at all. It is the tile's own painted cartouche, MATHE 13V3: real, photographed, and exactly the kind of mark a detector locates and a field parser cannot map. It is shown as a rejected candidate rather than quietly dropped. Every capture in both screens is a different object on the stand: no two frames anywhere show the same photograph.",

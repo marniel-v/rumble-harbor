@@ -36,18 +36,19 @@ export default function About() {
 
             <div className="about__body">
               <p>
-                One engineer. 14+ years of experience. No handoffs, no layers,
-                nothing lost between the person you brief and the person who
-                builds it. I work end to end: web and cloud platforms, native
-                iOS and Android apps, multi-platform games, and machine-learning
-                tools spanning neural networks and computer vision.
+                Rumble Harbor is an independent software engineering studio
+                focused on building and solving complex software systems. With
+                14+ years of experience, it brings deep engineering capability
+                across platforms, applications, data, cloud infrastructure, and
+                AI.
               </p>
               <p>
-                That experience runs from analytics SaaS for B2B and consumer
-                markets, through logistics platforms for estimation and
-                reporting, to ERP for manufacturing and shipping. Different
-                domains, one discipline: architecture before abstraction, every
-                time.
+                The studio is built around direct ownership. One senior engineer
+                takes a project from the initial problem through architecture,
+                development, and production. That means fewer layers, faster
+                decisions, and no loss of context. The result is software built
+                to solve the real problem and keep working as the business
+                evolves.
               </p>
 
               <div className="about__pillars">
