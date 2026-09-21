@@ -4,7 +4,7 @@ import SignalMarker from "@/components/SignalMarker";
 const quotes = [
   {
     key: "logistics",
-    text: "Marniel is a highly technically fluent software engineer who is goal oriented: give him the objective, not the steps, and he gets there. He is grounded in the traditions of best practice while pushing the boundaries of what is possible with current technology.",
+    text: "Marniel is a technically fluent software engineer who is goal oriented: give him the objective, not the steps, and he gets there. He is grounded in the traditions of best practice while pushing the boundaries of what is possible with current technology.",
     name: "Chris Ryan",
     photo: "/testimonials/chris-ryan.jpeg",
     linkedin:
@@ -14,7 +14,7 @@ const quotes = [
   },
   {
     key: "analytics",
-    text: `He is a highly skilled engineer, a strong people person, and someone who genuinely understands business
+    text: `Marniel is a highly skilled engineer, a strong people person, and someone who genuinely understands business
 requirements. He has an excellent ability to translate those needs into reliable, secure, and well-engineered
 software.`,
     name: "Dave Blakey",
