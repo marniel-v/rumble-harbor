@@ -2,30 +2,6 @@ import PulseMark from "@/components/PulseMark";
 import PulseText from "@/components/PulseText";
 import SignalMarker from "@/components/SignalMarker";
 
-/* Structured light — the one piece of work on this site that is shown as
- * itself. Everything else in Selected Work is described at a coarse grain
- * because it belongs to a client; this is a university project, so the real
- * report, the real figures and the real measured failure can all be on the
- * page.
- *
- * Every number below is traceable to a section of the report:
- *   M. Vosloo, "Low Cost 3D Mapping using Structured Light", project EPR400,
- *   Dept. Electrical, Electronic and Computer Engineering,
- *   University of Pretoria, November 2012.
- *
- * Two figures are DERIVED here rather than quoted, deliberately. Table 2's
- * own error column is a fraction printed under a "%" heading, so quoting it
- * would overstate accuracy by 100x; the deviation and relative columns below
- * are recomputed from the table's own measurements against the 2.00 cm
- * ground truth. Same for the turntable: 1 degree over 18 rotations is
- * 0.056 deg/step, not the 0.05% the summary claims. See SCANS and the note
- * under the table.
- */
-
-/* Table 2, p.47. Four gaps per scan, each 2.00 cm by tape measure, read back
-   off the point cloud. `dev` is the mean absolute deviation over the row's
-   four gaps and `rel` is that against the 2.00 cm truth — both computed from
-   `gaps`, not transcribed, so they cannot drift from the measurements. */
 const TRUTH = 2.0;
 const SCANS = [
   { n: 1, gaps: [1.92, 1.94, 1.92, 1.94], focused: true },
@@ -45,10 +21,6 @@ const rows = SCANS.map((s) => {
 const allDevCm =
   SCANS.reduce((a, s) => a + meanDevCm(s.gaps), 0) / SCANS.length;
 
-/* System facts, each one a single readout. */
-/* Global relaxation, five iterations, §3.5.2 / Fig 40. It started at 1.33 cm,
-   so anything at or above that is the algorithm having made things no better
-   — which is what the colouring marks, rather than alternating for effect. */
 const RELAX_START = 1.33;
 const relaxation = [1.33, 0.96, 2.03, 1.09, 2.41];
 
@@ -59,9 +31,6 @@ const facts = [
   { value: "> 100k", label: "POINTS PER SINGLE SCAN" },
 ];
 
-/* The pipeline, in the order the system actually runs it — which puts the
-   stage that failed in its true position, in the middle, where it damaged
-   everything downstream of it. */
 const steps = [
   {
     n: "01",
@@ -180,10 +149,6 @@ export default function StructuredLight() {
     <section className="section slight" id="structured-light">
       <div className="container">
         <div className="slight__head">
-          {/* The marker directly above already reads STRUCTURED LIGHT, so
-                the heading does not repeat it — that redundancy is what forced
-                the title into four ragged lines. The full formal title is
-                given verbatim in the provenance note at the foot. */}
           <div>
             <h2 className="slight__title">
               Low Cost
@@ -215,7 +180,6 @@ export default function StructuredLight() {
           </div>
         </div>
 
-        {/* The sequence. Numbered, and in the order the pipeline runs. */}
         <div className="slight__block">
           <SignalMarker label="CAPTURE TO MODEL" meta="FIVE STAGES" />
           <ol className="slight__seq">
@@ -231,10 +195,6 @@ export default function StructuredLight() {
                     {s.n}
                   </span>
                   {s.motion ? (
-                    /* The still is rendered alongside and swapped in by CSS
-                       under prefers-reduced-motion. The poster frame carries
-                       the pattern on the object, so the stage still reads
-                       when the clip is suppressed. */
                     <>
                       <video
                         className="slight__motion"
@@ -281,12 +241,6 @@ export default function StructuredLight() {
           </ol>
         </div>
 
-        {/* The headline figure. Everything else on the page is in service of
-            this number being checkable, so it gets the largest type on the page
-            and leads the right column, with the reading that backs it directly
-            underneath and the plate standing alone on the left. That block
-            leads in source order so the number stays first once the grid
-            collapses to one column. */}
         <div className="slight__readout">
           <div className="slight__readout-display">
             <p className="slight__hero-fig">
@@ -349,8 +303,6 @@ export default function StructuredLight() {
           </div>
         </div>
 
-        {/* Table 2. Wrapped so the table scrolls inside its own box rather than
-            pushing the page sideways at narrow widths. */}
         <div className="slight__block">
           <SignalMarker label="MEASURED" meta="TABLE 2 · P.47" />
           <div className="slight__table-wrap">
@@ -396,7 +348,6 @@ export default function StructuredLight() {
               </tfoot>
             </table>
           </div>
-          {/* Kept outside the scroll box, or it clips with the table. */}
           <p className="slight__foot">
             Four gaps per scan, each 2.00 cm by tape measure, read back off the
             point cloud. Deviation and relative error are computed from those

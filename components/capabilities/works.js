@@ -1,42 +1,6 @@
-/**
- * The capability set, ordered as the run goes.
- *
- * This is the plan's build order, which lands `vision-3d` last on purpose: it
- * is the one work with no facade behind it — the real final-year project shown
- * as itself — so it reads as where the vision work started rather than as the
- * ceiling of what it became.
- *
- * `capability` and `qualifier` are one claim in two pieces — the competence,
- * then the part of it that was actually hard. Split because a single uppercase
- * run gives the reader nothing to land on and costs three lines to say it; set
- * as a heading and a subheading it is shorter and it leads. They join with a
- * plain space to reconstruct the sentence, which is what the page title does.
- *
- * `role` states what part of the work was actually mine. It sits in the same
- * slot on every page for the same reason the disclosure does: a scope note that
- * always appears in one place reads as a spec line, where the same note dropped
- * into the prose of some pages and not others reads as something being slid
- * past the reader. Optional, and absent on works still being written up.
- *
- * `disclosure: false` drops the NDA line from a work's page and from the bar
- * of its facade overlay. Left out, the line shows, which is the honest default
- * for a reconstruction; a work only opts out when it has nothing to disclose.
- *
- * `views[].id` names a directory under facades/, which is gitignored and served
- * at runtime by app/portfolio/facade/[slug]/route.js. `ready: false` works
- * have no page yet; the band still renders their tick, so the length of the run
- * is honest even while most of it is unbuilt.
- *
- * `bio` opens the run at 00: a portrait where the filmstrip would be, and the
- * claim beside it. No screens, no facade, no disclosure — nothing on it is a
- * reconstruction.
- */
-
 export const DISCLOSURE =
   "Reference implementation. The original is under NDA.";
 
-/* `construction: true` on a work swaps its lead and body for this note. The
-   title, screens and role still render — only the prose is held back. */
 export const CONSTRUCTION = "Under Construction";
 
 export const works = [

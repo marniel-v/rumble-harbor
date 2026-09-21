@@ -6,14 +6,10 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { IconMenu, IconClose } from "@/components/Icons";
 import useCurrentLink from "@/components/useCurrentLink";
 
-/* Root-relative, not bare fragments: the nav now renders on /portfolio/*
-   too, where "#about" points at nothing. */
 const links = [
   { label: "About", href: "/#about" },
   { label: "Services", href: "/#services" },
   { label: "Work", href: "/#work" },
-  // Enters the run at its start rather than at a landing page — there isn't
-  // one, and 01 is where the argument begins.
   { label: "Portfolio", href: "/portfolio/bio" },
   { label: "Testimonials", href: "/#testimonials" },
   { label: "Contact", href: "/#contact" },
@@ -42,8 +38,6 @@ export default function Nav() {
           </span>
         </a>
 
-        {/* Links collapse into the mobile sheet; the theme control never does
-            — it stays reachable at every width. */}
         <div className="nav__end">
           <nav className="nav__links" aria-label="Primary">
             {links.map((l) => (

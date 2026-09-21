@@ -23,20 +23,6 @@ import {
   runSignal,
 } from "@/components/capabilities/signal";
 
-/**
- * One work: the filmstrip of its own screens on the left, the claim on the
- * right, the live facade over the top of both.
- *
- * Hovering a frame does not open anything — it highlights the matching line in
- * the claim, and the reverse. Opening is a click. An overlay that appears on
- * hover cannot be moved into, read, or scrolled, and is dead on touch.
- *
- * The transition between works hands off through sessionStorage: the outgoing
- * page dissolves its claim into the noise field and then navigates, and the
- * incoming page reads the flag and resolves the same front back into type. See
- * signal.js for how the panel is broken up and put back together.
- */
-
 const HANDOFF = "rh-cap-front";
 
 export default function CapabilityView({ work, prev, next }) {
@@ -138,9 +124,6 @@ export default function CapabilityView({ work, prev, next }) {
             className="marker--section"
           />
 
-          {/* The filter the transition drives. Attached to the panel only
-              while it runs — a permanent filter costs a compositing layer and softens
-              the text under it. */}
           <svg className="cap__filter" aria-hidden="true" focusable="false">
             <filter
               id="rh-signal"
@@ -150,9 +133,6 @@ export default function CapabilityView({ work, prev, next }) {
               height="136%"
               colorInterpolationFilters="sRGB"
             >
-              {/* Anisotropic on purpose: slow across, fast down, so the
-                  displacement tears the panel into horizontal bands instead of
-                  fogging it evenly. */}
               <feTurbulence
                 ref={turbRef}
                 type="fractalNoise"
@@ -172,9 +152,6 @@ export default function CapabilityView({ work, prev, next }) {
             </filter>
           </svg>
 
-          {/* The bio: a portrait where the filmstrip would be, the claim
-              beside it, and nothing under it — no screens to note and no
-              substitution to disclose. */}
           {work.bio && (
             <div className="cap__grid cap__grid--bio" ref={panelRef}>
               <figure className="cap__portrait">
@@ -200,12 +177,9 @@ export default function CapabilityView({ work, prev, next }) {
             </div>
           )}
 
-          {/* The exhibit has no facade behind it, so it has no filmstrip,
-              no overlay and no disclosure — it renders the real thing. */}
           {!work.exhibit && !work.bio && (
             <>
               <div className="cap__grid" ref={panelRef}>
-                {/* Left: this work's screens, and only this work's. */}
                 <div className="cap__strip" key={work.slug}>
                   {work.views.map((v, i) => (
                     <button
@@ -233,11 +207,7 @@ export default function CapabilityView({ work, prev, next }) {
                   </p>
                 </div>
 
-                {/* Right: what is being claimed, and what each screen shows. */}
                 <div className="cap__text">
-                  {/* One heading, set as two. The qualifier stays inside the
-                      h1 so the accessible name is still the whole claim —
-                      the split is typographic, not structural. */}
                   <h1 className="cap__title">
                     {work.capability}{" "}
                     <span className="cap__qualifier">{work.qualifier}</span>
@@ -271,9 +241,6 @@ export default function CapabilityView({ work, prev, next }) {
                     </>
                   )}
 
-                  {/* Closes the prose: the claim, then what part of it was
-                      actually mine. Everything below this line is about the
-                      screens rather than about the work. */}
                   {work.role && (
                     <div className="cap__role">
                       <span className="cap__role-label">
@@ -288,11 +255,6 @@ export default function CapabilityView({ work, prev, next }) {
                   )}
                 </div>
 
-                {/* The screen list is its own grid child rather than the tail
-                    of the claim, so the narrow layout can put the filmstrip
-                    between the two — the notes name frames, and stacked they
-                    have to follow the frames they name. On desktop it sits
-                    under the claim in the same column and reads as one block. */}
                 <div className="cap__notes">
                   <ul className="cap__views">
                     {work.views.map((v, i) => (
@@ -323,7 +285,6 @@ export default function CapabilityView({ work, prev, next }) {
           )}
         </div>
 
-        {/* The exhibit is its own panel for the transition. */}
         {work.exhibit && (
           <div ref={panelRef}>
             <StructuredLight />
@@ -331,18 +292,6 @@ export default function CapabilityView({ work, prev, next }) {
         )}
       </section>
 
-      {/* The run, which is this page's footer — the site footer is deliberately
-          not rendered here. Pinned to the bottom of the window so the way into
-          the next capability is always in reach rather than something you have
-          to scroll to the end of the argument to find.
-
-          Every tick shows, including the works with no page yet: the length of
-          the set is not something to hide.
-
-          The run is a line, so the ends are real ends: no back step on the
-          first work, no forward step on the last. The absent one leaves a
-          spacer rather than collapsing, or the ticks would slide off centre at
-          either end of the set. */}
       <nav className="cap__band" aria-label="Portfolio">
         <div className="container cap__band-inner">
           {prev ? (

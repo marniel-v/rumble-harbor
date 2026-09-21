@@ -2,8 +2,6 @@ import Link from "next/link";
 import SignalMarker from "@/components/SignalMarker";
 import { liveWorks } from "@/components/capabilities/works";
 
-/* Cards whose capability page exists become links to it. The keys below are
-   the same slugs works.js uses, so the two lists cannot drift apart silently. */
 const linked = new Set(liveWorks.map((w) => w.slug));
 
 function MotifAnalytics() {
@@ -350,7 +348,6 @@ function MotifScan3D() {
           <circle cx="168" cy="82" r="2.6" />
           <circle cx="132" cy="42" r="2.2" opacity=".6" />
         </g>
-        {/* Apex — the one point that carries the signal. */}
         <circle cx="150" cy="24" r="3.2" fill="#F25F57" />
         <g fill="#6E7573" opacity=".7">
           <circle cx="124" cy="70" r="1.3" />

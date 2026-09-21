@@ -37,9 +37,6 @@ export default async function CapabilityPage({ params }) {
   return (
     <>
       <Nav />
-      {/* No site footer here. The run itself is the footer — see the fixed
-          band in CapabilityView — so the bottom of the window is always a way
-          into the next capability rather than a dead end. */}
       <main>
         <CapabilityView work={work} prev={prev} next={next} />
       </main>

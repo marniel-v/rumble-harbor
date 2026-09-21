@@ -1,19 +1,6 @@
 import PulseMark from "@/components/PulseMark";
 import SignalMarker from "@/components/SignalMarker";
 
-/* Placeholder copy — swap in real quotes and attribution before launch.
- *
- * `name`, `photo` and `linkedin` are all optional and all need the person's
- * permission, so the placeholders carry none of them:
- *
- *   name:     "Jordan Vega"
- *   photo:    "/testimonials/jordan-vega.jpg"  — a real file in public/
- *   linkedin: "https://www.linkedin.com/in/jordan-vega/"
- *
- * Photos are served from public/, not hotlinked from media.licdn.com: those
- * URLs are signed and expire, and reusing them off-platform is against
- * LinkedIn's terms. Ask for the headshot along with the quote.
- */
 const quotes = [
   {
     key: "logistics",
@@ -53,9 +40,6 @@ const initials = (name) =>
     .map((w) => w[0])
     .join("");
 
-/* Photo if there is one, initials if there's only a name, and nothing at all
-   until the real attribution lands — an unconditional <img> would just render
-   a broken frame against the placeholders. */
 function Avatar({ name, photo }) {
   if (photo)
     return (
@@ -84,8 +68,6 @@ export default function Testimonials() {
         <SignalMarker label="TESTIMONIALS" className="marker--section" />
         <div className="quote-grid">
           {quotes.map(({ key, text, name, photo, linkedin, role, sector }) => {
-            /* The profile link wraps the whole identity block, so the photo and
-               the name are one target rather than two. */
             const ident = (
               <>
                 <Avatar name={name} photo={photo} />

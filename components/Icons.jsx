@@ -4,8 +4,6 @@ import {
   PULSE_FLIP_TRANSFORM,
 } from "@/components/PulseMark";
 
-/** 32-bit integer hash — exact in doubles, so it is stable across engines.
-    Every field that needs noise reads off this, so server and client agree. */
 export const hash = (i) => {
   let h = Math.imul(i ^ 0x9e3779b9, 0x85ebca6b);
   h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
@@ -91,7 +89,6 @@ export function IconClose({ size = 22 }) {
   );
 }
 
-/** Shown in dark mode: press for light. */
 export function IconSun({ size = 16 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} {...base}>
@@ -101,7 +98,6 @@ export function IconSun({ size = 16 }) {
   );
 }
 
-/** Shown in light mode: press for dark. */
 export function IconMoon({ size = 16 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} {...base}>
@@ -173,8 +169,6 @@ export function PulseField({ className }) {
         ))}
       </g>
 
-      {/* 155 x 129 scaled to 55.8 x 46.44, centred on (300, 38). The field is
-          symmetrical, so only the mark itself responds to PULSE_FLIPPED. */}
       <g transform="translate(272.1 14.78) scale(0.36)" fill="var(--coral)">
         <g transform={PULSE_FLIPPED ? PULSE_FLIP_TRANSFORM : undefined}>
           {generatePulse().map((d) => (
@@ -186,15 +180,6 @@ export function PulseField({ className }) {
   );
 }
 
-/**
- * Frequency Fields — from the brand's graphic language. Rays leave one source
- * at the back edge and spread as they travel. Ambient only: no mark, no coral.
- *
- * Stretches to whatever box it is given (`preserveAspectRatio="none"`) — rays
- * are straight, so non-uniform scale costs nothing and the strokes hold their
- * weight. Being directional it follows PULSE_FLIPPED, but through
- * `html[data-pulse]` in globals.css rather than a transform of its own.
- */
 export function FrequencyField({ className }) {
   const rays = Array.from({ length: 21 }, (_, i) => i - 10);
 
@@ -224,9 +209,6 @@ export function FrequencyField({ className }) {
         </linearGradient>
       </defs>
 
-      {/* The source is a short bundle, not a point — 2.6 apart at the edge
-          against 17 at full spread. Both signs match, or the rays cross and
-          the field reads as convergence instead. */}
       <g fill="none">
         {rays.map((i) => (
           <line
@@ -245,17 +227,6 @@ export function FrequencyField({ className }) {
   );
 }
 
-/**
- * Resonance — from the brand's graphic language. One wave carried five times
- * at stepped phase: they pinch at the crossings and open between them. Same
- * frequency reinforcing itself, with the mark riding it.
- *
- * The box reads left to right as the five finding each other. They enter out of
- * phase and off frequency, and both disagreements close by `settled` — from
- * there on it is the stepped-phase figure and nothing else, which is where the
- * mark sits. The chaos is added to that figure rather than replacing it, so the
- * right of the box is the resonance and the left is it not having arrived yet.
- */
 export function Resonance({ className }) {
   const W = 320;
   const mid = 60;
@@ -314,9 +285,6 @@ export function Resonance({ className }) {
           y2="0"
         >
           <stop offset="0" stopColor="var(--field-stroke)" stopOpacity="0" />
-          {/* In earlier than the trailing edge fades out: the unsettled stretch
-              runs to 0.6, and a 0.26 ramp would spend most of it on ink that is
-              not there yet. */}
           <stop
             offset="0.16"
             stopColor="var(--field-stroke)"
@@ -337,7 +305,6 @@ export function Resonance({ className }) {
         ))}
       </g>
 
-      {/* 155 x 129 at 0.2 = 31 x 25.8, centred on (198, 60). */}
       <g transform="translate(185.5 50.1) scale(0.2)" fill="var(--coral)">
         <g transform={PULSE_FLIPPED ? PULSE_FLIP_TRANSFORM : undefined}>
           {generatePulse().map((d) => (
@@ -349,29 +316,6 @@ export function Resonance({ className }) {
   );
 }
 
-/**
- * Spectrum — from the brand's graphic language. Three frequency bands stacked
- * back to front, each running the full width, one per brand colour: fog grey
- * behind, warm ivory carrying, coral in front. The two behind are noise floors;
- * the coral one is the signal — it stays low across the band and takes the
- * resonance at a point, which is the only place anything reaches full height.
- *
- * Every band is the same construction at different weights, so the shape is in
- * the numbers rather than in three separate bits of code: a hashed noise floor,
- * a broad `shoulder` working on the band around the resonance, and `peak`/
- * `flank` giving the spike its tip and its ragged base. The bands share a
- * resonance but not a seed — they agree about where the signal is and disagree
- * everywhere else, and that disagreement is the depth.
- *
- * They sit on one grid rather than interleaving: a taller bar behind shows its
- * top above the one in front, which is what makes the stack read as depth
- * instead of as three times the bars. Nothing is dimmed to sell that depth —
- * the bands are opaque and separate on colour alone.
- *
- * Heights are hashed off the bar index, not Math.random, so the server and the
- * client draw the same field. The resonance sits at 42% across; moving `centre`
- * moves all three bands together, since they read off the same curves.
- */
 export function SpectrumField({ className }) {
   const W = 600;
   const H = 200;

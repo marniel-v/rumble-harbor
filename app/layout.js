@@ -3,11 +3,6 @@ import { Inter, IBM_Plex_Mono } from "next/font/google";
 import { PULSE_FLIPPED } from "@/components/PulseMark";
 import "./globals.css";
 
-/**
- * Bristone Medium — the brand display face. Single weight, unicase, and very
- * extended (cap 'H' is 0.958em), so it is headings only: never body copy, and
- * never asked for a weight other than 500 or the browser fakes a bold.
- */
 const bristone = localFont({
   src: "./fonts/BristoneMedium.ttf",
   weight: "500",
@@ -30,13 +25,6 @@ const plexMono = IBM_Plex_Mono({
   variable: "--font-mono",
 });
 
-/**
- * Runs before first paint, ahead of React: resolves the theme from a pinned
- * choice, falling back to the system preference, and stamps it on <html> so
- * the page never renders in one theme and corrects to the other.
- *
- * The key must match THEME_KEY in components/ThemeToggle.jsx.
- */
 const themeScript = `
 (function () {
   try {
