@@ -32,12 +32,18 @@ export async function POST(request) {
   });
 
   try {
+    // No Reply-To: an external address there reads as phishing to spam filters
+    // (Hostinger flagged it). The mailto link below gives one-click reply.
+    const esc = (s) =>
+      s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
     await transport.sendMail({
       from: process.env.CONTACT_FROM,
       to: process.env.CONTACT_TO || "hello@rumbleharbor.com",
-      replyTo: `${name} <${email}>`,
-      subject: `New enquiry from ${name}`,
+      subject: `Website enquiry from ${name}`,
       text: `Name: ${name}\nEmail: ${email}\n\n${message}`,
+      html: `<p><strong>Name:</strong> ${esc(name)}<br>
+<strong>Email:</strong> <a href="mailto:${esc(email)}">${esc(email)}</a></p>
+<p>${esc(message).replace(/\n/g, "<br>")}</p>`,
     });
   } catch (err) {
     console.error("Contact mail failed:", err);
