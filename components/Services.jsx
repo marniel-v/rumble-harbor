@@ -52,7 +52,7 @@ const services = [
     key: "ops",
     index: "04",
     title: "Managed Ops",
-    body: "Cloud ops, handled. We deploy, secure, scale, and maintain your apps so you can keep building.",
+    body: "Cloud ops, handled. I deploy, secure, scale, and maintain your apps so you can keep building.",
     Icon: IconServer,
   },
 ];

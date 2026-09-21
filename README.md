@@ -44,7 +44,7 @@ somewhere else, you're probably overspending it.
   - **IBM Plex Mono** — every technical label: markers, nav, buttons, chips, field
     labels, card indices.
 - **Voice** — _Complexity is inevitable. Fragility isn't._ Architecture before
-  abstraction. We don't just ship features, we build systems.
+  abstraction. I don't just ship features, I build systems.
 - **Tagline** — _From signal to system_ (alternates: _Complexity, anchored._ / _Software under
   pressure._ / _Systems that hold._)
 
