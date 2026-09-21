@@ -157,7 +157,7 @@ export default function CapabilityView({ work, prev, next }) {
               <figure className="cap__portrait">
                 <img
                   src={`/portfolio/${work.slug}/portrait.jpg`}
-                  alt=""
+                  alt={`${work.capability}, ${work.qualifier}`}
                   width={480}
                   height={600}
                 />
@@ -194,7 +194,7 @@ export default function CapabilityView({ work, prev, next }) {
                     >
                       <img
                         src={`/portfolio/${work.slug}/${v.n}.jpg`}
-                        alt=""
+                        alt={`${work.product} — ${v.title}`}
                         width={480}
                         height={300}
                         loading={i > 1 ? "lazy" : undefined}

@@ -15,7 +15,7 @@ export default function Hero() {
           <Transmission />
         </div>
 
-        <p className="hero__lead">From signal to system</p>
+        <h1 className="hero__lead">From signal to system</h1>
 
         <div className="hero__cta">
           <a href="#contact" className="btn btn--primary">
