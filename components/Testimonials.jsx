@@ -3,6 +3,14 @@ import SignalMarker from "@/components/SignalMarker";
 
 const quotes = [
   {
+    key: "manufacturing",
+    text: "I had the privilege of working with Marniel a few years ago. He consistently went the extra mile, putting in the time and effort to finish work on schedule. Marniel is passionate about all things software, and he isn't afraid to speak up and challenge ideas in order to achieve the best result.",
+    name: "Alwyn Lubbe",
+    photo: "/testimonials/alwyn-lubbe.jpeg",
+    role: "Engineer",
+    sector: "Mecalc",
+  },
+  {
     key: "logistics",
     text: "Marniel is a technically fluent software engineer who is goal oriented: give him the objective, not the steps, and he gets there. He is grounded in the traditions of best practice while pushing the boundaries of what is possible with current technology.",
     name: "Chris Ryan",
@@ -22,14 +30,6 @@ software.`,
     linkedin: "https://za.linkedin.com/in/daveblakey",
     role: "CTO",
     sector: "October Health",
-  },
-  {
-    key: "manufacturing",
-    text: "I had the privilege of working with Marniel a few years ago. He consistently went the extra mile, putting in the time and effort to finish work on schedule. Marniel is passionate about all things software, and he isn't afraid to speak up and challenge ideas in order to achieve the best result.",
-    name: "Alwyn Lubbe",
-    photo: "/testimonials/alwyn-lubbe.jpeg",
-    role: "Engineer",
-    sector: "Mecalc",
   },
 ];
 
